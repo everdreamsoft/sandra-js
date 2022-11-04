@@ -114,14 +114,26 @@ export class DBAdapter {
     }
 
     async getConcept(shortname: string): Promise<Concept> {
-       
+
         let sql = "select from " + this.tables.get("concepts") + " where shortname = ?";
         let res = await this.getConnection().query(sql, shortname);
-       
+
         if (res && res?.length > 0)
             return new Concept(res[0].id, res[0].code, res[0].shortname);
 
         return undefined;
     }
-    
+
+    async addConcept(c: Concept): Promise<Concept> {
+
+        let sql = "insert into " + this.tables.get("concepts") + " values (? , ?);select LAST_INSERT_ID() as id;";
+        let res = await this.getConnection().query(sql, c.getDBArrayFormat(false));
+
+        if (res && res?.length > 0) {
+            c.setId(res[0].id);
+            return c;
+        }
+
+        return undefined;
+    }
 }
