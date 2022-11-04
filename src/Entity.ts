@@ -1,6 +1,7 @@
 import { Concept } from "./Concept";
 import { EntityFactory } from "./EntityFactory";
 import { Reference } from "./Reference";
+import { SystemConcepts } from "./SystemConcepts";
 import { Triplet } from "./Triplet";
 import { Utils } from "./Utils";
 
@@ -11,19 +12,45 @@ export class Entity {
     private references: Reference[] = [];
     private uniqueRefConcept: Concept;
 
+    private factory: EntityFactory;
+    private pushedStatus: boolean = false;
+
     constructor() {
     }
 
     setSubject(subject: Concept) { this.subject = subject; }
     setRefs(refs: Reference[]) { this.references = refs; }
     setUniqueRefConcept(c: Concept) { this.uniqueRefConcept = c; }
+    setFactory(factory: EntityFactory) { this.factory = factory; }
+    setPushedStatus(status: boolean) { this.pushedStatus = status; }
 
     getSubject() { return this.subject; }
     getTriplets() { return this.triplets; }
     getRefs() { return this.references; }
+    getFactory() { return this.factory; }
+    getPushedStatus() { return this.pushedStatus; }
 
-    addTriplet(t: Triplet) {
+
+    async brother(verb: string, target: string, refs: Reference[] = null) {
+        await this.addTriplet(await SystemConcepts.get(verb), await SystemConcepts.get(target), refs)
+    }
+
+    async join(verb: string, entity: Entity) {
+        let t = new Triplet(-1, this.subject, await SystemConcepts.get(verb), entity.getSubject());
+        t.setJoinedEntity(entity);
         this.triplets.push(t);
+    }
+
+    async addTriplet(verb: Concept, target: Concept, refs: Reference[] = null) {
+
+        let t = new Triplet(-1, this.subject, verb, target);
+        this.triplets.push(t);
+
+        if (refs && refs?.length > 0) {
+            refs.forEach(ref => ref.setTripletLink(t));
+            this.references.push(...refs);
+        }
+
     }
 
     isEqualTo(entity: Entity) {

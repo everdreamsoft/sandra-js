@@ -1,8 +1,8 @@
 import { Concept } from "../src/Concept";
-import { Entity } from "../src/Entity";
 import { EntityFactory } from "../src/EntityFactory";
 import { Reference } from "../src/Reference";
 import { SystemConcepts } from "../src/SystemConcepts";
+import { Triplet } from "../src/Triplet";
 import { Utils } from "../src/Utils";
 
 export class Test {
@@ -11,25 +11,26 @@ export class Test {
 
         console.log("started test");
 
-        let factory = new EntityFactory("exo_planet", "exo_planet_file", await SystemConcepts.get("name"));
+        let planetFactory = new EntityFactory("exo_planet", "exo_planet_file", await SystemConcepts.get("name"));
+        let moonFactory = new EntityFactory("moon", "moon_file", await SystemConcepts.get("name"));
 
-        await factory.create(
+        await planetFactory.create(
             [
-                await Utils.createDBReference("name", "earth"),
+                await Utils.createDBReference("name", "earth1"),
                 await Utils.createDBReference("age", "3.5B")
             ]
         );
 
-        await factory.create(
+        await planetFactory.create(
             [
-                await Utils.createDBReference("name", "venus"),
+                await Utils.createDBReference("name", "venus1"),
                 await Utils.createDBReference("age", "3.5B")
             ]
         );
 
-        await factory.create(
+        let e = await planetFactory.create(
             [
-                await Utils.createDBReference("name", "earth"),
+                await Utils.createDBReference("name", "earth1"),
                 await Utils.createDBReference("age", "3B"),
                 await Utils.createDBReference("atmosphere", "yes"),
                 await Utils.createDBReference("pressure", "1"),
@@ -37,9 +38,17 @@ export class Test {
             ]
         );
 
-        let res = await factory.push();
+        await e.brother("hasMoon", "yes");
 
-        console.log("");
+        let moon1 = await moonFactory.create([await Utils.createDBReference("name", "moon1")]);
+
+        await e.join("moon", moon1);
+
+        let res = await planetFactory.push();
+
+        console.log("Done");
+
+        process.exit();
 
     }
 

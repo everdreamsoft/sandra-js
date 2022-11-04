@@ -23,41 +23,27 @@ export class EntityFactory {
     async create(refs: Reference[]): Promise<Entity> {
 
         let e = new Entity();
+
         let subConcept = new Concept(-1, Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
+
+        e.setFactory(this);
+
         e.setSubject(subConcept);
-
-        let tripletIsA = new Triplet(
-            -1,
-            subConcept,
-            await SystemConcepts.get("is_a"),
-            await SystemConcepts.get(this.is_a),
-            false);
-
-        let tripletFile = new Triplet(
-            -1,
-            subConcept,
-            await SystemConcepts.get("contained_in_file"),
-            await SystemConcepts.get(this.contained_in_file),
-            false)
-
-        // Adding is_a verb triplet
-        e.addTriplet(tripletIsA);
-
-        // Adding contained_in_file triplet
-        e.addTriplet(tripletFile);
 
         // Set unique ref concept
         e.setUniqueRefConcept(this.uniqueRefConcept);
 
-        // Linking each ref with contained in file verb triplet
-        refs.forEach(ref => ref.setTripletLink(tripletFile));
+        // Adding is_a verb triplet
+        await e.brother("is_a", this.is_a);
 
-        // Adding refs
-        e.setRefs(refs);
+        // Adding contained_in_file triplet
+        await e.brother("contained_in_file", this.contained_in_file, refs);
 
+        // Adding it to the factory list
         this.add(e);
 
         return e;
+
     }
 
     getIsAVerb() {
@@ -95,26 +81,35 @@ export class EntityFactory {
     // Pushing entities to database, without batch insertion //
     async push() {
 
-        let dbConcepts: string[][] = [];
-        let dbTriplets: string[][] = [];
-        let dbRefs: string[][] = [];
-
         for (let index = 0; index < this.entityArray.length; index++) {
 
             let entity = this.entityArray[index];
+
+            if (entity.getPushedStatus()) { continue; }
 
             // Create subject 
             await (await DBAdapter.getInstance()).addConcept(entity.getSubject());
 
             // Create triplets
             for (let indexTriplet = 0; indexTriplet < entity.getTriplets().length; indexTriplet++) {
-                await (await DBAdapter.getInstance()).addTriplet(entity.getTriplets()[indexTriplet]);
+
+                let t = entity.getTriplets()[indexTriplet];
+
+                // Check if this is joined entity othewise push it also
+                if (t.getJoinedentity()) {
+                    await t.getJoinedentity().getFactory().push();
+                }
+
+                await (await DBAdapter.getInstance()).addTriplet(t);
+
             }
 
             // Create refs
             for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
                 await (await DBAdapter.getInstance()).addRefs(entity.getRefs()[indexRef]);
             }
+
+            entity.setPushedStatus(true);
 
         }
 
@@ -125,3 +120,4 @@ export class EntityFactory {
     }
 
 }
+
