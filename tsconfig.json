@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+      "downlevelIteration": true,
+      "esModuleInterop": true,
+      "outDir": "build",
+      "sourceMap": true,
+      "resolveJsonModule" : true
+    },
+    "exclude": [
+      "node_modules"
+    ],
+  }
+  
