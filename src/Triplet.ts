@@ -32,10 +32,21 @@ export class Triplet {
         return this.target;
     }
 
-    getDBArrayFormat() {
-        return [this.id.toString(), this.subject.getId().toString(), this.verb.getId().toString(), 
+    getDBArrayFormat(withId: boolean = true) {
+       
+        if (withId)
+            return [this.id.toString(), this.subject.getId().toString(), this.verb.getId().toString(),
             this.target.getId().toString()];
+
+        else
+            return [this.subject.getId().toString(), this.verb.getId().toString(),
+            this.target.getId().toString()];
+
     }
 
+
+    setId(id: number) {
+        this.id = id;
+    }
 
 }

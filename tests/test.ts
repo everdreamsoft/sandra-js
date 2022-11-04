@@ -11,7 +11,7 @@ export class Test {
 
         console.log("started test");
 
-        let factory = new EntityFactory("planet", "planet_file", await SystemConcepts.get("name"));
+        let factory = new EntityFactory("exo_planet", "exo_planet_file", await SystemConcepts.get("name"));
 
         await factory.create(
             [

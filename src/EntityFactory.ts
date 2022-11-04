@@ -26,34 +26,34 @@ export class EntityFactory {
         let subConcept = new Concept(-1, Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
         e.setSubject(subConcept);
 
-        // Adding refs
-        e.setRefs(refs);
+        let tripletIsA = new Triplet(
+            -1,
+            subConcept,
+            await SystemConcepts.get("is_a"),
+            await SystemConcepts.get(this.is_a),
+            false);
 
-        let is_a = await SystemConcepts.get("is_a");
-        let is_a_val =  await SystemConcepts.get(this.is_a);
+        let tripletFile = new Triplet(
+            -1,
+            subConcept,
+            await SystemConcepts.get("contained_in_file"),
+            await SystemConcepts.get(this.contained_in_file),
+            false)
 
         // Adding is_a verb triplet
-        e.addTriplet(
-            new Triplet(
-                -1,
-                subConcept,
-                is_a,
-                is_a_val,
-                false)
-        );
+        e.addTriplet(tripletIsA);
 
         // Adding contained_in_file triplet
-        e.addTriplet(
-            new Triplet(
-                -1,
-                subConcept,
-                await SystemConcepts.get("contained_in_file"),
-                await SystemConcepts.get(this.contained_in_file),
-                false)
-        );
+        e.addTriplet(tripletFile);
 
         // Set unique ref concept
         e.setUniqueRefConcept(this.uniqueRefConcept);
+
+        // Linking each ref with contained in file verb triplet
+        refs.forEach(ref => ref.setTripletLink(tripletFile));
+
+        // Adding refs
+        e.setRefs(refs);
 
         this.add(e);
 
@@ -92,41 +92,35 @@ export class EntityFactory {
 
     }
 
-    // Pushing entities to database
+    // Pushing entities to database, without batch insertion //
     async push() {
 
         let dbConcepts: string[][] = [];
         let dbTriplets: string[][] = [];
+        let dbRefs: string[][] = [];
 
-        let subjectId = 1;
+        for (let index = 0; index < this.entityArray.length; index++) {
 
-        this.entityArray.forEach(entity => {
-            let subject = entity.getSubject();
-            subject.setId(subjectId);
-            dbConcepts.push(entity.getSubject().getDBArrayFormat());
-            dbTriplets.push(...entity.getTriplets().map(triplet => {
-                return triplet.getDBArrayFormat();
-            }));
-            subjectId++;
-        });
+            let entity = this.entityArray[index];
 
-        //let res = await (await DBAdapter.getInstance()).insertConcepts(dbConcepts);
+            // Create subject 
+            await (await DBAdapter.getInstance()).addConcept(entity.getSubject());
 
-        // Insert subject concept
+            // Create triplets
+            for (let indexTriplet = 0; indexTriplet < entity.getTriplets().length; indexTriplet++) {
+                await (await DBAdapter.getInstance()).addTriplet(entity.getTriplets()[indexTriplet]);
+            }
 
-        // Insert triplets
+            // Create refs
+            for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
+                await (await DBAdapter.getInstance()).addRefs(entity.getRefs()[indexRef]);
+            }
 
-        // Insert references 
+        }
 
     }
 
     load() {
-
-        // Load subject concept
-
-        // Load triplets 
-
-        // Load references 
 
     }
 

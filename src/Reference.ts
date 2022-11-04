@@ -1,28 +1,57 @@
 import { Concept } from "./Concept";
+import { Triplet } from "./Triplet";
 
 export class Reference {
 
     private id: number;
     private concept: Concept;
     private value: string;
-    private refLinkId: number;
+    private tripletLink: Triplet;
 
-    constructor(id: number, concpet: Concept, refLinkId: number, value: string) {
+    constructor(id: number, concpet: Concept, tripletLink: Triplet, value: string) {
         this.id = id;
         this.concept = concpet;
         this.value = value;
-        this.refLinkId = refLinkId;
+        this.tripletLink = tripletLink;
     }
 
+    // Getting properties 
     getId() { return this.id; }
 
     getIdConcept() { return this.concept; }
 
     getValue() { return this.value; }
 
-    getRefLinkId() { return this.refLinkId; }
+    getTripletLink() { return this.tripletLink; }
 
+
+    // Setting properties 
+    setId(id: number) { this.id = id; }
+
+    setTripletLink(t: Triplet) { this.tripletLink = t; }
+
+    setValue(val: string) { this.value = val; }
+
+    setIdConcept(c: Concept) { this.concept = c; }
+
+    // Utilty Functions 
+
+    // Compare a ref object with current 
     isEqualTo(ref: Reference) {
         return this.getIdConcept().isSame(ref.getIdConcept()) && this.getValue() == ref.getValue();
     }
+
+    getDBArrayFormat(withId: boolean = true) {
+
+        if (withId)
+            return [this.id.toString(), this.concept.getId().toString(), this.tripletLink.getId().toString(),
+            this.value];
+
+        else
+            return [this.concept.getId().toString(), this.tripletLink.getId().toString(),
+            this.value];
+
+    }
+
+
 }
