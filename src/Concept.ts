@@ -1,5 +1,9 @@
 export class Concept {
 
+    static readonly SYSTEM_CONCEPT_CODE_PREFIX = "system concept ";
+    static readonly ENTITY_CONCEPT_CODE_PREFIX = "A ";
+
+
     private id: number;
     private code: string;
     private shortname: string;
@@ -10,7 +14,7 @@ export class Concept {
         this.shortname = shortname;
     }
 
-    
+
     getId() {
         return this.id;
     }
@@ -36,6 +40,21 @@ export class Concept {
             return [this.id.toString(), this.code, this.shortname];
 
         return [this.code, this.shortname];
+    }
+
+    getJSON(withId: boolean = true) {
+
+        if (withId)
+            return {
+                "id": this.id.toString(),
+                "code": this.code,
+                "shortname": this.shortname
+            };
+
+        return {
+            "code": this.code,
+            "shortname": this.shortname
+        };
     }
 
 }

@@ -3,8 +3,7 @@ import { DBAdapter } from "./DBAdapter";
 
 export class SystemConcepts {
 
-    static readonly CODE_PREFIX = "system concept ";
-    private static concepts: Concept[];
+    private static concepts: Concept[] = [];
 
     constructor() {
     }
@@ -39,7 +38,7 @@ export class SystemConcepts {
         }
 
         // add in DB and return 
-        c = await (await DBAdapter.getInstance()).addConcept(new Concept(-1, SystemConcepts.CODE_PREFIX + shortname, shortname));
+        c = await (await DBAdapter.getInstance()).addConcept(new Concept(-1, Concept.SYSTEM_CONCEPT_CODE_PREFIX + shortname, shortname));
 
         return c;
 

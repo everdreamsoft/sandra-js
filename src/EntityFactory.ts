@@ -1,6 +1,10 @@
 import { Concept } from "./Concept";
 import { DBAdapter } from "./DBAdapter";
 import { Entity } from "./Entity";
+import { Reference } from "./Reference";
+import { SystemConcepts } from "./SystemConcepts";
+import { Triplet } from "./Triplet";
+import { Utils } from "./Utils";
 
 export class EntityFactory {
 
@@ -14,6 +18,46 @@ export class EntityFactory {
         this.is_a = is_a;
         this.contained_in_file = contained_in_file;
         this.uniqueRefConcept = uniqueRefConcept;
+    }
+
+    async create(refs: Reference[]): Promise<Entity> {
+
+        let e = new Entity();
+        let subConcept = new Concept(-1, Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
+        e.setSubject(subConcept);
+
+        // Adding refs
+        e.setRefs(refs);
+
+        let is_a = await SystemConcepts.get("is_a");
+        let is_a_val =  await SystemConcepts.get(this.is_a);
+
+        // Adding is_a verb triplet
+        e.addTriplet(
+            new Triplet(
+                -1,
+                subConcept,
+                is_a,
+                is_a_val,
+                false)
+        );
+
+        // Adding contained_in_file triplet
+        e.addTriplet(
+            new Triplet(
+                -1,
+                subConcept,
+                await SystemConcepts.get("contained_in_file"),
+                await SystemConcepts.get(this.contained_in_file),
+                false)
+        );
+
+        // Set unique ref concept
+        e.setUniqueRefConcept(this.uniqueRefConcept);
+
+        this.add(e);
+
+        return e;
     }
 
     getIsAVerb() {
@@ -66,7 +110,7 @@ export class EntityFactory {
             subjectId++;
         });
 
-        let res = await (await DBAdapter.getInstance()).insertConcepts(dbConcepts);
+        //let res = await (await DBAdapter.getInstance()).insertConcepts(dbConcepts);
 
         // Insert subject concept
 

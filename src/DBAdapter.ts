@@ -108,14 +108,14 @@ export class DBAdapter {
     }
 
     async insertConcepts(concpets: string[][]) {
-        let sql = "insert into " + this.tables.get("concepts") + " values (?,?,?)";
+        let sql = "insert into " + this.tables.get("concepts") + " (id, code, shortname) values (?,?,?)";
         let res = await this.getConnection().query(sql, concpets);
         return res;
     }
 
     async getConcept(shortname: string): Promise<Concept> {
 
-        let sql = "select from " + this.tables.get("concepts") + " where shortname = ?";
+        let sql = "select * from " + this.tables.get("concepts") + " where shortname = ?";
         let res = await this.getConnection().query(sql, shortname);
 
         if (res && res?.length > 0)
@@ -126,11 +126,14 @@ export class DBAdapter {
 
     async addConcept(c: Concept): Promise<Concept> {
 
-        let sql = "insert into " + this.tables.get("concepts") + " values (? , ?);select LAST_INSERT_ID() as id;";
+        // let sql = "insert into " + this.tables.get("concepts") +  " (code, shortname) values (? , ?);select LAST_INSERT_ID() as id;";
+        // let res = await this.getConnection().query(sql, c.getDBArrayFormat(false));
+
+        let sql = "insert into " + this.tables.get("concepts") + " set code = ?, shortname = ?";
         let res = await this.getConnection().query(sql, c.getDBArrayFormat(false));
 
-        if (res && res?.length > 0) {
-            c.setId(res[0].id);
+        if (res && res?.insertId ) {
+            c.setId(Number(res.insertId));
             return c;
         }
 

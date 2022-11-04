@@ -2,6 +2,7 @@ import { Concept } from "../src/Concept";
 import { Entity } from "../src/Entity";
 import { EntityFactory } from "../src/EntityFactory";
 import { Reference } from "../src/Reference";
+import { SystemConcepts } from "../src/SystemConcepts";
 import { Utils } from "../src/Utils";
 
 export class Test {
@@ -10,21 +11,30 @@ export class Test {
 
         console.log("started test");
 
-        let factory = new EntityFactory("planet", "planet_file", Utils.createMemoryConcept("name"));
+        let factory = new EntityFactory("planet", "planet_file", await SystemConcepts.get("name"));
 
-        let entity0 = new Entity(factory, [
-            Utils.createMemoryReference("name", "earth"),
-            Utils.createMemoryReference("age", "3.5B")]
+        await factory.create(
+            [
+                await Utils.createDBReference("name", "earth"),
+                await Utils.createDBReference("age", "3.5B")
+            ]
         );
 
-        let entity1 = new Entity(factory, [
-            Utils.createMemoryReference("name", "mars"),
-            Utils.createMemoryReference("age", "3B")]
+        await factory.create(
+            [
+                await Utils.createDBReference("name", "venus"),
+                await Utils.createDBReference("age", "3.5B")
+            ]
         );
 
-        let entity3 = new Entity(factory, [
-            Utils.createMemoryReference("name", "earth"),
-            Utils.createMemoryReference("age", "4B")]
+        await factory.create(
+            [
+                await Utils.createDBReference("name", "earth"),
+                await Utils.createDBReference("age", "3B"),
+                await Utils.createDBReference("atmosphere", "yes"),
+                await Utils.createDBReference("pressure", "1"),
+                await Utils.createDBReference("habitable", "yes"),
+            ]
         );
 
         let res = await factory.push();
