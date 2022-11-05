@@ -115,9 +115,42 @@ export class EntityFactory {
 
     }
 
-    load() {
+    // Loads all entities with the given reference 
+    async load(ref: Reference) {
+
+        let entityTriplets: Triplet[] = await (await DBAdapter.getInstance()).getEntityTriplet(
+            ref,
+            await SystemConcepts.get("contained_in_file"),
+            await SystemConcepts.get(this.contained_in_file)
+        );
+
+        for (let index = 0; index < entityTriplets?.length; index++) {
+
+            let entityTriplet = entityTriplets[index];
+            let refs: Reference[] = [];
+
+            let triplets: Triplet[] = await (await DBAdapter.getInstance()).getTripletsBySubject(
+                entityTriplet.getSubject()
+            );
+
+            for (let i = 0; i < triplets.length; i++) {
+                let r = await (await DBAdapter.getInstance()).getReferenceByTriplet(
+                    triplets[i]
+                );
+                refs.push(...r);
+            }
+
+            let e = new Entity();
+            e.setSubject(entityTriplet.getSubject());
+            e.getTriplets().push(...triplets);
+            e.getRefs().push(...refs);
+            e.setUniqueRefConcept(this.uniqueRefConcept);
+            this.add(e);
+
+        }
 
     }
+
 
 }
 

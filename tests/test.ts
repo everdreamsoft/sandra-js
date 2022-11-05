@@ -7,7 +7,7 @@ import { Utils } from "../src/Utils";
 
 export class Test {
 
-    async testEntity() {
+    async testEntityPush() {
 
         console.log("started test");
 
@@ -44,7 +44,7 @@ export class Test {
 
         await e.join("moon", moon1);
 
-        let res = await planetFactory.push();
+        await planetFactory.push();
 
         console.log("Done");
 
@@ -52,7 +52,15 @@ export class Test {
 
     }
 
+    async testEnityLoad() {
+
+        let planetFactory = new EntityFactory("exo_planet", "exo_planet_file", await SystemConcepts.get("name"));
+        await planetFactory.load(await Utils.createDBReference("name", "earth"));
+        console.log("");
+
+    }
+
 }
 
 let test = new Test();
-test.testEntity();
+test.testEnityLoad();
