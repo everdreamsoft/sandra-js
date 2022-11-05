@@ -59,8 +59,16 @@ export class Test {
         console.log("");
 
     }
+    async testEnityLoadAll() {
+
+        let planetFactory = new EntityFactory("exo_planet", "exo_planet_file", await SystemConcepts.get("name"));
+        await planetFactory.loadEntityConcepts(null, "2");
+        console.log("");
+
+    }
+
 
 }
 
 let test = new Test();
-test.testEnityLoad();
+test.testEnityLoadAll();

@@ -9,19 +9,29 @@ export class SystemConcepts {
     }
 
     static add(concept: Concept) {
-        this.concepts.push(concept);
+
+        if (concept.getShortname()) {
+            // Check if it exist
+            let i = SystemConcepts.concepts.findIndex(c => concept.isSame(concept));
+            if (i >= 0)
+                return SystemConcepts.concepts[i];
+        }
+
+        SystemConcepts.concepts.push(concept);
+        return concept
+
     }
 
     static async load(shortname: string) {
         let c = await (await DBAdapter.getInstance()).getConcept(shortname);
-        this.concepts.push(c);
+        SystemConcepts.concepts.push(c);
         return c;
     }
 
     static async get(shortname: string) {
 
         // check if it exist in memory 
-        let c = this.concepts.find(concept => {
+        let c = SystemConcepts.concepts.find(concept => {
             return concept.getShortname() === shortname;
         })
 
@@ -33,7 +43,7 @@ export class SystemConcepts {
         c = await (await DBAdapter.getInstance()).getConcept(shortname);
 
         if (c) {
-            this.concepts.push(c);
+            SystemConcepts.concepts.push(c);
             return c;
         }
 

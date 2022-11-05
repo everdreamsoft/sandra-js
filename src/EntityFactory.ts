@@ -119,9 +119,9 @@ export class EntityFactory {
     async load(ref: Reference) {
 
         let entityTriplets: Triplet[] = await (await DBAdapter.getInstance()).getEntityTriplet(
-            ref,
             await SystemConcepts.get("contained_in_file"),
-            await SystemConcepts.get(this.contained_in_file)
+            await SystemConcepts.get(this.contained_in_file),
+            ref
         );
 
         for (let index = 0; index < entityTriplets?.length; index++) {
@@ -151,6 +151,23 @@ export class EntityFactory {
 
     }
 
+    async loadEntityConcepts(lastId?: string, limit?: string) {
+
+        let entityConcepts: Concept[] = await (await DBAdapter.getInstance()).getEntityConcepts(
+            this.is_a, lastId, limit
+        );
+
+        for (let index = 0; index < entityConcepts?.length; index++) {
+            let entityConcept = entityConcepts[index];
+            let e = new Entity();
+            e.setSubject(entityConcept);
+            e.setUniqueRefConcept(this.uniqueRefConcept);
+            this.entityArray.push(e);
+        }
+
+        console.log("");
+
+    }
 
 }
 

@@ -3,6 +3,7 @@ import { Connection } from "mariadb";
 import { Concept } from "./Concept";
 import { IDBConfig } from "./interfaces/IDBconfig";
 import { Reference } from "./Reference";
+import { SystemConcepts } from "./SystemConcepts";
 import { Triplet } from "./Triplet";
 import { Utils } from "./Utils";
 
@@ -87,7 +88,7 @@ export class DBAdapter {
     /**
      *  Get the triplet attached with given verb and target linked to given reference
      */
-    async getEntityTriplet(ref: Reference, verb: Concept, target: Concept):Promise<Triplet[]> {
+    async getEntityTriplet(verb: Concept, target: Concept, ref: Reference): Promise<Triplet[]> {
 
         let sql = "select t.id, c.id as subjectId, c.code as subjectCode, c.shortname as subjectShortname, t.idConceptLink as verb, t.idConceptTarget as target from " + this.tables.get("triplets") + " as t join  " + this.tables.get("references") + " as r" +
             " on t.id = r.linkReferenced and t.idConceptLink = ? and t.idConceptTarget = ? and r.value = ? and" +
@@ -113,7 +114,6 @@ export class DBAdapter {
         return triplets;
 
     }
-
 
     async getTripletsBySubject(subject: Concept): Promise<Triplet[]> {
 
@@ -196,8 +196,7 @@ export class DBAdapter {
        }
    
        async getReferencesBySubjectId(subjectId: number) {
-   
-           let sql = "SELECT r.*, c.shortname FROM " + this.tables.get("references") + " as r join " +
+              let sql = "SELECT r.*, c.shortname FROM " + this.tables.get("references") + " as r join " +
                this.tables.get("concepts") + " as c on " +
                "c.id = r.idConcept and  r.linkReferenced in " +
                "(select id from " + this.tables.get("triplets") + " as t where idConceptStart = ?);";
@@ -205,13 +204,15 @@ export class DBAdapter {
            return res;
    
        }
-   */
 
+       
     async insertConcepts(concpets: string[][]) {
         let sql = "insert into " + this.tables.get("concepts") + " (id, code, shortname) values (?,?,?)";
         let res = await this.getConnection().query(sql, concpets);
         return res;
     }
+   */
+
 
     async getConceptById(conceptId: number): Promise<Concept> {
 
@@ -234,6 +235,40 @@ export class DBAdapter {
             return new Concept(res[0].id, res[0].code, res[0].shortname);
 
         return undefined;
+    }
+
+    // Get all the entity concepts for this factory, on verb contained_in_file
+    async getEntityConcepts(is_a: string, lastId?: string, limit?: string): Promise<Concept[]> {
+
+        let limitQ = "";
+        let lastIdQ = "";
+
+        if (lastId)
+            lastIdQ = " and id < " + lastId + " order by id desc";
+        else {
+            lastIdQ = " order by id desc";
+        }
+
+        if (limit)
+            limitQ = " limit " + limit;
+
+        let sql = "select id, code, shortname from " + this.tables.get("concepts") + " where code = ? " +
+            " and shortname is null " + lastIdQ + limitQ;
+
+        let res = await this.getConnection().query(sql, Concept.ENTITY_CONCEPT_CODE_PREFIX + is_a);
+
+        let concpets: Concept[] = [];
+
+        if (res?.length > 0) {
+            res.forEach(row => {
+                concpets.push(
+                    new Concept(row.id, row.code, row.shortname)
+                );
+            });
+        }
+
+        return concpets;
+
     }
 
     async addConcept(c: Concept): Promise<Concept> {
