@@ -48,7 +48,7 @@ var Utils = /** @class */ (function () {
             database: "lindt_helvetia",
             env: "fondue",
             host: "mysql-lindt.alwaysdata.net",
-            password: "!!Wak4bewq",
+            password: "",
             multipleStatements: true
         };
     };

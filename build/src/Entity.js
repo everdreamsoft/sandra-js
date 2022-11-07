@@ -93,27 +93,25 @@ var Entity = /** @class */ (function () {
                         _b = [_c.sent()];
                         return [4 /*yield*/, SystemConcepts_1.SystemConcepts.get(target)];
                     case 2: return [4 /*yield*/, _a.apply(this, _b.concat([_c.sent(), refs]))];
-                    case 3:
-                        _c.sent();
-                        return [2 /*return*/];
+                    case 3: return [2 /*return*/, _c.sent()];
                 }
             });
         });
     };
-    Entity.prototype.join = function (verb, entity) {
+    Entity.prototype.join = function (verb, entity, refs) {
+        if (refs === void 0) { refs = null; }
         return __awaiter(this, void 0, void 0, function () {
-            var t, _a, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var t, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        _a = Triplet_1.Triplet.bind;
-                        _b = [void 0, -1, this.subject];
+                        _a = this.addTriplet;
                         return [4 /*yield*/, SystemConcepts_1.SystemConcepts.get(verb)];
-                    case 1:
-                        t = new (_a.apply(Triplet_1.Triplet, _b.concat([_c.sent(), entity.getSubject()])))();
+                    case 1: return [4 /*yield*/, _a.apply(this, [_b.sent(), entity.getSubject(), refs])];
+                    case 2:
+                        t = _b.sent();
                         t.setJoinedEntity(entity);
-                        this.triplets.push(t);
-                        return [2 /*return*/];
+                        return [2 /*return*/, t];
                 }
             });
         });
@@ -130,7 +128,7 @@ var Entity = /** @class */ (function () {
                     refs.forEach(function (ref) { return ref.setTripletLink(t); });
                     (_a = this.references).push.apply(_a, __spreadArray([], __read(refs), false));
                 }
-                return [2 /*return*/];
+                return [2 /*return*/, t];
             });
         });
     };
