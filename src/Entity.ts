@@ -31,14 +31,14 @@ export class Entity {
     getPushedStatus() { return this.pushedStatus; }
 
 
-    async brother(verb: string, target: string, refs: Reference[] = null) {
-        await this.addTriplet(await SystemConcepts.get(verb), await SystemConcepts.get(target), refs)
+    async brother(verb: string, target: string, refs: Reference[] = null): Promise<Triplet> {
+        return await this.addTriplet(await SystemConcepts.get(verb), await SystemConcepts.get(target), refs)
     }
 
-    async join(verb: string, entity: Entity) {
-        let t = new Triplet(-1, this.subject, await SystemConcepts.get(verb), entity.getSubject());
+    async join(verb: string, entity: Entity, refs: Reference[] = null): Promise<Triplet> {
+        let t = await this.addTriplet(await SystemConcepts.get(verb), entity.getSubject(), refs)
         t.setJoinedEntity(entity);
-        this.triplets.push(t);
+        return t;
     }
 
     async addTriplet(verb: Concept, target: Concept, refs: Reference[] = null) {
@@ -51,6 +51,7 @@ export class Entity {
             this.references.push(...refs);
         }
 
+        return t;
     }
 
     isEqualTo(entity: Entity) {
