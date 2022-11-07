@@ -81,7 +81,7 @@ export class EntityFactory {
     // Pushing entities to database, without batch insertion //
     async push() {
 
-        for (let index = 0; index < this.entityArray.length; index++) {
+        for (let index = 0; index < this.entityArray?.length; index++) {
 
             let entity = this.entityArray[index];
 
@@ -96,8 +96,8 @@ export class EntityFactory {
                 let t = entity.getTriplets()[indexTriplet];
 
                 // Check if this is joined entity othewise push it also
-                if (t.getJoinedentity()) {
-                    await t.getJoinedentity().getFactory().push();
+                if (t.getJoinedEntity()) {
+                    await t.getJoinedEntity().getFactory().push();
                 }
 
                 await (await DBAdapter.getInstance()).addTriplet(t);
@@ -114,6 +114,21 @@ export class EntityFactory {
         }
 
     }
+
+
+    async pushBatch() {
+        
+        let concepts = [];
+
+        for (let index = 0; index < this.entityArray?.length; index++) {
+            let e = this.entityArray[index];
+            concepts.push(e.getSubject());
+        }
+
+        await (await DBAdapter.getInstance()).addConceptsBatch(concepts);
+
+    }
+
 
     // Loads all entities with the given reference 
     async load(ref: Reference) {

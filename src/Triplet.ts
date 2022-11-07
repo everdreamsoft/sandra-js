@@ -35,7 +35,7 @@ export class Triplet {
         return this.target;
     }
 
-    getJoinedentity() {
+    getJoinedEntity() {
         return this.joinedEntity;
     }
 

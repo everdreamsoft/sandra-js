@@ -17,8 +17,7 @@ export class SystemConcepts {
                 return SystemConcepts.concepts[i];
         }
 
-        SystemConcepts.concepts.push(concept);
-        return concept
+        throw new Error("Not a system concpet, trying to push shortname with null value");
 
     }
 

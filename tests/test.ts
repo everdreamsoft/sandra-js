@@ -59,16 +59,39 @@ export class Test {
         console.log("");
 
     }
-    async testEnityLoadAll() {
 
+    async testEnityLoadAll() {
         let planetFactory = new EntityFactory("exo_planet", "exo_planet_file", await SystemConcepts.get("name"));
         await planetFactory.loadEntityConcepts(null, "2");
         console.log("");
+    }
+
+    async testBatchPush() {
+
+        let planetFactory = new EntityFactory("exo_planet", "exo_planet_file", await SystemConcepts.get("name"));
+
+        // Creating new entities 
+        await planetFactory.create([]);
+        await planetFactory.create([]);
+        await planetFactory.create([]);
+        await planetFactory.create([]);
+        await planetFactory.create([]);
+        await planetFactory.create([]);
+
+        await planetFactory.pushBatch();
 
     }
+
+    async testJetskiEventsPush()
+    {
+
+        
+
+    }
+
 
 
 }
 
 let test = new Test();
-test.testEnityLoadAll();
+test.testBatchPush();

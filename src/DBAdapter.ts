@@ -310,4 +310,86 @@ export class DBAdapter {
         return undefined;
     }
 
+    async addRefsBatch(refs: Reference[]): Promise<any> {
+
+        let refData = [];
+
+        refs?.forEach(ref => {
+            refData.push(ref.getId(), ref.getIdConcept(), ref.getTripletLink(), ref.getValue());
+        });
+
+        let sql = "insert ignore into " + this.tables.get("references") + " (id, idConcept, linkReferenced, value) values (?, ? ,? ,?)";
+
+        let res = await this.getConnection().batch(sql, [refData]);
+
+        return res;
+
+    }
+
+    async addConceptsBatch(concepts: Concept[]): Promise<any> {
+
+        let conceptsData = [];
+
+        let id = await this.getMaxConceptId();
+
+        concepts?.forEach(concept => {
+            id = id + 1;
+            conceptsData.push([id, concept.getCode(), concept.getShortname()]);
+        });
+
+        let sql = "insert ignore into " + this.tables.get("concepts") + " (id, code, shortname) values (?, ? ,?)";
+
+        let res = await this.getConnection().batch(sql, conceptsData);
+
+        return res;
+
+    }
+
+    async addTripletsBatch(triplets: Triplet[]): Promise<any> {
+
+        let tripletsData = [];
+
+        triplets?.forEach(t => {
+            tripletsData.push([t.getDBArrayFormat()]);
+        });
+
+        let sql = "insert ignore into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
+
+        let res = await this.getConnection().batch(sql, tripletsData);
+
+        return res;
+
+    }
+
+    async addReferencesBatch(refs: Reference[])
+    {
+
+        let refsData = [];
+
+        refs?.forEach(r => {
+            refsData.push([r.getDBArrayFormat()]);
+        });
+
+        let sql = "insert ignore into " + this.tables.get("references") + " (id, idConcept, linkReferenced, value) values (?, ?, ?, ?) ";
+
+        let res = await this.getConnection().batch(sql, refsData);
+
+        return res;
+
+    }
+    
+
+    async getMaxConceptId() {
+
+        let sql = "select max(id) as id from " + this.tables.get("concepts");
+        
+        let res = await this.getConnection().query(sql);
+
+        if (res?.length > 0)
+            return res[0].id;
+
+        return 0;
+
+    }
+
 }
