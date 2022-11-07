@@ -1,46 +1,43 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.Triplet = void 0;
-var Triplet = /** @class */ (function () {
-    function Triplet(id, subject, verb, target, flag) {
-        if (flag === void 0) { flag = false; }
+class Triplet {
+    constructor(id, subject, verb, target, flag = false) {
         this.id = id;
         this.subject = subject;
         this.verb = verb;
         this.target = target;
         this.flag = flag;
     }
-    Triplet.prototype.getId = function () {
+    getId() {
         return this.id;
-    };
-    Triplet.prototype.getSubject = function () {
+    }
+    getSubject() {
         return this.subject;
-    };
-    Triplet.prototype.getVerb = function () {
+    }
+    getVerb() {
         return this.verb;
-    };
-    Triplet.prototype.getTarget = function () {
+    }
+    getTarget() {
         return this.target;
-    };
-    Triplet.prototype.getJoinedEntity = function () {
+    }
+    getJoinedEntity() {
         return this.joinedEntity;
-    };
-    Triplet.prototype.getDBArrayFormat = function (withId) {
-        if (withId === void 0) { withId = true; }
+    }
+    getDBArrayFormat(withId = true) {
         if (withId)
             return [this.id.toString(), this.subject.getId().toString(), this.verb.getId().toString(),
                 this.target.getId().toString()];
         else
             return [this.subject.getId().toString(), this.verb.getId().toString(),
                 this.target.getId().toString()];
-    };
-    Triplet.prototype.setId = function (id) {
+    }
+    setId(id) {
         this.id = id;
-    };
-    Triplet.prototype.setJoinedEntity = function (entity) {
+    }
+    setJoinedEntity(entity) {
         this.joinedEntity = entity;
-    };
-    return Triplet;
-}());
+    }
+}
 exports.Triplet = Triplet;
 //# sourceMappingURL=Triplet.js.map

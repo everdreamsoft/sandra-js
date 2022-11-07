@@ -1,35 +1,33 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.Concept = void 0;
-var Concept = /** @class */ (function () {
-    function Concept(id, code, shortname) {
+class Concept {
+    constructor(id, code, shortname) {
         this.id = id;
         this.code = code;
         this.shortname = shortname;
     }
-    Concept.prototype.getId = function () {
+    getId() {
         return this.id;
-    };
-    Concept.prototype.getCode = function () {
+    }
+    getCode() {
         return this.code;
-    };
-    Concept.prototype.getShortname = function () {
+    }
+    getShortname() {
         return this.shortname;
-    };
-    Concept.prototype.setId = function (id) {
+    }
+    setId(id) {
         this.id = id;
-    };
-    Concept.prototype.isSame = function (concept) {
+    }
+    isSame(concept) {
         return this.getShortname() === concept.getShortname();
-    };
-    Concept.prototype.getDBArrayFormat = function (withId) {
-        if (withId === void 0) { withId = true; }
+    }
+    getDBArrayFormat(withId = true) {
         if (withId)
             return [this.id.toString(), this.code, this.shortname];
         return [this.code, this.shortname];
-    };
-    Concept.prototype.getJSON = function (withId) {
-        if (withId === void 0) { withId = true; }
+    }
+    getJSON(withId = true) {
         if (withId)
             return {
                 "id": this.id.toString(),
@@ -40,10 +38,9 @@ var Concept = /** @class */ (function () {
             "code": this.code,
             "shortname": this.shortname
         };
-    };
-    Concept.SYSTEM_CONCEPT_CODE_PREFIX = "system concept ";
-    Concept.ENTITY_CONCEPT_CODE_PREFIX = "A ";
-    return Concept;
-}());
+    }
+}
 exports.Concept = Concept;
+Concept.SYSTEM_CONCEPT_CODE_PREFIX = "system concept ";
+Concept.ENTITY_CONCEPT_CODE_PREFIX = "A ";
 //# sourceMappingURL=Concept.js.map

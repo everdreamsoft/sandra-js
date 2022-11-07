@@ -1,0 +1,62 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Entity = void 0;
+const SystemConcepts_1 = require("./SystemConcepts");
+const Triplet_1 = require("./Triplet");
+class Entity {
+    constructor() {
+        this.triplets = [];
+        this.references = [];
+        this.pushedStatus = false;
+    }
+    setSubject(subject) { this.subject = subject; }
+    setRefs(refs) { this.references = refs; }
+    setUniqueRefConcept(c) { this.uniqueRefConcept = c; }
+    setFactory(factory) { this.factory = factory; }
+    setPushedStatus(status) { this.pushedStatus = status; }
+    getSubject() { return this.subject; }
+    getTriplets() { return this.triplets; }
+    getRefs() { return this.references; }
+    getFactory() { return this.factory; }
+    getPushedStatus() { return this.pushedStatus; }
+    async brother(verb, target, refs = null) {
+        return await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), await SystemConcepts_1.SystemConcepts.get(target), refs);
+    }
+    async join(verb, entity, refs = null) {
+        let t = await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), entity.getSubject(), refs);
+        t.setJoinedEntity(entity);
+        return t;
+    }
+    async addTriplet(verb, target, refs = null) {
+        let t = new Triplet_1.Triplet(-1, this.subject, verb, target);
+        this.triplets.push(t);
+        if (refs && (refs === null || refs === void 0 ? void 0 : refs.length) > 0) {
+            refs.forEach(ref => ref.setTripletLink(t));
+            this.references.push(...refs);
+        }
+        return t;
+    }
+    isEqualTo(entity) {
+        // Check the entity triplets is_a and contained_in_file 
+        let tripets1 = entity.getTriplets();
+        let tripets2 = this.getTriplets();
+        // Compare if they are same
+        let is_a_triplet1 = tripets1.find(t => t.getVerb().getShortname() === "is_a");
+        let is_a_triplet2 = tripets2.find(t => t.getVerb().getShortname() === "is_a");
+        if (is_a_triplet1.getTarget().getShortname() != is_a_triplet2.getTarget().getShortname())
+            return false;
+        let contained_in_file1 = tripets1.find(t => t.getVerb().getShortname() === "contained_in_file");
+        let contained_in_file2 = tripets2.find(t => t.getVerb().getShortname() === "contained_in_file");
+        if (contained_in_file1.getTarget().getShortname() != contained_in_file2.getTarget().getShortname())
+            return false;
+        let refs1 = entity.getRefs();
+        let refs2 = this.references;
+        let uniqueRef1 = refs1.find(ref => ref.getIdConcept().isSame(this.uniqueRefConcept));
+        let uniqueRef2 = refs2.find(ref => ref.getIdConcept().isSame(this.uniqueRefConcept));
+        if (uniqueRef1 && uniqueRef2)
+            return uniqueRef1.isEqualTo(uniqueRef2);
+        return false;
+    }
+}
+exports.Entity = Entity;
+//# sourceMappingURL=Entity.js.map
