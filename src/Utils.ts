@@ -13,7 +13,7 @@ export class Utils {
             database: "lindt_helvetia",
             env: "fondue",
             host: "mysql-lindt.alwaysdata.net",
-            password: "",
+            password: "!!Wak4bewq",
             multipleStatements: true
         } as IDBConfig;
 
