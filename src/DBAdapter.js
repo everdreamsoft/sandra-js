@@ -90,10 +90,29 @@ class DBAdapter {
         let triplets = [];
         if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
             res.forEach(row => {
-                triplets.push(new Triplet_1.Triplet(res[0].id, new Concept_1.Concept(res[0].subjectId, res[0].subjectCode, res[0].subjectShortname), verb, target));
+                triplets.push(new Triplet_1.Triplet(row.id, new Concept_1.Concept(row.subjectId, row.subjectCode, row.subjectShortname), verb, target));
             });
         }
         return triplets;
+    }
+    async getEntityConceptsByRefs(verb, target, refsValuesToSearch, refConcept) {
+        let refs = refsValuesToSearch.map(function (id) { return "'" + id + "'"; }).join(",");
+        let sql = "select  c.id, c.code, c.shortname, r.value from " +
+            this.tables.get("references") + "  as r " +
+            " join " + this.tables.get("triplets") + " as t on t.id = r.linkReferenced" +
+            " join " + this.tables.get("concepts") + " as c on t.idConceptStart = c.id" +
+            " and r.value in ( ? ) " +
+            " and r.idConcept = ? " +
+            " and t.idConceptLink =  ? " +
+            " and t.idConceptTarget = ? ";
+        let res = await this.getConnection().query(sql, [refsValuesToSearch, refConcept.getId(), verb.getId(), target.getId()]);
+        let map = new Map();
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
+            res.forEach(row => {
+                map.set(row.value, new Concept_1.Concept(row.id, row.code, row.shortname));
+            });
+        }
+        return map;
     }
     async getTripletsBySubject(subject) {
         let sql = "SELECT t.id as id, " +
@@ -114,70 +133,6 @@ class DBAdapter {
         }
         return triplets;
     }
-    /*
-       async getTripletByRefVal(refValue: string, refShortname: string, verb: string, target: string): Promise<Triplet> {
-   
-           let sqlConcepts = "select id, code, shortname from " + this.tables.get("concepts") + "  where shortname in (?,?,?)";
-           let concepts: [] = await this.getConnection().query(sqlConcepts, [refShortname, verb, target]);
-   
-           let refShortnameConcept: any = ((concepts.find((concept: any) => concept.shortname == refShortname)));
-           let verbConcept: any = ((concepts.find((concept: any) => concept.shortname == verb)));
-           let targetConcept: any = ((concepts.find((concept: any) => concept.shortname == target)));
-   
-           if (refShortnameConcept && verbConcept && targetConcept) {
-   
-               let sql = "select t.id, t.idConceptStart as subject, t.idConceptLink as verb, t.idConceptTarget as target from " + this.tables.get("triplets") + " as t join  " + this.tables.get("references") + " as r" +
-                   " on t.id = r.linkReferenced and t.idConceptLink = ? and t.idConceptTarget = ? and r.value = ? and" +
-                   " r.idConcept = ?";
-   
-               let res: any = await this.getConnection().query(sql, [verbConcept.id, targetConcept.id, refValue, refShortnameConcept.id]);
-   
-               if (res?.length > 0) {
-                   return new Triplet(res[0].id,
-                       new Concept(res[0].subject, "", ""),
-                       new Concept(verbConcept.id, "", verb),
-                       new Concept(targetConcept.id, "", target));
-               }
-   
-           }
-   
-           return null;
-   
-       }
-   
-       async getTripletsBySubjectId(subjectId: number) {
-   
-           let sql = "SELECT t.id as tripletId, t.idConceptStart as Subject, c.code as SubjectCode , " +
-               "t.idConceptLink as Verb, c2.shortname as VerbShortname , t.idConceptTarget as target, c3.shortname as TargetShortname FROM " +
-               this.tables.get("triplets") + " as t join " +
-               this.tables.get("concepts") + " as c on " +
-               "c.id = t.idConceptStart and  t.idConceptStart = ? " +
-               "join " + this.tables.get("concept") + " as c2 on c2.id = t.idConceptLink " +
-               "join " + this.tables.get("concept") + " as c3 on c3.id = t.idConceptTarget";
-   
-           let res = await this.getConnection().query(sql, [subjectId]);
-   
-           return res;
-   
-       }
-   
-       async getReferencesBySubjectId(subjectId: number) {
-              let sql = "SELECT r.*, c.shortname FROM " + this.tables.get("references") + " as r join " +
-               this.tables.get("concepts") + " as c on " +
-               "c.id = r.idConcept and  r.linkReferenced in " +
-               "(select id from " + this.tables.get("triplets") + " as t where idConceptStart = ?);";
-           let res = await this.getConnection().query(sql, [subjectId]);
-           return res;
-   
-       }
-
-       
-    async insertConcepts(concpets: string[][]) {
-        let sql = "insert into " + this.tables.get("concepts") + " (id, code, shortname) values (?,?,?)";
-        let res = await this.getConnection().query(sql, concpets);
-        return res;
-    }
-   */
     async getConceptById(conceptId) {
         let sql = "select id, code, shortname from " + this.tables.get("concepts") + " where id = ?";
         let res = await this.getConnection().query(sql, [conceptId]);

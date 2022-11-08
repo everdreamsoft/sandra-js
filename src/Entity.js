@@ -19,6 +19,14 @@ class Entity {
     getRefs() { return this.references; }
     getFactory() { return this.factory; }
     getPushedStatus() { return this.pushedStatus; }
+    getRef(concept) {
+        if (concept) {
+            let i = this.references.findIndex(ref => { return ref.getIdConcept().isSame(concept); });
+            if (i >= 0)
+                return this.references[i];
+        }
+        return null;
+    }
     async brother(verb, target, refs = null) {
         return await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), await SystemConcepts_1.SystemConcepts.get(target), refs);
     }

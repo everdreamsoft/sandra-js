@@ -31,6 +31,15 @@ export class Entity {
     getPushedStatus() { return this.pushedStatus; }
 
 
+    getRef(concept: Concept): Reference {
+        if (concept) {
+            let i = this.references.findIndex(ref => { return ref.getIdConcept().isSame(concept) });
+            if (i >= 0)
+                return this.references[i];
+        }
+        return null;
+    }
+
     async brother(verb: string, target: string, refs: Reference[] = null): Promise<Triplet> {
         return await this.addTriplet(await SystemConcepts.get(verb), await SystemConcepts.get(target), refs)
     }

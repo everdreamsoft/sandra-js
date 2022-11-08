@@ -20,6 +20,8 @@ export class EntityFactory {
         this.uniqueRefConcept = uniqueRefConcept;
     }
 
+    getEntities(): Entity[] { return this.entityArray; }
+
     async create(refs: Reference[]): Promise<Entity> {
 
         let e = new Entity();
@@ -97,7 +99,7 @@ export class EntityFactory {
 
                 // Check if this is joined entity othewise push it also
                 if (t.getJoinedEntity()) {
-                    await t.getJoinedEntity().getFactory().push();
+                    await t.getJoinedEntity().getFactory()?.push();
                 }
 
                 await (await DBAdapter.getInstance()).addTriplet(t);
@@ -129,9 +131,8 @@ export class EntityFactory {
 
     }
 
-
     // Loads all entities with the given reference 
-    async load(ref: Reference) {
+    async load(ref: Reference, iterateDown: boolean = false) {
 
         let entityTriplets: Triplet[] = await (await DBAdapter.getInstance()).getEntityTriplet(
             await SystemConcepts.get("contained_in_file"),
@@ -150,10 +151,13 @@ export class EntityFactory {
 
             for (let i = 0; i < triplets.length; i++) {
 
-                let e = await this.loadBySubject(triplets[i].getTarget());
+                if (iterateDown) {
 
-                if (e) {
-                    triplets[i].setJoinedEntity(e);
+                    let e = await this.loadBySubject(triplets[i].getTarget(), true);
+
+                    if (e) {
+                        triplets[i].setJoinedEntity(e);
+                    }
                 }
 
                 let r = await (await DBAdapter.getInstance()).getReferenceByTriplet(
@@ -166,6 +170,7 @@ export class EntityFactory {
 
             let e = new Entity();
             e.setSubject(entityTriplet.getSubject());
+            e.setPushedStatus(true);
             e.getTriplets().push(...triplets);
             e.getRefs().push(...refs);
             e.setUniqueRefConcept(this.uniqueRefConcept);
@@ -191,11 +196,14 @@ export class EntityFactory {
             let refs: Reference[] = [];
 
             for (let i = 0; i < triplets.length; i++) {
-                
-                let e = await this.loadBySubject(triplets[i].getTarget());
 
-                if (e) {
-                    triplets[i].setJoinedEntity(e);
+                if (iterateDown) {
+
+                    let e = await this.loadBySubject(triplets[i].getTarget(), true);
+
+                    if (e) {
+                        triplets[i].setJoinedEntity(e);
+                    }
                 }
 
                 let r = await (await DBAdapter.getInstance()).getReferenceByTriplet(
@@ -203,7 +211,6 @@ export class EntityFactory {
                 );
 
                 refs.push(...r);
-
 
             }
 
@@ -237,5 +244,30 @@ export class EntityFactory {
 
     }
 
+    async loadAllSubjects() {
+
+        let refs = this.entityArray.map(entity => {
+            let r = entity.getRef(this.uniqueRefConcept)
+            if (r) return r.getValue();
+        })
+
+        let entityConceptsMap: Map<string, Concept> = await (await DBAdapter.getInstance()).getEntityConceptsByRefs(
+            await SystemConcepts.get("contained_in_file"),
+            await SystemConcepts.get(this.contained_in_file),
+            refs,
+            this.uniqueRefConcept
+        );
+
+        this.entityArray.forEach(entity => {
+            let r = entity.getRef(this.uniqueRefConcept);
+            if (r) {
+                if (entityConceptsMap.get(r.getValue())) {
+                    entity.setPushedStatus(true);
+                    entity.setSubject(entityConceptsMap.get(r.getValue()));
+                }
+            }
+        });
+
+    }
 }
 
