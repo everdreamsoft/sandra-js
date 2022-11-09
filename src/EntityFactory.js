@@ -8,6 +8,7 @@ const SystemConcepts_1 = require("./SystemConcepts");
 class EntityFactory {
     constructor(is_a, contained_in_file, uniqueRefConcept) {
         this.entityArray = [];
+        this.pushedStatus = false;
         this.is_a = is_a;
         this.contained_in_file = contained_in_file;
         this.uniqueRefConcept = uniqueRefConcept;
@@ -28,6 +29,8 @@ class EntityFactory {
         this.add(e);
         return e;
     }
+    getPushedStatus() { return this.pushedStatus; }
+    setPushedStatus(status) { this.pushedStatus = status; }
     getIsAVerb() {
         return this.is_a;
     }
@@ -48,14 +51,20 @@ class EntityFactory {
             }
             else {
                 this.entityArray.push(entity);
+                if (!entity.getPushedStatus())
+                    this.setPushedStatus(false);
             }
         }
-        else
+        else {
             this.entityArray.push(entity);
+            if (!entity.getPushedStatus())
+                this.setPushedStatus(false);
+        }
     }
     // Pushing entities to database, without batch insertion //
     async push() {
         var _a, _b;
+        console.log("Pushing factory  - " + this.is_a + ", " + this.contained_in_file + " - " + this.entityArray.length);
         for (let index = 0; index < ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length); index++) {
             let entity = this.entityArray[index];
             if (entity.getPushedStatus()) {
@@ -68,7 +77,10 @@ class EntityFactory {
                 let t = entity.getTriplets()[indexTriplet];
                 // Check if this is joined entity othewise push it also
                 if (t.getJoinedEntity()) {
-                    await ((_b = t.getJoinedEntity().getFactory()) === null || _b === void 0 ? void 0 : _b.push());
+                    let factory = t.getJoinedEntity().getFactory();
+                    if (factory && !factory.getPushedStatus()) {
+                        await ((_b = t.getJoinedEntity().getFactory()) === null || _b === void 0 ? void 0 : _b.push());
+                    }
                 }
                 await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(t);
             }
@@ -78,15 +90,46 @@ class EntityFactory {
             }
             entity.setPushedStatus(true);
         }
+        this.setPushedStatus(true);
+        console.log("Pushed factory  - " + this.is_a + ", " + this.contained_in_file + " - " + this.entityArray.length);
     }
     async pushBatch() {
         var _a;
         let concepts = [];
+        let triplets = [];
+        let references = [];
+        let maxConceptId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxConceptId();
+        let maxTripletId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxTripletId();
+        let maxRefId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxReferenceId();
         for (let index = 0; index < ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length); index++) {
             let e = this.entityArray[index];
-            concepts.push(e.getSubject());
+            let s = e.getSubject();
+            let trps = e.getTriplets();
+            let refs = e.getRefs();
+            if (s.getId() == -1) {
+                maxConceptId = maxConceptId + 1;
+                s.setId(maxConceptId);
+                concepts.push(s);
+            }
+            trps.forEach(trp => {
+                if (trp.getId() == -1) {
+                    maxTripletId = maxTripletId + 1;
+                    trp.setId(maxTripletId);
+                    triplets.push(trp);
+                }
+            });
+            refs.forEach(ref => {
+                if (ref.getId() == -1) {
+                    maxRefId = maxRefId + 1;
+                    ref.setId(maxRefId);
+                    references.push(ref);
+                }
+            });
         }
         await (await DBAdapter_1.DBAdapter.getInstance()).addConceptsBatch(concepts);
+        await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets);
+        await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(references);
+        console.log("pushed batch ");
     }
     // Loads all entities with the given reference 
     async load(ref, iterateDown = false) {
@@ -159,9 +202,17 @@ class EntityFactory {
         this.entityArray.forEach(entity => {
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
-                if (entityConceptsMap.get(r.getValue())) {
+                let loadedS = entityConceptsMap.get(r.getValue());
+                if (loadedS) {
                     entity.setPushedStatus(true);
-                    entity.setSubject(entityConceptsMap.get(r.getValue()));
+                    let s = entity.getSubject();
+                    if (s) {
+                        s.setId(loadedS.getId());
+                        s.setCode(loadedS.getCode());
+                        s.setShortname(loadedS.getShortname());
+                    }
+                    else
+                        entity.setSubject(entityConceptsMap.get(r.getValue()));
                 }
             }
         });

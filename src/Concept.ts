@@ -30,6 +30,13 @@ export class Concept {
     setId(id: number) {
         this.id = id;
     }
+    setCode(code: string) {
+        this.code = code;
+    }
+
+    setShortname(sn: string) {
+        this.shortname = sn;
+    }
 
     isSame(concept: Concept): boolean {
         return this.getShortname() === concept.getShortname();

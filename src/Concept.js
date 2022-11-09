@@ -19,6 +19,12 @@ class Concept {
     setId(id) {
         this.id = id;
     }
+    setCode(code) {
+        this.code = code;
+    }
+    setShortname(sn) {
+        this.shortname = sn;
+    }
     isSame(concept) {
         return this.getShortname() === concept.getShortname();
     }

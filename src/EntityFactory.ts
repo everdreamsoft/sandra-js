@@ -13,6 +13,7 @@ export class EntityFactory {
     private uniqueRefConcept: Concept;
 
     private entityArray: Entity[] = [];
+    private pushedStatus = false;
 
     constructor(is_a: string, contained_in_file: string, uniqueRefConcept: Concept) {
         this.is_a = is_a;
@@ -45,8 +46,11 @@ export class EntityFactory {
         this.add(e);
 
         return e;
-
     }
+
+    getPushedStatus() { return this.pushedStatus; }
+
+    setPushedStatus(status: boolean) { this.pushedStatus = status; }
 
     getIsAVerb() {
         return this.is_a;
@@ -73,15 +77,23 @@ export class EntityFactory {
             }
             else {
                 this.entityArray.push(entity);
-            }
-        }
-        else
-            this.entityArray.push(entity);
 
+                if (!entity.getPushedStatus())
+                    this.setPushedStatus(false);
+            }
+
+        }
+        else {
+            this.entityArray.push(entity);
+            if (!entity.getPushedStatus())
+                this.setPushedStatus(false);
+        }
     }
 
     // Pushing entities to database, without batch insertion //
     async push() {
+
+        console.log("Pushing factory  - " + this.is_a + ", " + this.contained_in_file + " - " + this.entityArray.length);
 
         for (let index = 0; index < this.entityArray?.length; index++) {
 
@@ -99,7 +111,12 @@ export class EntityFactory {
 
                 // Check if this is joined entity othewise push it also
                 if (t.getJoinedEntity()) {
-                    await t.getJoinedEntity().getFactory()?.push();
+                    let factory = t.getJoinedEntity().getFactory();
+
+                    if (factory && !factory.getPushedStatus()) {
+                        await t.getJoinedEntity().getFactory()?.push();
+                    }
+
                 }
 
                 await (await DBAdapter.getInstance()).addTriplet(t);
@@ -115,19 +132,59 @@ export class EntityFactory {
 
         }
 
-    }
+        this.setPushedStatus(true);
+        console.log("Pushed factory  - " + this.is_a + ", " + this.contained_in_file + " - " + this.entityArray.length);
 
+    }
 
     async pushBatch() {
 
         let concepts = [];
+        let triplets = [];
+        let references = [];
+
+        let maxConceptId = await (await DBAdapter.getInstance()).getMaxConceptId();
+        let maxTripletId = await (await DBAdapter.getInstance()).getMaxTripletId();
+        let maxRefId = await (await DBAdapter.getInstance()).getMaxReferenceId();
 
         for (let index = 0; index < this.entityArray?.length; index++) {
+
             let e = this.entityArray[index];
-            concepts.push(e.getSubject());
+
+            let s = e.getSubject();
+            let trps = e.getTriplets();
+            let refs = e.getRefs();
+
+            if (s.getId() == -1) {
+                maxConceptId = maxConceptId + 1;
+                s.setId(maxConceptId)
+                concepts.push(s);
+            }
+
+            trps.forEach(trp => {
+                if (trp.getId() == -1) {
+                    maxTripletId = maxTripletId + 1;
+                    trp.setId(maxTripletId)
+                    triplets.push(trp);
+                }
+            });
+
+            refs.forEach(ref => {
+                if (ref.getId() == -1) {
+                    maxRefId = maxRefId + 1;
+                    ref.setId(maxRefId)
+                    references.push(ref);
+                }
+            });
+
+
         }
 
         await (await DBAdapter.getInstance()).addConceptsBatch(concepts);
+        await (await DBAdapter.getInstance()).addTripletsBatch(triplets);
+        await (await DBAdapter.getInstance()).addReferencesBatch(references);
+
+        console.log("pushed batch ")
 
     }
 
@@ -261,9 +318,17 @@ export class EntityFactory {
         this.entityArray.forEach(entity => {
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
-                if (entityConceptsMap.get(r.getValue())) {
+                let loadedS = entityConceptsMap.get(r.getValue());
+                if (loadedS) {
                     entity.setPushedStatus(true);
-                    entity.setSubject(entityConceptsMap.get(r.getValue()));
+                    let s = entity.getSubject();
+                    if (s) {
+                        s.setId(loadedS.getId());
+                        s.setCode(loadedS.getCode());
+                        s.setShortname(loadedS.getShortname());
+                    }
+                    else
+                        entity.setSubject(entityConceptsMap.get(r.getValue()));
                 }
             }
         });

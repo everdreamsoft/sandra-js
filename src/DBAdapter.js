@@ -207,10 +207,8 @@ class DBAdapter {
     }
     async addConceptsBatch(concepts) {
         let conceptsData = [];
-        let id = await this.getMaxConceptId();
         concepts === null || concepts === void 0 ? void 0 : concepts.forEach(concept => {
-            id = id + 1;
-            conceptsData.push([id, concept.getCode(), concept.getShortname()]);
+            conceptsData.push(concept.getDBArrayFormat(true));
         });
         let sql = "insert ignore into " + this.tables.get("concepts") + " (id, code, shortname) values (?, ? ,?)";
         let res = await this.getConnection().batch(sql, conceptsData);
@@ -219,7 +217,7 @@ class DBAdapter {
     async addTripletsBatch(triplets) {
         let tripletsData = [];
         triplets === null || triplets === void 0 ? void 0 : triplets.forEach(t => {
-            tripletsData.push([t.getDBArrayFormat()]);
+            tripletsData.push(t.getDBArrayFormat(true));
         });
         let sql = "insert ignore into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
         let res = await this.getConnection().batch(sql, tripletsData);
@@ -228,7 +226,7 @@ class DBAdapter {
     async addReferencesBatch(refs) {
         let refsData = [];
         refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
-            refsData.push([r.getDBArrayFormat()]);
+            refsData.push(r.getDBArrayFormat(true));
         });
         let sql = "insert ignore into " + this.tables.get("references") + " (id, idConcept, linkReferenced, value) values (?, ?, ?, ?) ";
         let res = await this.getConnection().batch(sql, refsData);
@@ -236,6 +234,20 @@ class DBAdapter {
     }
     async getMaxConceptId() {
         let sql = "select max(id) as id from " + this.tables.get("concepts");
+        let res = await this.getConnection().query(sql);
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
+            return res[0].id;
+        return 0;
+    }
+    async getMaxTripletId() {
+        let sql = "select max(id) as id from " + this.tables.get("triplets");
+        let res = await this.getConnection().query(sql);
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
+            return res[0].id;
+        return 0;
+    }
+    async getMaxReferenceId() {
+        let sql = "select max(id) as id from " + this.tables.get("references");
         let res = await this.getConnection().query(sql);
         if ((res === null || res === void 0 ? void 0 : res.length) > 0)
             return res[0].id;

@@ -293,11 +293,8 @@ export class DBAdapter {
 
         let conceptsData = [];
 
-        let id = await this.getMaxConceptId();
-
         concepts?.forEach(concept => {
-            id = id + 1;
-            conceptsData.push([id, concept.getCode(), concept.getShortname()]);
+            conceptsData.push(concept.getDBArrayFormat(true));
         });
 
         let sql = "insert ignore into " + this.tables.get("concepts") + " (id, code, shortname) values (?, ? ,?)";
@@ -313,7 +310,7 @@ export class DBAdapter {
         let tripletsData = [];
 
         triplets?.forEach(t => {
-            tripletsData.push([t.getDBArrayFormat()]);
+            tripletsData.push(t.getDBArrayFormat(true));
         });
 
         let sql = "insert ignore into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
@@ -329,7 +326,7 @@ export class DBAdapter {
         let refsData = [];
 
         refs?.forEach(r => {
-            refsData.push([r.getDBArrayFormat()]);
+            refsData.push(r.getDBArrayFormat(true));
         });
 
         let sql = "insert ignore into " + this.tables.get("references") + " (id, idConcept, linkReferenced, value) values (?, ?, ?, ?) ";
@@ -343,6 +340,34 @@ export class DBAdapter {
     async getMaxConceptId() {
 
         let sql = "select max(id) as id from " + this.tables.get("concepts");
+
+        let res = await this.getConnection().query(sql);
+
+        if (res?.length > 0)
+            return res[0].id;
+
+        return 0;
+
+    }
+
+
+    async getMaxTripletId() {
+
+        let sql = "select max(id) as id from " + this.tables.get("triplets");
+
+        let res = await this.getConnection().query(sql);
+
+        if (res?.length > 0)
+            return res[0].id;
+
+        return 0;
+
+    }
+
+
+    async getMaxReferenceId() {
+
+        let sql = "select max(id) as id from " + this.tables.get("references");
 
         let res = await this.getConnection().query(sql);
 
