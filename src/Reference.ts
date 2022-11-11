@@ -1,4 +1,3 @@
-import { threadId } from "worker_threads";
 import { Concept } from "./Concept";
 import { Triplet } from "./Triplet";
 

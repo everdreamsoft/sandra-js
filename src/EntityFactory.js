@@ -51,6 +51,9 @@ class EntityFactory {
     getIsAVerb() {
         return this.is_a;
     }
+    getFullName() {
+        return "is a - " + this.is_a + " and contained in file - " + this.contained_in_file;
+    }
     getContainedInFileVerb() {
         return this.contained_in_file;
     }
@@ -104,9 +107,9 @@ class EntityFactory {
     // }
     // Pushing entities to database, without batch insertion //
     async push() {
-        var _a, _b;
-        console.log("Pushing factory  - " + this.is_a + ", " + this.contained_in_file + " - " + this.entityArray.length);
-        for (let index = 0; index < ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length); index++) {
+        var _a, _b, _c;
+        console.log("Pushing factory  - " + this.getFullName() + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
+        for (let index = 0; index < ((_b = this.entityArray) === null || _b === void 0 ? void 0 : _b.length); index++) {
             let entity = this.entityArray[index];
             if (entity.getPushedStatus()) {
                 continue;
@@ -120,7 +123,7 @@ class EntityFactory {
                 if (t.getJoinedEntity()) {
                     let factory = t.getJoinedEntity().getFactory();
                     if (factory && !factory.getPushedStatus()) {
-                        await ((_b = t.getJoinedEntity().getFactory()) === null || _b === void 0 ? void 0 : _b.push());
+                        await ((_c = t.getJoinedEntity().getFactory()) === null || _c === void 0 ? void 0 : _c.push());
                     }
                 }
                 await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(t);
@@ -132,10 +135,10 @@ class EntityFactory {
             entity.setPushedStatus(true);
         }
         this.setPushedStatus(true);
-        console.log("Pushed factory  - " + this.is_a + ", " + this.contained_in_file + " - " + this.entityArray.length);
+        console.log("Pushed factory  - " + this.getFullName());
     }
     async pushBatch() {
-        var _a;
+        var _a, _b, _c;
         let concepts = [];
         let triplets = [];
         let references = [];
@@ -152,16 +155,11 @@ class EntityFactory {
                 s.setId(maxConceptId);
                 concepts.push(s);
             }
-            if (trps.length != 9 && this.is_a == "A blockchainEvent")
-                console.log("trplesc count not 9" + s.getId());
             trps.forEach(trp => {
                 if (trp.getId() == -1) {
                     maxTripletId = maxTripletId + 1;
                     trp.setId(maxTripletId);
                     triplets.push(trp);
-                }
-                else {
-                    console.log("skip triplet" + s.getId() + ", ");
                 }
             });
             refs.forEach(ref => {
@@ -172,10 +170,14 @@ class EntityFactory {
                 }
             });
         }
-        await (await DBAdapter_1.DBAdapter.getInstance()).addConceptsBatch(concepts);
-        await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets);
-        await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(references);
-        console.log("pushed batch ");
+        console.log("Pushing factory  batch - " + this.getFullName() + ((_b = this.entityArray) === null || _b === void 0 ? void 0 : _b.length));
+        if (concepts && concepts.length > 0)
+            await (await DBAdapter_1.DBAdapter.getInstance()).addConceptsBatch(concepts);
+        if (triplets && triplets.length > 0)
+            await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets);
+        if (references && references.length > 0)
+            await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(references);
+        console.log("Pushed factory batch - " + this.getFullName() + ((_c = this.entityArray) === null || _c === void 0 ? void 0 : _c.length));
     }
     // Loads all entities with the given reference 
     async load(ref, iterateDown = false) {
