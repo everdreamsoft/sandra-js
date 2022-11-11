@@ -94,4 +94,4 @@ export class Test {
 }
 
 let test = new Test();
-test.testBatchPush();
+test.testEntityPush();

@@ -15,18 +15,35 @@ class EntityFactory {
     }
     getEntities() { return this.entityArray; }
     async create(refs) {
-        let e = new Entity_1.Entity();
-        let subConcept = new Concept_1.Concept(-1, Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
-        e.setFactory(this);
-        e.setSubject(subConcept);
-        // Set unique ref concept
-        e.setUniqueRefConcept(this.uniqueRefConcept);
-        // Adding is_a verb triplet
-        await e.brother("is_a", this.is_a);
-        // Adding contained_in_file triplet
-        await e.brother("contained_in_file", this.contained_in_file, refs);
-        // Adding it to the factory list
-        this.add(e);
+        // Check if it arelady exist
+        let uniqueRef1 = null;
+        // Finding reference in array for unique concept
+        if (this.uniqueRefConcept)
+            uniqueRef1 = refs.find(ref => { var _a; return (_a = this.uniqueRefConcept) === null || _a === void 0 ? void 0 : _a.isSame(ref.getIdConcept()); });
+        let e = this.getEntityByRef(uniqueRef1);
+        if (e) {
+            let ts = e.getTriplets();
+            let tIndex = ts.findIndex(t => { return t.getVerb().getShortname() == "contained_in_file"; });
+            if (tIndex >= 0) {
+                let t = ts[tIndex];
+                refs.forEach(ref => ref.setTripletLink(t));
+                e.setRefs(refs);
+            }
+        }
+        else {
+            e = new Entity_1.Entity();
+            let subConcept = new Concept_1.Concept(-1, Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
+            e.setFactory(this);
+            e.setSubject(subConcept);
+            // Set unique ref concept
+            e.setUniqueRefConcept(this.uniqueRefConcept);
+            // Adding is_a verb triplet
+            await e.brother("is_a", this.is_a);
+            // Adding contained_in_file triplet
+            await e.brother("contained_in_file", this.contained_in_file, refs);
+            // Adding it to the factory list
+            this.entityArray.push(e);
+        }
         return e;
     }
     getPushedStatus() { return this.pushedStatus; }
@@ -43,24 +60,48 @@ class EntityFactory {
     getUniqueRefConcept() {
         return this.uniqueRefConcept;
     }
-    add(entity) {
+    getEntityByRef(ref) {
+        let index = this.entityArray.findIndex(e => {
+            let refs1 = e.getRefs();
+            if (refs1 && ref) {
+                let uniqueRef1 = refs1.find(r => { var _a; return (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.isSame(ref.getIdConcept()); });
+                return uniqueRef1.isEqualTo(ref);
+            }
+            return false;
+        });
+        if (index >= 0)
+            return this.entityArray[index];
+        return null;
+    }
+    getEntity(entity) {
         if (this.uniqueRefConcept && this.uniqueRefConcept.getShortname().length > 0) {
             let index = this.entityArray.findIndex(e => e.isEqualTo(entity));
             if (index >= 0) {
-                this.entityArray[index] = entity;
+                return this.entityArray[index];
             }
-            else {
-                this.entityArray.push(entity);
-                if (!entity.getPushedStatus())
-                    this.setPushedStatus(false);
-            }
-        }
-        else {
-            this.entityArray.push(entity);
-            if (!entity.getPushedStatus())
-                this.setPushedStatus(false);
         }
     }
+    // add(entity: Entity) {
+    //     if (this.uniqueRefConcept && this.uniqueRefConcept.getShortname().length > 0) {
+    //         let index = this.entityArray.findIndex(e => e.isEqualTo(entity));
+    //         if (index >= 0) {
+    //             // Copy new values to current entity 
+    //             let e = this.entityArray[index];
+    //             e.getSubject().copy(entity.getSubject());
+    //             e.getTriplets()
+    //         }
+    //         else {
+    //             this.entityArray.push(entity);
+    //             if (!entity.getPushedStatus())
+    //                 this.setPushedStatus(false);
+    //         }
+    //     }
+    //     else {
+    //         this.entityArray.push(entity);
+    //         if (!entity.getPushedStatus())
+    //             this.setPushedStatus(false);
+    //     }
+    // }
     // Pushing entities to database, without batch insertion //
     async push() {
         var _a, _b;
@@ -111,11 +152,16 @@ class EntityFactory {
                 s.setId(maxConceptId);
                 concepts.push(s);
             }
+            if (trps.length != 9 && this.is_a == "A blockchainEvent")
+                console.log("trplesc count not 9" + s.getId());
             trps.forEach(trp => {
                 if (trp.getId() == -1) {
                     maxTripletId = maxTripletId + 1;
                     trp.setId(maxTripletId);
                     triplets.push(trp);
+                }
+                else {
+                    console.log("skip triplet" + s.getId() + ", ");
                 }
             });
             refs.forEach(ref => {
@@ -154,7 +200,7 @@ class EntityFactory {
             e.getTriplets().push(...triplets);
             e.getRefs().push(...refs);
             e.setUniqueRefConcept(this.uniqueRefConcept);
-            this.add(e);
+            this.entityArray.push(e);
         }
     }
     async loadBySubject(subject, iterateDown = false) {
@@ -202,7 +248,7 @@ class EntityFactory {
         this.entityArray.forEach(entity => {
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
-                let loadedS = entityConceptsMap.get(r.getValue());
+                let loadedS = entityConceptsMap.get(r.getValue().toString());
                 if (loadedS) {
                     entity.setPushedStatus(true);
                     let s = entity.getSubject();

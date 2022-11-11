@@ -28,6 +28,11 @@ class Concept {
     isSame(concept) {
         return this.getShortname() === concept.getShortname();
     }
+    copy(c) {
+        this.id = c.getId();
+        this.code = c.getCode();
+        this.shortname = c.getShortname();
+    }
     getDBArrayFormat(withId = true) {
         if (withId)
             return [this.id.toString(), this.code, this.shortname];

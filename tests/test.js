@@ -57,5 +57,5 @@ class Test {
 }
 exports.Test = Test;
 let test = new Test();
-test.testBatchPush();
+test.testEntityPush();
 //# sourceMappingURL=test.js.map

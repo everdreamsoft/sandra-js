@@ -1,3 +1,4 @@
+import { threadId } from "worker_threads";
 import { Concept } from "./Concept";
 import { Triplet } from "./Triplet";
 
@@ -34,7 +35,6 @@ export class Reference {
 
     setIdConcept(c: Concept) { this.concept = c; }
 
-    // Utilty Functions 
 
     // Compare a ref object with current 
     isEqualTo(ref: Reference) {

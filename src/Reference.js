@@ -18,7 +18,6 @@ class Reference {
     setTripletLink(t) { this.tripletLink = t; }
     setValue(val) { this.value = val; }
     setIdConcept(c) { this.concept = c; }
-    // Utilty Functions 
     // Compare a ref object with current 
     isEqualTo(ref) {
         return this.getIdConcept().isSame(ref.getIdConcept()) && this.getValue() == ref.getValue();

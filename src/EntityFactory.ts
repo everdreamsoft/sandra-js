@@ -25,25 +25,48 @@ export class EntityFactory {
 
     async create(refs: Reference[]): Promise<Entity> {
 
-        let e = new Entity();
+        // Check if it arelady exist
+        let uniqueRef1 = null;
 
-        let subConcept = new Concept(-1, Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
+        // Finding reference in array for unique concept
+        if (this.uniqueRefConcept)
+            uniqueRef1 = refs.find(ref => this.uniqueRefConcept?.isSame(ref.getIdConcept()));
 
-        e.setFactory(this);
+        let e = this.getEntityByRef(uniqueRef1);
 
-        e.setSubject(subConcept);
+        if (e) {
+            let ts = e.getTriplets();
+            let tIndex = ts.findIndex(t => { return t.getVerb().getShortname() == "contained_in_file" });
 
-        // Set unique ref concept
-        e.setUniqueRefConcept(this.uniqueRefConcept);
+            if (tIndex >= 0) {
+                let t = ts[tIndex];
+                refs.forEach(ref => ref.setTripletLink(t));
+                e.setRefs(refs);
+            }
+        }
+        else {
 
-        // Adding is_a verb triplet
-        await e.brother("is_a", this.is_a);
+            e = new Entity();
 
-        // Adding contained_in_file triplet
-        await e.brother("contained_in_file", this.contained_in_file, refs);
+            let subConcept = new Concept(-1, Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
 
-        // Adding it to the factory list
-        this.add(e);
+            e.setFactory(this);
+
+            e.setSubject(subConcept);
+
+            // Set unique ref concept
+            e.setUniqueRefConcept(this.uniqueRefConcept);
+
+            // Adding is_a verb triplet
+            await e.brother("is_a", this.is_a);
+
+            // Adding contained_in_file triplet
+            await e.brother("contained_in_file", this.contained_in_file, refs);
+
+            // Adding it to the factory list
+            this.entityArray.push(e);
+
+        }
 
         return e;
     }
@@ -54,6 +77,10 @@ export class EntityFactory {
 
     getIsAVerb() {
         return this.is_a;
+    }
+
+    getFullName() {
+        return "is a - " + this.is_a + " and contained in file - " + this.contained_in_file;
     }
 
     getContainedInFileVerb() {
@@ -68,32 +95,63 @@ export class EntityFactory {
         return this.uniqueRefConcept;
     }
 
-    add(entity: Entity) {
+    getEntityByRef(ref: Reference) {
 
+        let index = this.entityArray.findIndex(e => {
+            let refs1 = e.getRefs();
+            if (refs1 && ref) {
+                let uniqueRef1 = refs1.find(r => r.getIdConcept()?.isSame(ref.getIdConcept()));
+                return uniqueRef1.isEqualTo(ref);
+            }
+            return false;
+        });
+
+        if (index >= 0)
+            return this.entityArray[index];
+
+        return null;
+
+    }
+
+    getEntity(entity: Entity) {
         if (this.uniqueRefConcept && this.uniqueRefConcept.getShortname().length > 0) {
             let index = this.entityArray.findIndex(e => e.isEqualTo(entity));
             if (index >= 0) {
-                this.entityArray[index] = entity;
+                return this.entityArray[index];
             }
-            else {
-                this.entityArray.push(entity);
-
-                if (!entity.getPushedStatus())
-                    this.setPushedStatus(false);
-            }
-
-        }
-        else {
-            this.entityArray.push(entity);
-            if (!entity.getPushedStatus())
-                this.setPushedStatus(false);
         }
     }
 
+    // add(entity: Entity) {
+
+    //     if (this.uniqueRefConcept && this.uniqueRefConcept.getShortname().length > 0) {
+    //         let index = this.entityArray.findIndex(e => e.isEqualTo(entity));
+    //         if (index >= 0) {
+    //             // Copy new values to current entity 
+    //             let e = this.entityArray[index];
+
+    //             e.getSubject().copy(entity.getSubject());
+    //             e.getTriplets()
+
+    //         }
+    //         else {
+    //             this.entityArray.push(entity);
+    //             if (!entity.getPushedStatus())
+    //                 this.setPushedStatus(false);
+    //         }
+    //     }
+    //     else {
+    //         this.entityArray.push(entity);
+    //         if (!entity.getPushedStatus())
+    //             this.setPushedStatus(false);
+    //     }
+    // }
+
     // Pushing entities to database, without batch insertion //
+
     async push() {
 
-        console.log("Pushing factory  - " + this.is_a + ", " + this.contained_in_file + " - " + this.entityArray.length);
+        console.log("Pushing factory  - " + this.getFullName() + this.entityArray?.length);
 
         for (let index = 0; index < this.entityArray?.length; index++) {
 
@@ -133,7 +191,8 @@ export class EntityFactory {
         }
 
         this.setPushedStatus(true);
-        console.log("Pushed factory  - " + this.is_a + ", " + this.contained_in_file + " - " + this.entityArray.length);
+
+        console.log("Pushed factory  - " + this.getFullName());
 
     }
 
@@ -180,11 +239,18 @@ export class EntityFactory {
 
         }
 
-        await (await DBAdapter.getInstance()).addConceptsBatch(concepts);
-        await (await DBAdapter.getInstance()).addTripletsBatch(triplets);
-        await (await DBAdapter.getInstance()).addReferencesBatch(references);
+        console.log("Pushing factory  batch - " + this.getFullName() + this.entityArray?.length);
 
-        console.log("pushed batch ")
+        if (concepts && concepts.length > 0)
+            await (await DBAdapter.getInstance()).addConceptsBatch(concepts);
+
+        if (triplets && triplets.length > 0)
+            await (await DBAdapter.getInstance()).addTripletsBatch(triplets);
+
+        if (references && references.length > 0)
+            await (await DBAdapter.getInstance()).addReferencesBatch(references);
+
+        console.log("Pushed factory batch - " + this.getFullName() + this.entityArray?.length);
 
     }
 
@@ -226,12 +292,13 @@ export class EntityFactory {
             }
 
             let e = new Entity();
+
             e.setSubject(entityTriplet.getSubject());
             e.setPushedStatus(true);
             e.getTriplets().push(...triplets);
             e.getRefs().push(...refs);
             e.setUniqueRefConcept(this.uniqueRefConcept);
-            this.add(e);
+            this.entityArray.push(e);
 
         }
 
@@ -318,7 +385,7 @@ export class EntityFactory {
         this.entityArray.forEach(entity => {
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
-                let loadedS = entityConceptsMap.get(r.getValue());
+                let loadedS = entityConceptsMap.get(r.getValue().toString());
                 if (loadedS) {
                     entity.setPushedStatus(true);
                     let s = entity.getSubject();

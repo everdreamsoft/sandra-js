@@ -39,6 +39,7 @@ export class Triplet {
         return this.joinedEntity;
     }
 
+
     getDBArrayFormat(withId: boolean = true) {
 
         if (withId)

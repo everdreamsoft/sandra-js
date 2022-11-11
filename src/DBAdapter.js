@@ -109,7 +109,7 @@ class DBAdapter {
         let map = new Map();
         if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
             res.forEach(row => {
-                map.set(row.value, new Concept_1.Concept(row.id, row.code, row.shortname));
+                map.set(row.value.toString(), new Concept_1.Concept(row.id, row.code, row.shortname));
             });
         }
         return map;
@@ -217,7 +217,10 @@ class DBAdapter {
     async addTripletsBatch(triplets) {
         let tripletsData = [];
         triplets === null || triplets === void 0 ? void 0 : triplets.forEach(t => {
-            tripletsData.push(t.getDBArrayFormat(true));
+            let arr = t.getDBArrayFormat(true);
+            arr.forEach(a => { if (a == "-1")
+                throw new Error("Invalid batch insert, unlinked concept found"); });
+            tripletsData.push(arr);
         });
         let sql = "insert ignore into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
         let res = await this.getConnection().batch(sql, tripletsData);
@@ -226,7 +229,10 @@ class DBAdapter {
     async addReferencesBatch(refs) {
         let refsData = [];
         refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
-            refsData.push(r.getDBArrayFormat(true));
+            let arr = r.getDBArrayFormat(true);
+            arr.forEach(a => { if (a == "-1")
+                throw new Error("Invalid batch insert, unlinked concept found"); });
+            refsData.push(arr);
         });
         let sql = "insert ignore into " + this.tables.get("references") + " (id, idConcept, linkReferenced, value) values (?, ?, ?, ?) ";
         let res = await this.getConnection().batch(sql, refsData);

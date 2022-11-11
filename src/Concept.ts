@@ -42,6 +42,12 @@ export class Concept {
         return this.getShortname() === concept.getShortname();
     }
 
+    copy(c: Concept) {
+        this.id = c.getId();
+        this.code = c.getCode();
+        this.shortname = c.getShortname();
+    }
+
     getDBArrayFormat(withId: boolean = true) {
         if (withId)
             return [this.id.toString(), this.code, this.shortname];
