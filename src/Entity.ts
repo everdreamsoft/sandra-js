@@ -3,7 +3,6 @@ import { EntityFactory } from "./EntityFactory";
 import { Reference } from "./Reference";
 import { SystemConcepts } from "./SystemConcepts";
 import { Triplet } from "./Triplet";
-import { Utils } from "./Utils";
 
 export class Entity {
 
