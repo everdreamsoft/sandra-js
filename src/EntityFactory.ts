@@ -1,6 +1,7 @@
 import { Concept } from "./Concept";
 import { DBAdapter } from "./DBAdapter";
 import { Entity } from "./Entity";
+import { LogManager } from "./loggers/LogManager";
 import { Reference } from "./Reference";
 import { SystemConcepts } from "./SystemConcepts";
 import { Triplet } from "./Triplet";
@@ -21,54 +22,6 @@ export class EntityFactory {
     }
 
     getEntities(): Entity[] { return this.entityArray; }
-
-    async create(refs: Reference[]): Promise<Entity> {
-
-        // Check if it arelady exist
-        let uniqueRef1 = null;
-
-        // Finding reference in array for unique concept
-        if (this.uniqueRefConcept)
-            uniqueRef1 = refs.find(ref => this.uniqueRefConcept?.isSame(ref.getIdConcept()));
-
-        let e = this.getEntityByRef(uniqueRef1);
-
-        if (e) {
-            let ts = e.getTriplets();
-            let tIndex = ts.findIndex(t => { return t.getVerb().getShortname() == "contained_in_file" });
-
-            if (tIndex >= 0) {
-                let t = ts[tIndex];
-                refs.forEach(ref => ref.setTripletLink(t));
-                e.setRefs(refs);
-            }
-        }
-        else {
-
-            e = new Entity();
-
-            let subConcept = new Concept(-1, Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
-
-            e.setFactory(this);
-
-            e.setSubject(subConcept);
-
-            // Set unique ref concept
-            e.setUniqueRefConcept(this.uniqueRefConcept);
-
-            // Adding is_a verb triplet
-            await e.brother("is_a", this.is_a);
-
-            // Adding contained_in_file triplet
-            await e.brother("contained_in_file", this.contained_in_file, refs);
-
-            // Adding it to the factory list
-            this.entityArray.push(e);
-
-        }
-
-        return e;
-    }
 
     getPushedStatus() { return this.pushedStatus; }
 
@@ -121,36 +74,58 @@ export class EntityFactory {
         }
     }
 
-    // add(entity: Entity) {
+    async create(refs: Reference[]): Promise<Entity> {
 
-    //     if (this.uniqueRefConcept && this.uniqueRefConcept.getShortname().length > 0) {
-    //         let index = this.entityArray.findIndex(e => e.isEqualTo(entity));
-    //         if (index >= 0) {
-    //             // Copy new values to current entity 
-    //             let e = this.entityArray[index];
+        // Check if it arelady exist
+        let uniqueRef1 = null;
 
-    //             e.getSubject().copy(entity.getSubject());
-    //             e.getTriplets()
+        // Finding reference in array for unique concept
+        if (this.uniqueRefConcept)
+            uniqueRef1 = refs.find(ref => this.uniqueRefConcept?.isSame(ref.getIdConcept()));
 
-    //         }
-    //         else {
-    //             this.entityArray.push(entity);
-    //             if (!entity.getPushedStatus())
-    //                 this.setPushedStatus(false);
-    //         }
-    //     }
-    //     else {
-    //         this.entityArray.push(entity);
-    //         if (!entity.getPushedStatus())
-    //             this.setPushedStatus(false);
-    //     }
-    // }
+        let e = this.getEntityByRef(uniqueRef1);
+
+        if (e) {
+            let ts = e.getTriplets();
+            let tIndex = ts.findIndex(t => { return t.getVerb().getShortname() == "contained_in_file" });
+
+            if (tIndex >= 0) {
+                let t = ts[tIndex];
+                refs.forEach(ref => ref.setTripletLink(t));
+                e.setRefs(refs);
+            }
+        }
+        else {
+
+            e = new Entity();
+
+            let subConcept = new Concept(-1, Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
+
+            e.setFactory(this);
+
+            e.setSubject(subConcept);
+
+            // Set unique ref concept
+            e.setUniqueRefConcept(this.uniqueRefConcept);
+
+            // Adding is_a verb triplet
+            await e.brother("is_a", this.is_a);
+
+            // Adding contained_in_file triplet
+            await e.brother("contained_in_file", this.contained_in_file, refs);
+
+            // Adding it to the factory list
+            this.entityArray.push(e);
+
+        }
+
+        return e;
+    }
 
     // Pushing entities to database, without batch insertion //
-
     async push() {
 
-        console.log("Pushing factory  - " + this.getFullName() + this.entityArray?.length);
+        LogManager.getInstance().info("Pushing factory  - " + this.getFullName() + ", length - " + this.entityArray?.length);
 
         for (let index = 0; index < this.entityArray?.length; index++) {
 
@@ -191,11 +166,13 @@ export class EntityFactory {
 
         this.setPushedStatus(true);
 
-        console.log("Pushed factory  - " + this.getFullName());
+        LogManager.getInstance().info("Pushed factory  - " + this.getFullName());
 
     }
 
     async pushBatch() {
+
+        LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + this.entityArray?.length);
 
         let concepts = [];
         let triplets = [];
@@ -218,6 +195,10 @@ export class EntityFactory {
                 s.setId(maxConceptId)
                 concepts.push(s);
             }
+            else {
+                // Do not add triplets of subjects that are not pushed 
+                continue;
+            }
 
             trps.forEach(trp => {
                 if (trp.getId() == -1) {
@@ -235,21 +216,25 @@ export class EntityFactory {
                 }
             });
 
-
         }
 
-        console.log("Pushing factory  batch - " + this.getFullName() + this.entityArray?.length);
 
         if (concepts && concepts.length > 0)
             await (await DBAdapter.getInstance()).addConceptsBatch(concepts);
+        else
+            LogManager.getInstance().info("No concepts to push..");
 
         if (triplets && triplets.length > 0)
             await (await DBAdapter.getInstance()).addTripletsBatch(triplets);
+        else
+            LogManager.getInstance().info("No triplets to push..");
 
         if (references && references.length > 0)
             await (await DBAdapter.getInstance()).addReferencesBatch(references);
+        else
+            LogManager.getInstance().info("No refs to push..");
 
-        console.log("Pushed factory batch - " + this.getFullName() + this.entityArray?.length);
+        LogManager.getInstance().info("Pushed factory batch - " + this.getFullName());
 
     }
 
@@ -363,8 +348,6 @@ export class EntityFactory {
             this.entityArray.push(e);
         }
 
-        console.log("");
-
     }
 
     async loadAllSubjects() {
@@ -400,5 +383,6 @@ export class EntityFactory {
         });
 
     }
+
 }
 
