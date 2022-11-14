@@ -86,14 +86,27 @@ export class EntityFactory {
         let e = this.getEntityByRef(uniqueRef1);
 
         if (e) {
+
+            let existingRefs = e.getRefs();
             let ts = e.getTriplets();
             let tIndex = ts.findIndex(t => { return t.getVerb().getShortname() == "contained_in_file" });
 
-            if (tIndex >= 0) {
-                let t = ts[tIndex];
-                refs.forEach(ref => ref.setTripletLink(t));
-                e.setRefs(refs);
-            }
+            // Add non existing refs with current entity or replace the value for same verb
+            refs.forEach(r => {
+
+                let rIndex = existingRefs.findIndex(rI => { return rI.getIdConcept().isSame(r.getIdConcept()) });
+
+                if (rIndex >= 0) {
+                    existingRefs[rIndex].setValue(r.getValue());
+                }
+                else {
+                    if (tIndex >= 0) {
+                        r.setTripletLink(ts[tIndex]);
+                        existingRefs.push(r);
+                    }
+                }
+            });
+
         }
         else {
 
