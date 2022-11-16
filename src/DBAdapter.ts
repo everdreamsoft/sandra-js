@@ -233,7 +233,7 @@ export class DBAdapter {
 
     async addConcept(c: Concept): Promise<Concept> {
 
-        let sql = "insert into " + this.tables.get("concepts") + " set code = ?, shortname = ?";
+        let sql = "insert ignore into " + this.tables.get("concepts") + " set code = ?, shortname = ?";
         let res = await this.getConnection().query(sql, c.getDBArrayFormat(false));
 
         if (res && res?.insertId) {
@@ -246,7 +246,7 @@ export class DBAdapter {
 
     async addTriplet(t: Triplet): Promise<Triplet> {
 
-        let sql = "insert into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+        let sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
         let res = await this.getConnection().query(sql, t.getDBArrayFormat(false));
 
         if (res && res?.insertId) {
@@ -259,7 +259,7 @@ export class DBAdapter {
 
     async addRefs(ref: Reference): Promise<Reference> {
 
-        let sql = "insert into " + this.tables.get("references") + " set idConcept = ?, linkReferenced = ?, value = ?";
+        let sql = "insert ignore into " + this.tables.get("references") + " set idConcept = ?, linkReferenced = ?, value = ?";
         let res = await this.getConnection().query(sql, ref.getDBArrayFormat(false));
 
         if (res && res?.insertId) {

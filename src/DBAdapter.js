@@ -170,7 +170,7 @@ class DBAdapter {
         return concpets;
     }
     async addConcept(c) {
-        let sql = "insert into " + this.tables.get("concepts") + " set code = ?, shortname = ?";
+        let sql = "insert ignore into " + this.tables.get("concepts") + " set code = ?, shortname = ?";
         let res = await this.getConnection().query(sql, c.getDBArrayFormat(false));
         if (res && (res === null || res === void 0 ? void 0 : res.insertId)) {
             c.setId(Number(res.insertId));
@@ -179,7 +179,7 @@ class DBAdapter {
         return undefined;
     }
     async addTriplet(t) {
-        let sql = "insert into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+        let sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
         let res = await this.getConnection().query(sql, t.getDBArrayFormat(false));
         if (res && (res === null || res === void 0 ? void 0 : res.insertId)) {
             t.setId(Number(res.insertId));
@@ -188,7 +188,7 @@ class DBAdapter {
         return undefined;
     }
     async addRefs(ref) {
-        let sql = "insert into " + this.tables.get("references") + " set idConcept = ?, linkReferenced = ?, value = ?";
+        let sql = "insert ignore into " + this.tables.get("references") + " set idConcept = ?, linkReferenced = ?, value = ?";
         let res = await this.getConnection().query(sql, ref.getDBArrayFormat(false));
         if (res && (res === null || res === void 0 ? void 0 : res.insertId)) {
             ref.setId(Number(res.insertId));
