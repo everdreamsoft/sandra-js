@@ -1,7 +1,10 @@
 import * as mariaDb from "mariadb";
 import { Connection } from "mariadb";
 import { Concept } from "./Concept";
+import { EnumLockStatus } from "./enums/lock-status";
+import { EnumTransactionStatus } from "./enums/transaction-status";
 import { IDBConfig } from "./interfaces/IDBconfig";
+import { LogManager } from "./loggers/LogManager";
 import { Reference } from "./Reference";
 import { Triplet } from "./Triplet";
 import { Utils } from "./Utils";
@@ -14,11 +17,15 @@ export class DBAdapter {
     private tables: Map<string, string> = new Map<string, string>();
 
     private readonly config: IDBConfig;
+    private transactionStatus: EnumTransactionStatus;
+    private tableLockStatus: EnumLockStatus;
+
 
     private constructor(config: IDBConfig) {
 
         this.config = config;
-
+        this.transactionStatus = EnumTransactionStatus.Completed;
+        this.tableLockStatus = EnumLockStatus.Off;
         this.tables.set("concepts", this.config.env + "_SandraConcept");
         this.tables.set("references", this.config.env + "_SandraReferences");
         this.tables.set("triplets", this.config.env + "_SandraTriplets");
@@ -32,11 +39,13 @@ export class DBAdapter {
             await DBAdapter.instance.connect();
         }
 
+
         return DBAdapter.instance;
     }
 
     async connect() {
         try {
+            LogManager.getInstance().info("Creating DB connection..");
             this.connection = await mariaDb.createConnection(this.config);
         } catch (e) {
             console.error(e);
@@ -55,6 +64,54 @@ export class DBAdapter {
         } catch (e) {
             console.error(e);
         }
+    }
+
+    async beginTransaction() {
+        LogManager.getInstance().info("Starting transaction..")
+        let sql = "Start Transaction;";
+        await this.getConnection().query(sql);
+        this.transactionStatus = EnumTransactionStatus.Started;
+    }
+
+    async commit() {
+        LogManager.getInstance().info("Committing..")
+        let sql = "Commit;";
+        await this.getConnection().query(sql);
+        this.transactionStatus = EnumTransactionStatus.Completed;
+    }
+
+    async sleep(durationInSec: number) {
+        LogManager.getInstance().info("Sleep for " + durationInSec + "s");
+        let sql = "select sleep(" + durationInSec + ")";
+        await this.getConnection().query(sql);
+
+    }
+
+    async lockTables(concept: boolean = false, triplet: boolean = false, ref: boolean = false) {
+
+        let tables = [];
+
+        if (concept)
+            tables.push(this.tables.get("concepts") + " WRITE");
+
+        if (triplet)
+            tables.push(this.tables.get("triplets") + " WRITE");
+
+        if (ref)
+            tables.push(this.tables.get("references") + " WRITE");
+
+        if (tables.length > 0) {
+            LogManager.getInstance().info("Unlocking tables.." + tables.toString());
+            let sql = "LOCK TABLES " + tables.toString() + ";";
+            await this.getConnection().query(sql);
+        }
+
+    }
+
+    async unlockTable() {
+        LogManager.getInstance().info("Unlocking tables..");
+        let sql = "UNLOCK TABLES";
+        await this.getConnection().query(sql);
     }
 
     async getReferenceByTriplet(t: Triplet): Promise<Reference[]> {
@@ -231,10 +288,14 @@ export class DBAdapter {
 
     }
 
-    async addConcept(c: Concept): Promise<Concept> {
+    async addConcept(c: Concept, withId: boolean = false): Promise<Concept> {
 
-        let sql = "insert ignore into " + this.tables.get("concepts") + " set code = ?, shortname = ?";
-        let res = await this.getConnection().query(sql, c.getDBArrayFormat(false));
+        let values = " set code = ?, shortname = ?";
+        if (withId)
+            values = values + ", id = ?";
+
+        let sql = "insert ignore into " + this.tables.get("concepts") + values;
+        let res = await this.getConnection().query(sql, c.getDBArrayFormat(withId));
 
         if (res && res?.insertId) {
             c.setId(Number(res.insertId));
@@ -244,10 +305,14 @@ export class DBAdapter {
         return undefined;
     }
 
-    async addTriplet(t: Triplet): Promise<Triplet> {
+    async addTriplet(t: Triplet, withId: boolean = false): Promise<Triplet> {
 
-        let sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
-        let res = await this.getConnection().query(sql, t.getDBArrayFormat(false));
+        let values = " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+        if (withId)
+            values = values + ", id = ?";
+
+        let sql = "insert ignore into " + this.tables.get("triplets") + values;
+        let res = await this.getConnection().query(sql, t.getDBArrayFormat(withId));
 
         if (res && res?.insertId) {
             t.setId(Number(res.insertId));
@@ -321,17 +386,25 @@ export class DBAdapter {
 
     }
 
-    async addReferencesBatch(refs: Reference[]) {
+    async addReferencesBatch(refs: Reference[], withId: boolean = false) {
 
         let refsData = [];
 
         refs?.forEach(r => {
-            let arr = r.getDBArrayFormat(true);
-            arr.forEach(a => { if (a == "-1") throw new Error("Invalid batch insert, unlinked concept found") })
+            let arr = r.getDBArrayFormat(withId);
+            if (withId)
+                arr.forEach(a => { if (a == "-1") throw new Error("Invalid batch insert, unlinked concept found") })
             refsData.push(arr);
         });
 
-        let sql = "insert ignore into " + this.tables.get("references") + " (id, idConcept, linkReferenced, value) values (?, ?, ?, ?) ";
+        let values = " (id, idConcept, linkReferenced, value) values (?, ?, ?, ?) ";
+
+        if (!withId) {
+            values = values = " (idConcept, linkReferenced, value) values (?, ?, ?) ";
+        }
+
+
+        let sql = "insert ignore into " + this.tables.get("references") + values;
 
         let res = await this.getConnection().batch(sql, refsData);
 

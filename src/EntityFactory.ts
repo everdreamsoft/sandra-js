@@ -183,13 +183,14 @@ export class EntityFactory {
 
     }
 
-    async pushBatch() {
+    async pushBatch1() {
 
         LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + this.entityArray?.length);
 
         let concepts = [];
         let triplets = [];
         let references = [];
+
 
         let maxConceptId = await (await DBAdapter.getInstance()).getMaxConceptId();
         let maxTripletId = await (await DBAdapter.getInstance()).getMaxTripletId();
@@ -209,7 +210,7 @@ export class EntityFactory {
                 concepts.push(s);
             }
             else {
-                // Do not add triplets of subjects that are not pushed 
+                // Do not add triplets of subjects that are pushed 
                 continue;
             }
 
@@ -232,17 +233,17 @@ export class EntityFactory {
         }
 
 
-        if (concepts && concepts.length > 0)
+        if (concepts.length > 0)
             await (await DBAdapter.getInstance()).addConceptsBatch(concepts);
         else
             LogManager.getInstance().info("No concepts to push..");
 
-        if (triplets && triplets.length > 0)
+        if (triplets.length > 0)
             await (await DBAdapter.getInstance()).addTripletsBatch(triplets);
         else
             LogManager.getInstance().info("No triplets to push..");
 
-        if (references && references.length > 0)
+        if (references.length > 0)
             await (await DBAdapter.getInstance()).addReferencesBatch(references);
         else
             LogManager.getInstance().info("No refs to push..");
@@ -251,6 +252,110 @@ export class EntityFactory {
 
     }
 
+    async pushBatch() {
+
+        LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + this.entityArray?.length);
+
+        let concepts = [];
+        let triplets = [];
+        let references = [];
+
+        let newEntities = this.entityArray.filter(e => {
+            if (e.getSubject().getId() == -1) {
+                return e;
+            }
+        });
+
+        let newConcepts = newEntities.map(e => {
+            return e.getSubject();
+        });
+
+        if (newConcepts?.length > 0) {
+
+            let newTriplets = [];
+            newEntities.forEach(e => {
+                newTriplets = [...newTriplets, ...e.getTriplets()];
+            });
+
+            let newRef = [];
+            newEntities.forEach(e => {
+                newRef = [...newRef, ...e.getRefs()];
+            });
+
+            let totalNewConc = newConcepts?.length;
+            let totalNewTrips = newTriplets?.length;
+
+            let lastConceptToAdd = newConcepts[newConcepts.length - 1];
+
+            let lastTipletToAdd: Triplet;
+            let maxTripletId = -1;
+            if (newTriplets.length > 0)
+                lastTipletToAdd = newTriplets[newTriplets.length - 1];
+
+            let lockTripTable = false;
+            if (lastTipletToAdd) lockTripTable = true;
+
+            // Inserting and getting max ids 
+            await (await DBAdapter.getInstance()).beginTransaction();
+            await (await DBAdapter.getInstance()).lockTables(true, lockTripTable);
+
+            let maxConceptId = await (await DBAdapter.getInstance()).getMaxConceptId();
+            lastConceptToAdd.setId(Number(maxConceptId) + totalNewConc);
+            await (await DBAdapter.getInstance()).addConcept(lastConceptToAdd, true);
+
+            if (lastTipletToAdd) {
+                maxTripletId = await (await DBAdapter.getInstance()).getMaxTripletId();
+                lastTipletToAdd.setId(Number(maxTripletId) + totalNewTrips);
+                await (await DBAdapter.getInstance()).addTriplet(lastTipletToAdd, true);
+            }
+
+            await (await DBAdapter.getInstance()).unlockTable();
+
+            // Add till second last because last id was already added
+            for (let i = 0; i <= newConcepts.length - 2; i++) {
+                maxConceptId = maxConceptId + 1;
+                let c = newConcepts[i];
+                c.setId(maxConceptId)
+                concepts.push(c);
+            }
+
+            for (let i = 0; i <= newTriplets.length - 2; i++) {
+                maxTripletId = maxTripletId + 1;
+                let t = newTriplets[i];
+                t.setId(maxTripletId)
+                triplets.push(t);
+            }
+
+            for (let i = 0; i <= newRef.length - 1; i++) {
+                references.push(newRef[i]);
+            }
+
+            if (concepts.length > 0)
+                await (await DBAdapter.getInstance()).addConceptsBatch(concepts);
+            else
+                LogManager.getInstance().info("No concepts to push..");
+
+            if (triplets.length > 0)
+                await (await DBAdapter.getInstance()).addTripletsBatch(triplets);
+            else
+                LogManager.getInstance().info("No triplets to push..");
+
+            if (references.length > 0)
+                await (await DBAdapter.getInstance()).addReferencesBatch(references, false);
+            else
+                LogManager.getInstance().info("No refs to push..");
+
+            await (await DBAdapter.getInstance()).commit();
+
+            LogManager.getInstance().info("Pushed factory batch - " + this.getFullName());
+
+        }
+        else {
+            LogManager.getInstance().info("No new entity to push.. - " + this.getFullName());
+
+        }
+
+    }
     // Loads all entities with the given reference 
     async load(ref: Reference, iterateDown: boolean = false) {
 
