@@ -75,7 +75,7 @@ export class EntityFactory {
         }
     }
 
-    async create(refs: Reference[]): Promise<Entity> {
+    async create(refs: Reference[], upsert: boolean = false): Promise<Entity> {
 
         // Check if it arelady exist
         let uniqueRef1 = null;
@@ -87,6 +87,8 @@ export class EntityFactory {
         let e = this.getEntityByRef(uniqueRef1);
 
         if (e) {
+
+            e.setUpsert(upsert);
 
             let existingRefs = e.getRefs();
             let ts = e.getTriplets();
@@ -112,6 +114,8 @@ export class EntityFactory {
         else {
 
             e = new Entity();
+
+            e.setUpsert(upsert);
 
             let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
 
@@ -165,13 +169,13 @@ export class EntityFactory {
 
                 }
 
-                await (await DBAdapter.getInstance()).addTriplet(t);
+                await (await DBAdapter.getInstance()).addTriplet(t, false, entity.isUpsert());
 
             }
 
             // Create refs
             for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
-                await (await DBAdapter.getInstance()).addRefs(entity.getRefs()[indexRef]);
+                await (await DBAdapter.getInstance()).addRefs(entity.getRefs()[indexRef], entity.isUpsert());
             }
 
             entity.setPushedStatus(true);
@@ -181,75 +185,6 @@ export class EntityFactory {
         this.setPushedStatus(true);
 
         LogManager.getInstance().info("Pushed factory  - " + this.getFullName());
-
-    }
-
-    async pushBatch1() {
-
-        LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + this.entityArray?.length);
-
-        let concepts = [];
-        let triplets = [];
-        let references = [];
-
-
-        let maxConceptId = await (await DBAdapter.getInstance()).getMaxConceptId();
-        let maxTripletId = await (await DBAdapter.getInstance()).getMaxTripletId();
-        let maxRefId = await (await DBAdapter.getInstance()).getMaxReferenceId();
-
-        for (let index = 0; index < this.entityArray?.length; index++) {
-
-            let e = this.entityArray[index];
-
-            let s = e.getSubject();
-            let trps = e.getTriplets();
-            let refs = e.getRefs();
-
-            if (TemporaryId.isValid(s.getId())) {
-                maxConceptId = maxConceptId + 1;
-                s.setId(maxConceptId)
-                concepts.push(s);
-            }
-            else {
-                // Do not add triplets of subjects that are pushed 
-                continue;
-            }
-
-            trps.forEach(trp => {
-                if (TemporaryId.isValid(trp.getId())) {
-                    maxTripletId = maxTripletId + 1;
-                    trp.setId(maxTripletId)
-                    triplets.push(trp);
-                }
-            });
-
-            refs.forEach(ref => {
-                if (TemporaryId.isValid(ref.getId())) {
-                    maxRefId = maxRefId + 1;
-                    ref.setId(maxRefId)
-                    references.push(ref);
-                }
-            });
-
-        }
-
-
-        if (concepts.length > 0)
-            await (await DBAdapter.getInstance()).addConceptsBatch(concepts);
-        else
-            LogManager.getInstance().info("No concepts to push..");
-
-        if (triplets.length > 0)
-            await (await DBAdapter.getInstance()).addTripletsBatch(triplets);
-        else
-            LogManager.getInstance().info("No triplets to push..");
-
-        if (references.length > 0)
-            await (await DBAdapter.getInstance()).addReferencesBatch(references);
-        else
-            LogManager.getInstance().info("No refs to push..");
-
-        LogManager.getInstance().info("Pushed factory batch - " + this.getFullName());
 
     }
 
@@ -357,6 +292,7 @@ export class EntityFactory {
         }
 
     }
+
     // Loads all entities with the given reference 
     async load(ref: Reference, iterateDown: boolean = false) {
 

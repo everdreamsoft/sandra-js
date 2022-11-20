@@ -42,8 +42,10 @@ export class Test {
         await e.brother("hasMoon", "yes");
 
         let moon1 = await moonFactory.create([await Utils.createDBReference("name", "moon1")]);
-
         await e.join("moon", moon1);
+
+        await moonFactory.loadAllSubjects();
+        await planetFactory.loadAllSubjects();
 
         await planetFactory.push();
 
@@ -162,4 +164,4 @@ export class Test {
 }
 
 let test = new Test();
-test.testBatchPush();
+test.testEntityPush();

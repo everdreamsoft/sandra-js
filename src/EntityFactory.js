@@ -54,7 +54,7 @@ class EntityFactory {
             }
         }
     }
-    async create(refs) {
+    async create(refs, upsert = false) {
         // Check if it arelady exist
         let uniqueRef1 = null;
         // Finding reference in array for unique concept
@@ -62,6 +62,7 @@ class EntityFactory {
             uniqueRef1 = refs.find(ref => { var _a; return (_a = this.uniqueRefConcept) === null || _a === void 0 ? void 0 : _a.isSame(ref.getIdConcept()); });
         let e = this.getEntityByRef(uniqueRef1);
         if (e) {
+            e.setUpsert(upsert);
             let existingRefs = e.getRefs();
             let ts = e.getTriplets();
             let tIndex = ts.findIndex(t => { return t.getVerb().getShortname() == "contained_in_file"; });
@@ -81,6 +82,7 @@ class EntityFactory {
         }
         else {
             e = new Entity_1.Entity();
+            e.setUpsert(upsert);
             let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
             e.setFactory(this);
             e.setSubject(subConcept);
@@ -116,68 +118,16 @@ class EntityFactory {
                         await ((_c = t.getJoinedEntity().getFactory()) === null || _c === void 0 ? void 0 : _c.push());
                     }
                 }
-                await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(t);
+                await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(t, false, entity.isUpsert());
             }
             // Create refs
             for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
-                await (await DBAdapter_1.DBAdapter.getInstance()).addRefs(entity.getRefs()[indexRef]);
+                await (await DBAdapter_1.DBAdapter.getInstance()).addRefs(entity.getRefs()[indexRef], entity.isUpsert());
             }
             entity.setPushedStatus(true);
         }
         this.setPushedStatus(true);
         LogManager_1.LogManager.getInstance().info("Pushed factory  - " + this.getFullName());
-    }
-    async pushBatch1() {
-        var _a, _b;
-        LogManager_1.LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
-        let concepts = [];
-        let triplets = [];
-        let references = [];
-        let maxConceptId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxConceptId();
-        let maxTripletId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxTripletId();
-        let maxRefId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxReferenceId();
-        for (let index = 0; index < ((_b = this.entityArray) === null || _b === void 0 ? void 0 : _b.length); index++) {
-            let e = this.entityArray[index];
-            let s = e.getSubject();
-            let trps = e.getTriplets();
-            let refs = e.getRefs();
-            if (TemporaryId_1.TemporaryId.isValid(s.getId())) {
-                maxConceptId = maxConceptId + 1;
-                s.setId(maxConceptId);
-                concepts.push(s);
-            }
-            else {
-                // Do not add triplets of subjects that are pushed 
-                continue;
-            }
-            trps.forEach(trp => {
-                if (TemporaryId_1.TemporaryId.isValid(trp.getId())) {
-                    maxTripletId = maxTripletId + 1;
-                    trp.setId(maxTripletId);
-                    triplets.push(trp);
-                }
-            });
-            refs.forEach(ref => {
-                if (TemporaryId_1.TemporaryId.isValid(ref.getId())) {
-                    maxRefId = maxRefId + 1;
-                    ref.setId(maxRefId);
-                    references.push(ref);
-                }
-            });
-        }
-        if (concepts.length > 0)
-            await (await DBAdapter_1.DBAdapter.getInstance()).addConceptsBatch(concepts);
-        else
-            LogManager_1.LogManager.getInstance().info("No concepts to push..");
-        if (triplets.length > 0)
-            await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets);
-        else
-            LogManager_1.LogManager.getInstance().info("No triplets to push..");
-        if (references.length > 0)
-            await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(references);
-        else
-            LogManager_1.LogManager.getInstance().info("No refs to push..");
-        LogManager_1.LogManager.getInstance().info("Pushed factory batch - " + this.getFullName());
     }
     async pushBatch() {
         var _a;

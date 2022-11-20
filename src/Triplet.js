@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Triplet = void 0;
 class Triplet {
-    constructor(id, subject, verb, target, flag = false) {
+    constructor(id, subject, verb, target, flag = false, upsert = false) {
         this.id = id;
         this.subject = subject;
         this.verb = verb;
@@ -23,6 +23,9 @@ class Triplet {
     }
     getJoinedEntity() {
         return this.joinedEntity;
+    }
+    isUpsert() {
+        return this.upsert;
     }
     getDBArrayFormat(withId = true) {
         if (withId)

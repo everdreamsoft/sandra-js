@@ -305,16 +305,33 @@ export class DBAdapter {
         return undefined;
     }
 
-    async addTriplet(t: Triplet, withId: boolean = false): Promise<Triplet> {
+    async addTriplet(t: Triplet, withId: boolean = false, upsert: boolean = false): Promise<Triplet> {
 
+        let sql = "";
 
-        let sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+        if (!upsert) {
+            if (withId)
+                sql = "insert ignore into " + this.tables.get("triplets") + " set id = ?, idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+            else
+                sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+        }
+        else {
 
-        if (withId)
-            sql = "insert ignore into " + this.tables.get("triplets") + " set id = ?, idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+            if (withId) {
+                sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) on duplicate key update idConceptTarget = ? ";
+            }
+            else {
+                sql = "insert into " + this.tables.get("triplets") + " (idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?) on duplicate key update idConceptTarget = ? ";
+            }
 
+        }
 
-        let res = await this.getConnection().query(sql, t.getDBArrayFormat(withId));
+        let values = t.getDBArrayFormat(withId);
+
+        if (upsert)
+            values = [...t.getDBArrayFormat(withId), t.getTarget().getId().toString()];
+
+        let res = await this.getConnection().query(sql, values);
 
         if (res && res?.insertId) {
             t.setId(res.insertId);
@@ -324,10 +341,23 @@ export class DBAdapter {
         return undefined;
     }
 
-    async addRefs(ref: Reference): Promise<Reference> {
+    async addRefs(ref: Reference, upsert: boolean = false): Promise<Reference> {
 
-        let sql = "insert ignore into " + this.tables.get("references") + " set idConcept = ?, linkReferenced = ?, value = ?";
-        let res = await this.getConnection().query(sql, ref.getDBArrayFormat(false));
+        let sql = "";
+
+        if (upsert) {
+            sql = "insert into " + this.tables.get("references") + " (idConcept, linkReferenced, value ) values (?,?,?) on duplicate key update value = ? ";
+        }
+        else {
+            sql = "insert ignore into " + this.tables.get("references") + " set idConcept = ?, linkReferenced = ?, value = ?";
+        }
+
+        let values = ref.getDBArrayFormat(false);
+
+        if (upsert)
+            values = [...ref.getDBArrayFormat(false), ref.getValue()];
+
+        let res = await this.getConnection().query(sql, values);
 
         if (res && res?.insertId) {
             ref.setId(res.insertId);

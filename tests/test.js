@@ -28,6 +28,8 @@ class Test {
         await e.brother("hasMoon", "yes");
         let moon1 = await moonFactory.create([await Utils_1.Utils.createDBReference("name", "moon1")]);
         await e.join("moon", moon1);
+        await moonFactory.loadAllSubjects();
+        await planetFactory.loadAllSubjects();
         await planetFactory.push();
         console.log("Done");
         process.exit();
@@ -106,5 +108,5 @@ class Test {
 }
 exports.Test = Test;
 let test = new Test();
-test.testBatchPush();
+test.testEntityPush();
 //# sourceMappingURL=test.js.map

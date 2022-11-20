@@ -9,6 +9,7 @@ class Entity {
     constructor() {
         this.triplets = [];
         this.references = [];
+        this.upsert = false;
         this.pushedStatus = false;
     }
     setSubject(subject) { this.subject = subject; }
@@ -16,6 +17,8 @@ class Entity {
     setUniqueRefConcept(c) { this.uniqueRefConcept = c; }
     setFactory(factory) { this.factory = factory; }
     setPushedStatus(status) { this.pushedStatus = status; }
+    setUpsert(upsert) { this.upsert = upsert; }
+    isUpsert() { return this.upsert; }
     getSubject() { return this.subject; }
     getTriplets() { return this.triplets; }
     getRefs() { return this.references; }

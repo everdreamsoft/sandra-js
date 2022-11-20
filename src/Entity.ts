@@ -13,6 +13,7 @@ export class Entity {
     private references: Reference[] = [];
     private uniqueRefConcept: Concept;
 
+    private upsert:boolean = false;
     private factory: EntityFactory;
     private pushedStatus: boolean = false;
 
@@ -24,13 +25,16 @@ export class Entity {
     setUniqueRefConcept(c: Concept) { this.uniqueRefConcept = c; }
     setFactory(factory: EntityFactory) { this.factory = factory; }
     setPushedStatus(status: boolean) { this.pushedStatus = status; }
+    setUpsert(upsert:boolean) { this.upsert = upsert; }
+
+    isUpsert(){return this.upsert;}
 
     getSubject() { return this.subject; }
     getTriplets() { return this.triplets; }
     getRefs() { return this.references; }
     getFactory() { return this.factory; }
     getPushedStatus() { return this.pushedStatus; }
-
+    
 
 
     getRef(concept: Concept): Reference {

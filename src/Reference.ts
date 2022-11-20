@@ -7,12 +7,14 @@ export class Reference {
     private concept: Concept;
     private value: string;
     private tripletLink: Triplet;
+    private upsert: boolean;
 
-    constructor(id: string, concpet: Concept, tripletLink: Triplet, value: string) {
+    constructor(id: string, concpet: Concept, tripletLink: Triplet, value: string, upsert: boolean = false) {
         this.id = id;
         this.concept = concpet;
         this.value = value;
         this.tripletLink = tripletLink;
+        this.upsert = upsert;
     }
 
     // Getting properties 
@@ -24,6 +26,9 @@ export class Reference {
 
     getTripletLink() { return this.tripletLink; }
 
+    isUpsert() {
+        return this.upsert;
+    }
 
     // Setting properties 
     setId(id: string) { this.id = id; }

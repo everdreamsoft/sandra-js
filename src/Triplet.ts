@@ -7,11 +7,12 @@ export class Triplet {
     private subject: Concept;
     private verb: Concept;
     private target: Concept;
+    private upsert: boolean;
 
     private flag: boolean;
     private joinedEntity: Entity;
 
-    constructor(id: string, subject: Concept, verb: Concept, target: Concept, flag: boolean = false) {
+    constructor(id: string, subject: Concept, verb: Concept, target: Concept, flag: boolean = false, upsert: boolean = false) {
         this.id = id;
         this.subject = subject;
         this.verb = verb;
@@ -39,12 +40,16 @@ export class Triplet {
         return this.joinedEntity;
     }
 
+
+    isUpsert() {
+        return this.upsert;
+    }
+
     getDBArrayFormat(withId: boolean = true) {
 
         if (withId)
             return [this.id.toString(), this.subject.getId().toString(), this.verb.getId().toString(),
             this.target.getId().toString()];
-
         else
             return [this.subject.getId().toString(), this.verb.getId().toString(),
             this.target.getId().toString()];
