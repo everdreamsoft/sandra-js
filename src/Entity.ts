@@ -75,9 +75,28 @@ export class Entity {
             });
 
             if (i >= 0) {
+
                 LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName())
+
+                let existingRefs = this.getRefs();
+                // Add non existing refs with current entity or replace the value for same verb
+                refs?.forEach(r => {
+
+                    let rIndex = existingRefs.findIndex(rI => { return rI.getIdConcept().isSame(r.getIdConcept()) });
+
+                    if (rIndex >= 0) {
+                        existingRefs[rIndex].setValue(r.getValue());
+                    }
+                    else {
+                        r.setTripletLink(this.triplets[i]);
+                        existingRefs.push(r);
+                    }
+                });
+
                 return this.triplets[i];
+
             }
+
 
         }
 

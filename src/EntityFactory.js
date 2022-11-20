@@ -66,7 +66,7 @@ class EntityFactory {
             let ts = e.getTriplets();
             let tIndex = ts.findIndex(t => { return t.getVerb().getShortname() == "contained_in_file"; });
             // Add non existing refs with current entity or replace the value for same verb
-            refs.forEach(r => {
+            refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
                 let rIndex = existingRefs.findIndex(rI => { return rI.getIdConcept().isSame(r.getIdConcept()); });
                 if (rIndex >= 0) {
                     existingRefs[rIndex].setValue(r.getValue());

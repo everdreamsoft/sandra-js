@@ -93,7 +93,7 @@ export class EntityFactory {
             let tIndex = ts.findIndex(t => { return t.getVerb().getShortname() == "contained_in_file" });
 
             // Add non existing refs with current entity or replace the value for same verb
-            refs.forEach(r => {
+            refs?.forEach(r => {
 
                 let rIndex = existingRefs.findIndex(rI => { return rI.getIdConcept().isSame(r.getIdConcept()) });
 

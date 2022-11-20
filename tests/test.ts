@@ -102,6 +102,19 @@ export class Test {
         await e.brother("hasMoon", "yes");
         await e.brother("hasMoon", "yes");
         await e.brother("hasMoon", "yes");
+        await e.brother("hasMoon", "yes",
+            [
+                await Utils.createDBReference("total", "1"),
+                await Utils.createDBReference("test", "2"),
+            ]
+        );
+
+        await e.brother("hasMoon", "yes",
+            [
+                await Utils.createDBReference("total", "2"),
+                await Utils.createDBReference("test1", "3"),
+            ]
+        );
 
         let moon1 = await moonFactory.create([await Utils.createDBReference("name", "moon1")]);
         let moon2 = await moonFactory.create([await Utils.createDBReference("name", "moon2")]);
