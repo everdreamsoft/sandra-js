@@ -39,7 +39,7 @@ export class Concept {
     }
 
     isSame(concept: Concept): boolean {
-        return this.getShortname() === concept.getShortname();
+        return this.getId() === concept.getId();
     }
 
     copy(c: Concept) {

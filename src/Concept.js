@@ -26,7 +26,7 @@ class Concept {
         this.shortname = sn;
     }
     isSame(concept) {
-        return this.getShortname() === concept.getShortname();
+        return this.getId() === concept.getId();
     }
     copy(c) {
         this.id = c.getId();

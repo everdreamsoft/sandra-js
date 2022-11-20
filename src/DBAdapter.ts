@@ -290,11 +290,11 @@ export class DBAdapter {
 
     async addConcept(c: Concept, withId: boolean = false): Promise<Concept> {
 
-        let values = " set code = ?, shortname = ?";
-        if (withId)
-            values = values + ", id = ?";
+        let sql = "insert ignore into " + this.tables.get("concepts") + " set code = ?, shortname = ?";
 
-        let sql = "insert ignore into " + this.tables.get("concepts") + values;
+        if (withId)
+            sql = "insert ignore into " + this.tables.get("concepts") + " set id = ?, code = ?, shortname = ?";
+
         let res = await this.getConnection().query(sql, c.getDBArrayFormat(withId));
 
         if (res && res?.insertId) {
@@ -307,11 +307,13 @@ export class DBAdapter {
 
     async addTriplet(t: Triplet, withId: boolean = false): Promise<Triplet> {
 
-        let values = " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
-        if (withId)
-            values = values + ", id = ?";
 
-        let sql = "insert ignore into " + this.tables.get("triplets") + values;
+        let sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+
+        if (withId)
+            sql = "insert ignore into " + this.tables.get("triplets") + " set id = ?, idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+
+
         let res = await this.getConnection().query(sql, t.getDBArrayFormat(withId));
 
         if (res && res?.insertId) {
