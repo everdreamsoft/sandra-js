@@ -3,12 +3,12 @@ import { Triplet } from "./Triplet";
 
 export class Reference {
 
-    private id: number;
+    private id: string;
     private concept: Concept;
     private value: string;
     private tripletLink: Triplet;
 
-    constructor(id: number, concpet: Concept, tripletLink: Triplet, value: string) {
+    constructor(id: string, concpet: Concept, tripletLink: Triplet, value: string) {
         this.id = id;
         this.concept = concpet;
         this.value = value;
@@ -26,7 +26,7 @@ export class Reference {
 
 
     // Setting properties 
-    setId(id: number) { this.id = id; }
+    setId(id: string) { this.id = id; }
 
     setTripletLink(t: Triplet) { this.tripletLink = t; }
 

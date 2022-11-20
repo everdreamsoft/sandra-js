@@ -1,7 +1,9 @@
 import { Concept } from "./Concept";
 import { EntityFactory } from "./EntityFactory";
+import { LogManager } from "./loggers/LogManager";
 import { Reference } from "./Reference";
 import { SystemConcepts } from "./SystemConcepts";
+import { TemporaryId } from "./TemporaryId";
 import { Triplet } from "./Triplet";
 
 export class Entity {
@@ -45,14 +47,41 @@ export class Entity {
     }
 
     async join(verb: string, entity: Entity, refs: Reference[] = null): Promise<Triplet> {
-        let t = await this.addTriplet(await SystemConcepts.get(verb), entity.getSubject(), refs)
+
+        let verbConcept = await SystemConcepts.get(verb);
+
+        let i = this.triplets.findIndex(t => {
+            return t.getVerb().isSame(verbConcept) && t.getJoinedEntity().getSubject().getId() == entity.getSubject().getId()
+        });
+
+        if (i >= 0) {
+            LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName());
+            return this.triplets[i];
+        }
+
+        let t = await this.addTriplet(await SystemConcepts.get(verb), entity.getSubject(), refs, false)
+
         t.setJoinedEntity(entity);
+
         return t;
     }
 
-    async addTriplet(verb: Concept, target: Concept, refs: Reference[] = null) {
+    async addTriplet(verb: Concept, target: Concept, refs: Reference[] = null, checkExisting: boolean = true) {
 
-        let t = new Triplet(-1, this.subject, verb, target);
+        if (checkExisting) {
+
+            let i = this.triplets.findIndex(t => {
+                return t.isSame(verb, target)
+            });
+
+            if (i >= 0) {
+                LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName())
+                return this.triplets[i];
+            }
+
+        }
+
+        let t = new Triplet(TemporaryId.create(), this.subject, verb, target);
         this.triplets.push(t);
 
         if (refs && refs?.length > 0) {
@@ -62,6 +91,7 @@ export class Entity {
 
         return t;
     }
+
 
     isEqualTo(entity: Entity) {
 

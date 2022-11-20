@@ -38,6 +38,18 @@ class Triplet {
     setJoinedEntity(entity) {
         this.joinedEntity = entity;
     }
+    isEqual(t) {
+        if (this.getVerb().isSame(t.getVerb()) && this.getTarget().isSame(t.getTarget())) {
+            return true;
+        }
+        return false;
+    }
+    isSame(verb, target) {
+        if (this.getVerb().isSame(verb) && this.getTarget().isSame(target)) {
+            return true;
+        }
+        return false;
+    }
 }
 exports.Triplet = Triplet;
 //# sourceMappingURL=Triplet.js.map

@@ -99,10 +99,16 @@ export class Test {
         );
 
         await e.brother("hasMoon", "yes");
+        await e.brother("hasMoon", "yes");
+        await e.brother("hasMoon", "yes");
+        await e.brother("hasMoon", "yes");
 
         let moon1 = await moonFactory.create([await Utils.createDBReference("name", "moon1")]);
+        let moon2 = await moonFactory.create([await Utils.createDBReference("name", "moon2")]);
 
         await e.join("moon", moon1);
+        await e.join("moon", moon1);
+        await e.join("moon", moon2);
 
         await moonFactory.pushBatch();
 

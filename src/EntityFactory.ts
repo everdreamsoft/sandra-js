@@ -4,6 +4,7 @@ import { Entity } from "./Entity";
 import { LogManager } from "./loggers/LogManager";
 import { Reference } from "./Reference";
 import { SystemConcepts } from "./SystemConcepts";
+import { TemporaryId } from "./TemporaryId";
 import { Triplet } from "./Triplet";
 
 export class EntityFactory {
@@ -32,7 +33,7 @@ export class EntityFactory {
     }
 
     getFullName() {
-        return "is a - " + this.is_a + " and contained in file - " + this.contained_in_file;
+        return this.is_a + "/" + this.contained_in_file;
     }
 
     getContainedInFileVerb() {
@@ -112,7 +113,7 @@ export class EntityFactory {
 
             e = new Entity();
 
-            let subConcept = new Concept(-1, Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
+            let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
 
             e.setFactory(this);
 
@@ -204,7 +205,7 @@ export class EntityFactory {
             let trps = e.getTriplets();
             let refs = e.getRefs();
 
-            if (s.getId() == -1) {
+            if (TemporaryId.isValid(s.getId())) {
                 maxConceptId = maxConceptId + 1;
                 s.setId(maxConceptId)
                 concepts.push(s);
@@ -215,7 +216,7 @@ export class EntityFactory {
             }
 
             trps.forEach(trp => {
-                if (trp.getId() == -1) {
+                if (TemporaryId.isValid(trp.getId())) {
                     maxTripletId = maxTripletId + 1;
                     trp.setId(maxTripletId)
                     triplets.push(trp);
@@ -223,7 +224,7 @@ export class EntityFactory {
             });
 
             refs.forEach(ref => {
-                if (ref.getId() == -1) {
+                if (TemporaryId.isValid(ref.getId())) {
                     maxRefId = maxRefId + 1;
                     ref.setId(maxRefId)
                     references.push(ref);
@@ -261,7 +262,7 @@ export class EntityFactory {
         let references = [];
 
         let newEntities = this.entityArray.filter(e => {
-            if (e.getSubject().getId() == -1) {
+            if (TemporaryId.isValid(e.getSubject().getId())) {
                 return e;
             }
         });
@@ -300,12 +301,12 @@ export class EntityFactory {
             await (await DBAdapter.getInstance()).lockTables(true, lockTripTable);
 
             let maxConceptId = await (await DBAdapter.getInstance()).getMaxConceptId();
-            lastConceptToAdd.setId(Number(maxConceptId) + totalNewConc);
+            lastConceptToAdd.setId(String(Number(maxConceptId) + totalNewConc));
             await (await DBAdapter.getInstance()).addConcept(lastConceptToAdd, true);
 
             if (lastTipletToAdd) {
                 maxTripletId = await (await DBAdapter.getInstance()).getMaxTripletId();
-                lastTipletToAdd.setId(Number(maxTripletId) + totalNewTrips);
+                lastTipletToAdd.setId(String(Number(maxTripletId) + totalNewTrips));
                 await (await DBAdapter.getInstance()).addTriplet(lastTipletToAdd, true);
             }
 
@@ -409,7 +410,7 @@ export class EntityFactory {
     async loadBySubject(subject: Concept, iterateDown: boolean = false) {
 
         let entityConcept: Concept = await (await DBAdapter.getInstance()).getConceptById(
-            subject.getId()
+            Number(subject.getId())
         );
 
         if (entityConcept) {

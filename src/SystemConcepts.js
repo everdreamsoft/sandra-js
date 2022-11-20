@@ -3,22 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SystemConcepts = void 0;
 const Concept_1 = require("./Concept");
 const DBAdapter_1 = require("./DBAdapter");
+const TemporaryId_1 = require("./TemporaryId");
 class SystemConcepts {
     constructor() {
     }
-    static add(concept) {
+    static async add(concept) {
         if (concept.getShortname()) {
-            // Check if it exist
-            let i = SystemConcepts.concepts.findIndex(c => concept.isSame(concept));
-            if (i >= 0)
-                return SystemConcepts.concepts[i];
+            return await SystemConcepts.get(concept.getShortname());
         }
         throw new Error("Not a system concpet, trying to push shortname with null value");
-    }
-    static async load(shortname) {
-        let c = await (await DBAdapter_1.DBAdapter.getInstance()).getConcept(shortname);
-        SystemConcepts.concepts.push(c);
-        return c;
     }
     static async get(shortname) {
         // check if it exist in memory 
@@ -35,7 +28,8 @@ class SystemConcepts {
             return c;
         }
         // add in DB and return 
-        c = await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(new Concept_1.Concept(-1, Concept_1.Concept.SYSTEM_CONCEPT_CODE_PREFIX + shortname, shortname));
+        c = await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.SYSTEM_CONCEPT_CODE_PREFIX + shortname, shortname));
+        SystemConcepts.concepts.push(c);
         return c;
     }
 }

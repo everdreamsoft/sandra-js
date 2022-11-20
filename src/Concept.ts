@@ -4,11 +4,11 @@ export class Concept {
     static readonly ENTITY_CONCEPT_CODE_PREFIX = "A ";
 
 
-    private id: number;
+    private id: string;
     private code: string;
     private shortname: string;
 
-    constructor(id: number, code: string, shortname: string) {
+    constructor(id: string, code: string, shortname: string) {
         this.id = id;
         this.code = code;
         this.shortname = shortname;
@@ -27,7 +27,7 @@ export class Concept {
         return this.shortname;
     }
 
-    setId(id: number) {
+    setId(id: string) {
         this.id = id;
     }
     setCode(code: string) {

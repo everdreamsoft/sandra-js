@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Utils = void 0;
 const Reference_1 = require("./Reference");
 const SystemConcepts_1 = require("./SystemConcepts");
+const TemporaryId_1 = require("./TemporaryId");
 class Utils {
     static getDBConfig() {
         return {
@@ -14,11 +15,8 @@ class Utils {
             multipleStatements: true
         };
     }
-    static isNullConcept(concept) {
-        return concept.getId() === -999;
-    }
     static async createDBReference(shortname, value, tripletLink = null) {
-        return new Reference_1.Reference(-1, await SystemConcepts_1.SystemConcepts.get(shortname), tripletLink, value);
+        return new Reference_1.Reference(TemporaryId_1.TemporaryId.create(), await SystemConcepts_1.SystemConcepts.get(shortname), tripletLink, value);
     }
 }
 exports.Utils = Utils;

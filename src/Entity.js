@@ -1,7 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Entity = void 0;
+const LogManager_1 = require("./loggers/LogManager");
 const SystemConcepts_1 = require("./SystemConcepts");
+const TemporaryId_1 = require("./TemporaryId");
 const Triplet_1 = require("./Triplet");
 class Entity {
     constructor() {
@@ -31,12 +33,29 @@ class Entity {
         return await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), await SystemConcepts_1.SystemConcepts.get(target), refs);
     }
     async join(verb, entity, refs = null) {
-        let t = await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), entity.getSubject(), refs);
+        let verbConcept = await SystemConcepts_1.SystemConcepts.get(verb);
+        let i = this.triplets.findIndex(t => {
+            return t.getVerb().isSame(verbConcept) && t.getJoinedEntity().getSubject().getId() == entity.getSubject().getId();
+        });
+        if (i >= 0) {
+            LogManager_1.LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName());
+            return this.triplets[i];
+        }
+        let t = await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), entity.getSubject(), refs, false);
         t.setJoinedEntity(entity);
         return t;
     }
-    async addTriplet(verb, target, refs = null) {
-        let t = new Triplet_1.Triplet(-1, this.subject, verb, target);
+    async addTriplet(verb, target, refs = null, checkExisting = true) {
+        if (checkExisting) {
+            let i = this.triplets.findIndex(t => {
+                return t.isSame(verb, target);
+            });
+            if (i >= 0) {
+                LogManager_1.LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName());
+                return this.triplets[i];
+            }
+        }
+        let t = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), this.subject, verb, target);
         this.triplets.push(t);
         if (refs && (refs === null || refs === void 0 ? void 0 : refs.length) > 0) {
             refs.forEach(ref => ref.setTripletLink(t));

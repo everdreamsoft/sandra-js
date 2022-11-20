@@ -6,6 +6,7 @@ const DBAdapter_1 = require("./DBAdapter");
 const Entity_1 = require("./Entity");
 const LogManager_1 = require("./loggers/LogManager");
 const SystemConcepts_1 = require("./SystemConcepts");
+const TemporaryId_1 = require("./TemporaryId");
 class EntityFactory {
     constructor(is_a, contained_in_file, uniqueRefConcept) {
         this.entityArray = [];
@@ -21,7 +22,7 @@ class EntityFactory {
         return this.is_a;
     }
     getFullName() {
-        return "is a - " + this.is_a + " and contained in file - " + this.contained_in_file;
+        return this.is_a + "/" + this.contained_in_file;
     }
     getContainedInFileVerb() {
         return this.contained_in_file;
@@ -80,7 +81,7 @@ class EntityFactory {
         }
         else {
             e = new Entity_1.Entity();
-            let subConcept = new Concept_1.Concept(-1, Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
+            let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
             e.setFactory(this);
             e.setSubject(subConcept);
             // Set unique ref concept
@@ -140,7 +141,7 @@ class EntityFactory {
             let s = e.getSubject();
             let trps = e.getTriplets();
             let refs = e.getRefs();
-            if (s.getId() == -1) {
+            if (TemporaryId_1.TemporaryId.isValid(s.getId())) {
                 maxConceptId = maxConceptId + 1;
                 s.setId(maxConceptId);
                 concepts.push(s);
@@ -150,14 +151,14 @@ class EntityFactory {
                 continue;
             }
             trps.forEach(trp => {
-                if (trp.getId() == -1) {
+                if (TemporaryId_1.TemporaryId.isValid(trp.getId())) {
                     maxTripletId = maxTripletId + 1;
                     trp.setId(maxTripletId);
                     triplets.push(trp);
                 }
             });
             refs.forEach(ref => {
-                if (ref.getId() == -1) {
+                if (TemporaryId_1.TemporaryId.isValid(ref.getId())) {
                     maxRefId = maxRefId + 1;
                     ref.setId(maxRefId);
                     references.push(ref);
@@ -185,7 +186,7 @@ class EntityFactory {
         let triplets = [];
         let references = [];
         let newEntities = this.entityArray.filter(e => {
-            if (e.getSubject().getId() == -1) {
+            if (TemporaryId_1.TemporaryId.isValid(e.getSubject().getId())) {
                 return e;
             }
         });
@@ -215,11 +216,11 @@ class EntityFactory {
             await (await DBAdapter_1.DBAdapter.getInstance()).beginTransaction();
             await (await DBAdapter_1.DBAdapter.getInstance()).lockTables(true, lockTripTable);
             let maxConceptId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxConceptId();
-            lastConceptToAdd.setId(Number(maxConceptId) + totalNewConc);
+            lastConceptToAdd.setId(String(Number(maxConceptId) + totalNewConc));
             await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(lastConceptToAdd, true);
             if (lastTipletToAdd) {
                 maxTripletId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxTripletId();
-                lastTipletToAdd.setId(Number(maxTripletId) + totalNewTrips);
+                lastTipletToAdd.setId(String(Number(maxTripletId) + totalNewTrips));
                 await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(lastTipletToAdd, true);
             }
             await (await DBAdapter_1.DBAdapter.getInstance()).unlockTable();
@@ -285,7 +286,7 @@ class EntityFactory {
         }
     }
     async loadBySubject(subject, iterateDown = false) {
-        let entityConcept = await (await DBAdapter_1.DBAdapter.getInstance()).getConceptById(subject.getId());
+        let entityConcept = await (await DBAdapter_1.DBAdapter.getInstance()).getConceptById(Number(subject.getId()));
         if (entityConcept) {
             // Get all the triplets for this entity 
             let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTripletsBySubject(entityConcept);

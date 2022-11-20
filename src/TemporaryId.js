@@ -1,0 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TemporaryId = void 0;
+class TemporaryId {
+    constructor() {
+    }
+    static create() {
+        TemporaryId.counter = TemporaryId.counter + 1;
+        return "temp-" + (TemporaryId.counter);
+    }
+    static isValid(id) {
+        return id.includes("temp-");
+    }
+}
+exports.TemporaryId = TemporaryId;
+TemporaryId.counter = 0;
+//# sourceMappingURL=TemporaryId.js.map

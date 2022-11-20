@@ -3,7 +3,7 @@ import { Entity } from "./Entity";
 
 export class Triplet {
 
-    private id: number;
+    private id: string;
     private subject: Concept;
     private verb: Concept;
     private target: Concept;
@@ -11,7 +11,7 @@ export class Triplet {
     private flag: boolean;
     private joinedEntity: Entity;
 
-    constructor(id: number, subject: Concept, verb: Concept, target: Concept, flag: boolean = false) {
+    constructor(id: string, subject: Concept, verb: Concept, target: Concept, flag: boolean = false) {
         this.id = id;
         this.subject = subject;
         this.verb = verb;
@@ -39,7 +39,6 @@ export class Triplet {
         return this.joinedEntity;
     }
 
-
     getDBArrayFormat(withId: boolean = true) {
 
         if (withId)
@@ -52,12 +51,26 @@ export class Triplet {
 
     }
 
-    setId(id: number) {
+    setId(id: string) {
         this.id = id;
     }
 
     setJoinedEntity(entity: Entity) {
         this.joinedEntity = entity;
+    }
+
+    isEqual(t: Triplet) {
+        if (this.getVerb().isSame(t.getVerb()) && this.getTarget().isSame(t.getTarget())) {
+            return true;
+        }
+        return false;
+    }
+
+    isSame(verb: Concept, target: Concept) {
+        if (this.getVerb().isSame(verb) && this.getTarget().isSame(target)) {
+            return true;
+        }
+        return false;
     }
 
 }

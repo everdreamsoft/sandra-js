@@ -1,5 +1,6 @@
 import { Concept } from "./Concept";
 import { DBAdapter } from "./DBAdapter";
+import { TemporaryId } from "./TemporaryId";
 
 export class SystemConcepts {
 
@@ -8,24 +9,15 @@ export class SystemConcepts {
     constructor() {
     }
 
-    static add(concept: Concept) {
+    static async add(concept: Concept) {
 
         if (concept.getShortname()) {
-            // Check if it exist
-            let i = SystemConcepts.concepts.findIndex(c => concept.isSame(concept));
-            if (i >= 0)
-                return SystemConcepts.concepts[i];
+            return await SystemConcepts.get(concept.getShortname());
         }
-
         throw new Error("Not a system concpet, trying to push shortname with null value");
 
     }
 
-    static async load(shortname: string) {
-        let c = await (await DBAdapter.getInstance()).getConcept(shortname);
-        SystemConcepts.concepts.push(c);
-        return c;
-    }
 
     static async get(shortname: string) {
 
@@ -47,7 +39,9 @@ export class SystemConcepts {
         }
 
         // add in DB and return 
-        c = await (await DBAdapter.getInstance()).addConcept(new Concept(-1, Concept.SYSTEM_CONCEPT_CODE_PREFIX + shortname, shortname));
+        c = await (await DBAdapter.getInstance()).addConcept(new Concept(TemporaryId.create(), Concept.SYSTEM_CONCEPT_CODE_PREFIX + shortname, shortname));
+
+        SystemConcepts.concepts.push(c);
 
         return c;
 

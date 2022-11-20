@@ -218,7 +218,7 @@ class DBAdapter {
         let sql = "insert ignore into " + this.tables.get("concepts") + values;
         let res = await this.getConnection().query(sql, c.getDBArrayFormat(withId));
         if (res && (res === null || res === void 0 ? void 0 : res.insertId)) {
-            c.setId(Number(res.insertId));
+            c.setId(res.insertId);
             return c;
         }
         return undefined;
@@ -230,7 +230,7 @@ class DBAdapter {
         let sql = "insert ignore into " + this.tables.get("triplets") + values;
         let res = await this.getConnection().query(sql, t.getDBArrayFormat(withId));
         if (res && (res === null || res === void 0 ? void 0 : res.insertId)) {
-            t.setId(Number(res.insertId));
+            t.setId(res.insertId);
             return t;
         }
         return undefined;
@@ -239,7 +239,7 @@ class DBAdapter {
         let sql = "insert ignore into " + this.tables.get("references") + " set idConcept = ?, linkReferenced = ?, value = ?";
         let res = await this.getConnection().query(sql, ref.getDBArrayFormat(false));
         if (res && (res === null || res === void 0 ? void 0 : res.insertId)) {
-            ref.setId(Number(res.insertId));
+            ref.setId(res.insertId);
             return ref;
         }
         return undefined;
@@ -249,7 +249,7 @@ class DBAdapter {
         refs === null || refs === void 0 ? void 0 : refs.forEach(ref => {
             refData.push(ref.getId(), ref.getIdConcept(), ref.getTripletLink(), ref.getValue());
         });
-        let sql = "insert ignore into " + this.tables.get("references") + " (id, idConcept, linkReferenced, value) values (?, ? ,? ,?)";
+        let sql = "insert into " + this.tables.get("references") + " (id, idConcept, linkReferenced, value) values (?, ? ,? ,?)";
         let res = await this.getConnection().batch(sql, [refData]);
         return res;
     }
@@ -258,7 +258,7 @@ class DBAdapter {
         concepts === null || concepts === void 0 ? void 0 : concepts.forEach(concept => {
             conceptsData.push(concept.getDBArrayFormat(true));
         });
-        let sql = "insert ignore into " + this.tables.get("concepts") + " (id, code, shortname) values (?, ? ,?)";
+        let sql = "insert into " + this.tables.get("concepts") + " (id, code, shortname) values (?, ? ,?)";
         let res = await this.getConnection().batch(sql, conceptsData);
         return res;
     }
@@ -270,7 +270,7 @@ class DBAdapter {
                 throw new Error("Invalid batch insert, unlinked concept found"); });
             tripletsData.push(arr);
         });
-        let sql = "insert ignore into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
+        let sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
         let res = await this.getConnection().batch(sql, tripletsData);
         return res;
     }

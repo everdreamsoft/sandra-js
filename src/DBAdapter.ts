@@ -298,7 +298,7 @@ export class DBAdapter {
         let res = await this.getConnection().query(sql, c.getDBArrayFormat(withId));
 
         if (res && res?.insertId) {
-            c.setId(Number(res.insertId));
+            c.setId(res.insertId);
             return c;
         }
 
@@ -315,7 +315,7 @@ export class DBAdapter {
         let res = await this.getConnection().query(sql, t.getDBArrayFormat(withId));
 
         if (res && res?.insertId) {
-            t.setId(Number(res.insertId));
+            t.setId(res.insertId);
             return t;
         }
 
@@ -328,7 +328,7 @@ export class DBAdapter {
         let res = await this.getConnection().query(sql, ref.getDBArrayFormat(false));
 
         if (res && res?.insertId) {
-            ref.setId(Number(res.insertId));
+            ref.setId(res.insertId);
             return ref;
         }
 
@@ -343,7 +343,7 @@ export class DBAdapter {
             refData.push(ref.getId(), ref.getIdConcept(), ref.getTripletLink(), ref.getValue());
         });
 
-        let sql = "insert ignore into " + this.tables.get("references") + " (id, idConcept, linkReferenced, value) values (?, ? ,? ,?)";
+        let sql = "insert into " + this.tables.get("references") + " (id, idConcept, linkReferenced, value) values (?, ? ,? ,?)";
 
         let res = await this.getConnection().batch(sql, [refData]);
 
@@ -360,7 +360,7 @@ export class DBAdapter {
             conceptsData.push(concept.getDBArrayFormat(true));
         });
 
-        let sql = "insert ignore into " + this.tables.get("concepts") + " (id, code, shortname) values (?, ? ,?)";
+        let sql = "insert into " + this.tables.get("concepts") + " (id, code, shortname) values (?, ? ,?)";
 
         let res = await this.getConnection().batch(sql, conceptsData);
 
@@ -378,7 +378,7 @@ export class DBAdapter {
             tripletsData.push(arr);
         });
 
-        let sql = "insert ignore into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
+        let sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
 
         let res = await this.getConnection().batch(sql, tripletsData);
 
