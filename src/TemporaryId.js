@@ -9,7 +9,7 @@ class TemporaryId {
         return "temp-" + (TemporaryId.counter);
     }
     static isValid(id) {
-        return id.includes("temp-");
+        return String(id).includes("temp-");
     }
 }
 exports.TemporaryId = TemporaryId;

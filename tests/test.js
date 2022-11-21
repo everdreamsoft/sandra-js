@@ -6,6 +6,20 @@ const EntityFactory_1 = require("../src/EntityFactory");
 const SystemConcepts_1 = require("../src/SystemConcepts");
 const Utils_1 = require("../src/Utils");
 class Test {
+    async testEntityUpsert() {
+        console.log("started test");
+        let planetFactory = new EntityFactory_1.EntityFactory("planet", "planet_file", await SystemConcepts_1.SystemConcepts.get("name"));
+        let p1 = await planetFactory.create([
+            await Utils_1.Utils.createDBReference("name", "earth1"),
+            await Utils_1.Utils.createDBReference("age", "3.5B"),
+            await Utils_1.Utils.createDBReference("atm", "yes")
+        ], true);
+        await p1.brother("hasMoon", "no", [], false);
+        await planetFactory.loadAllSubjects();
+        await planetFactory.push();
+        console.log("Done");
+        process.exit();
+    }
     async testEntityPush() {
         console.log("started test");
         let planetFactory = new EntityFactory_1.EntityFactory("exo_planet", "exo_planet_file", await SystemConcepts_1.SystemConcepts.get("name"));

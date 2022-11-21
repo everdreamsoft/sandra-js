@@ -8,6 +8,7 @@ class Triplet {
         this.verb = verb;
         this.target = target;
         this.flag = flag;
+        this.upsert = upsert;
     }
     getId() {
         return this.id;
@@ -38,6 +39,7 @@ class Triplet {
     setId(id) {
         this.id = id;
     }
+    setUpsert(upsert) { this.upsert = upsert; }
     setJoinedEntity(entity) {
         this.joinedEntity = entity;
     }

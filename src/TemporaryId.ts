@@ -14,7 +14,7 @@ export class TemporaryId {
     }
 
     static isValid(id: string): boolean {
-        return id.includes("temp-");
+        return String(id).includes("temp-");
     }
 
 

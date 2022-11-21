@@ -32,8 +32,8 @@ class Entity {
         }
         return null;
     }
-    async brother(verb, target, refs = null) {
-        return await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), await SystemConcepts_1.SystemConcepts.get(target), refs);
+    async brother(verb, target, refs = null, upsert = false) {
+        return await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), await SystemConcepts_1.SystemConcepts.get(target), refs, true, upsert);
     }
     async join(verb, entity, refs = null) {
         let verbConcept = await SystemConcepts_1.SystemConcepts.get(verb);
@@ -48,13 +48,14 @@ class Entity {
         t.setJoinedEntity(entity);
         return t;
     }
-    async addTriplet(verb, target, refs = null, checkExisting = true) {
+    async addTriplet(verb, target, refs = null, checkExisting = true, upsert = false) {
         if (checkExisting) {
             let i = this.triplets.findIndex(t => {
                 return t.isSame(verb, target);
             });
             if (i >= 0) {
                 LogManager_1.LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName());
+                this.triplets[i].setUpsert(upsert);
                 let existingRefs = this.getRefs();
                 // Add non existing refs with current entity or replace the value for same verb
                 refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
@@ -70,7 +71,7 @@ class Entity {
                 return this.triplets[i];
             }
         }
-        let t = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), this.subject, verb, target);
+        let t = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), this.subject, verb, target, false, upsert);
         this.triplets.push(t);
         if (refs && (refs === null || refs === void 0 ? void 0 : refs.length) > 0) {
             refs.forEach(ref => ref.setTripletLink(t));

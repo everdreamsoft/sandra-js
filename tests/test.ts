@@ -1,13 +1,36 @@
-import { Concept } from "../src/Concept";
 import { DBAdapter } from "../src/DBAdapter";
 import { EntityFactory } from "../src/EntityFactory";
-import { Reference } from "../src/Reference";
 import { SystemConcepts } from "../src/SystemConcepts";
-import { Triplet } from "../src/Triplet";
 import { Utils } from "../src/Utils";
 
 export class Test {
 
+    async testEntityUpsert() {
+
+        console.log("started test");
+
+        let planetFactory = new EntityFactory("planet", "planet_file", await SystemConcepts.get("name"));
+
+        let p1 = await planetFactory.create(
+            [
+                await Utils.createDBReference("name", "earth1"),
+                await Utils.createDBReference("age", "3.5B"),
+                await Utils.createDBReference("atm", "yes")
+            ],
+            true
+        );
+
+        await p1.brother("hasMoon", "no", [], false);
+
+        await planetFactory.loadAllSubjects();
+        await planetFactory.push();
+
+        console.log("Done");
+
+        process.exit();
+
+    }
+    
     async testEntityPush() {
 
         console.log("started test");

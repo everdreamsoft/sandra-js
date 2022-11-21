@@ -13,7 +13,7 @@ export class Entity {
     private references: Reference[] = [];
     private uniqueRefConcept: Concept;
 
-    private upsert:boolean = false;
+    private upsert: boolean = false;
     private factory: EntityFactory;
     private pushedStatus: boolean = false;
 
@@ -25,16 +25,16 @@ export class Entity {
     setUniqueRefConcept(c: Concept) { this.uniqueRefConcept = c; }
     setFactory(factory: EntityFactory) { this.factory = factory; }
     setPushedStatus(status: boolean) { this.pushedStatus = status; }
-    setUpsert(upsert:boolean) { this.upsert = upsert; }
+    setUpsert(upsert: boolean) { this.upsert = upsert; }
 
-    isUpsert(){return this.upsert;}
+    isUpsert() { return this.upsert; }
 
     getSubject() { return this.subject; }
     getTriplets() { return this.triplets; }
     getRefs() { return this.references; }
     getFactory() { return this.factory; }
     getPushedStatus() { return this.pushedStatus; }
-    
+
 
 
     getRef(concept: Concept): Reference {
@@ -46,8 +46,8 @@ export class Entity {
         return null;
     }
 
-    async brother(verb: string, target: string, refs: Reference[] = null): Promise<Triplet> {
-        return await this.addTriplet(await SystemConcepts.get(verb), await SystemConcepts.get(target), refs)
+    async brother(verb: string, target: string, refs: Reference[] = null, upsert: boolean = false): Promise<Triplet> {
+        return await this.addTriplet(await SystemConcepts.get(verb), await SystemConcepts.get(target), refs, true, upsert);
     }
 
     async join(verb: string, entity: Entity, refs: Reference[] = null): Promise<Triplet> {
@@ -70,7 +70,7 @@ export class Entity {
         return t;
     }
 
-    async addTriplet(verb: Concept, target: Concept, refs: Reference[] = null, checkExisting: boolean = true) {
+    async addTriplet(verb: Concept, target: Concept, refs: Reference[] = null, checkExisting: boolean = true, upsert: boolean = false) {
 
         if (checkExisting) {
 
@@ -81,6 +81,8 @@ export class Entity {
             if (i >= 0) {
 
                 LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName())
+
+                this.triplets[i].setUpsert(upsert);
 
                 let existingRefs = this.getRefs();
                 // Add non existing refs with current entity or replace the value for same verb
@@ -104,7 +106,7 @@ export class Entity {
 
         }
 
-        let t = new Triplet(TemporaryId.create(), this.subject, verb, target);
+        let t = new Triplet(TemporaryId.create(), this.subject, verb, target, false, upsert);
         this.triplets.push(t);
 
         if (refs && refs?.length > 0) {

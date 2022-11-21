@@ -106,8 +106,10 @@ class EntityFactory {
             if (entity.getPushedStatus()) {
                 continue;
             }
-            // Create subject 
-            await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(entity.getSubject());
+            if (TemporaryId_1.TemporaryId.isValid(entity.getSubject().getId())) {
+                // Create subject 
+                await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(entity.getSubject());
+            }
             // Create triplets
             for (let indexTriplet = 0; indexTriplet < entity.getTriplets().length; indexTriplet++) {
                 let t = entity.getTriplets()[indexTriplet];
@@ -118,11 +120,21 @@ class EntityFactory {
                         await ((_c = t.getJoinedEntity().getFactory()) === null || _c === void 0 ? void 0 : _c.push());
                     }
                 }
-                await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(t, false, entity.isUpsert());
+                if (t.isUpsert()) {
+                    await (await DBAdapter_1.DBAdapter.getInstance()).upsertTriplet(t);
+                }
+                else {
+                    await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(t);
+                }
             }
             // Create refs
             for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
-                await (await DBAdapter_1.DBAdapter.getInstance()).addRefs(entity.getRefs()[indexRef], entity.isUpsert());
+                if (entity.isUpsert()) {
+                    await (await DBAdapter_1.DBAdapter.getInstance()).upsertRefs(entity.getRefs()[indexRef]);
+                }
+                else {
+                    await (await DBAdapter_1.DBAdapter.getInstance()).addRefs(entity.getRefs()[indexRef]);
+                }
             }
             entity.setPushedStatus(true);
         }
@@ -281,7 +293,8 @@ class EntityFactory {
             if (r) {
                 let loadedS = entityConceptsMap.get(r.getValue().toString());
                 if (loadedS) {
-                    entity.setPushedStatus(true);
+                    if (!entity.isUpsert())
+                        entity.setPushedStatus(true);
                     let s = entity.getSubject();
                     if (s) {
                         s.setId(loadedS.getId());

@@ -18,6 +18,7 @@ export class Triplet {
         this.verb = verb;
         this.target = target;
         this.flag = flag
+        this.upsert = upsert;
     }
 
     getId() {
@@ -59,6 +60,8 @@ export class Triplet {
     setId(id: string) {
         this.id = id;
     }
+
+    setUpsert(upsert: boolean) { this.upsert = upsert; }
 
     setJoinedEntity(entity: Entity) {
         this.joinedEntity = entity;
