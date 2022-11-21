@@ -6,6 +6,26 @@ const EntityFactory_1 = require("../src/EntityFactory");
 const SystemConcepts_1 = require("../src/SystemConcepts");
 const Utils_1 = require("../src/Utils");
 class Test {
+    async testProcessEntity() {
+        let processFactory = new EntityFactory_1.EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts_1.SystemConcepts.get("jwiId"));
+        let contractFactory = new EntityFactory_1.EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        await processFactory.load(await Utils_1.Utils.createDBReference("jwiId", "evm_jetski_ethereum"));
+        // Get all the joined contracts 
+        let e = processFactory.getEntities()[0];
+        // Joined address subjects
+        let trips = e.getTriplets().filter(t => {
+            return t.getVerb().getShortname() == "joinedAddress";
+        });
+        for (let i = 0; i < trips.length; i++) {
+            let e = await contractFactory.loadBySubject(trips[i].getTarget());
+            contractFactory.getEntities().push(e);
+        }
+        let contracts = [];
+        contractFactory.getEntities().forEach(e => {
+            contracts.push(e.getEntityRefsAsJson());
+        });
+        console.log("");
+    }
     async testEntityUpsert() {
         console.log("started test");
         let planetFactory = new EntityFactory_1.EntityFactory("planet", "planet_file", await SystemConcepts_1.SystemConcepts.get("name"));
@@ -122,5 +142,5 @@ class Test {
 }
 exports.Test = Test;
 let test = new Test();
-test.testEntityPush();
+test.testProcessEntity();
 //# sourceMappingURL=test.js.map

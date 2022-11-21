@@ -1,9 +1,41 @@
 import { DBAdapter } from "../src/DBAdapter";
 import { EntityFactory } from "../src/EntityFactory";
+import { Reference } from "../src/Reference";
 import { SystemConcepts } from "../src/SystemConcepts";
 import { Utils } from "../src/Utils";
 
 export class Test {
+
+    async testProcessEntity() {
+
+        let processFactory = new EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts.get("jwiId"));
+        let contractFactory = new EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts.get("id"));
+
+        await processFactory.load(await Utils.createDBReference("jwiId", "evm_jetski_ethereum"));
+
+        // Get all the joined contracts 
+        let e = processFactory.getEntities()[0];
+
+        // Joined address subjects
+        let trips = e.getTriplets().filter(t => {
+            return t.getVerb().getShortname() == "joinedAddress"
+        });
+
+        for (let i = 0; i < trips.length; i++) {
+            let e = await contractFactory.loadBySubject(trips[i].getTarget());
+            contractFactory.getEntities().push(e);
+        }
+
+        let contracts = [];
+
+        contractFactory.getEntities().forEach(e => {
+            contracts.push(e.getEntityRefsAsJson());
+        })
+
+
+        console.log("");
+
+    }
 
     async testEntityUpsert() {
 
@@ -30,7 +62,7 @@ export class Test {
         process.exit();
 
     }
-    
+
     async testEntityPush() {
 
         console.log("started test");
@@ -184,7 +216,8 @@ export class Test {
         }
 
     }
+
 }
 
 let test = new Test();
-test.testEntityPush();
+test.testProcessEntity();

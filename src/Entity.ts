@@ -1,3 +1,4 @@
+import { stringify } from "querystring";
 import { Concept } from "./Concept";
 import { EntityFactory } from "./EntityFactory";
 import { LogManager } from "./loggers/LogManager";
@@ -36,6 +37,37 @@ export class Entity {
     getPushedStatus() { return this.pushedStatus; }
 
 
+    getEntityRefsAsKeyValue() {
+        let m: Map<string, string> = new Map();
+        this.references.forEach(r => {
+            if (r.getTripletLink().getVerb().getShortname() == "contained_in_file")
+                m.set(r.getIdConcept().getShortname(), r.getValue());
+        })
+        return m;
+    }
+
+    getEntityRefsAsJson() {
+
+        let json = {};
+
+        this.references.forEach(r => {
+            if (r.getTripletLink().getVerb().getShortname() == "contained_in_file")
+                json[r.getIdConcept().getShortname()] = r.getValue();
+        });
+
+        return json;
+    }
+
+    getRefsKeyValuesByTiplet(tripletLinkConcept: Concept) {
+
+        let m: Map<string, string> = new Map();
+
+        this.references.forEach(r => {
+            if (r.getTripletLink().getVerb().isSame(tripletLinkConcept))
+                m.set(r.getIdConcept().getShortname(), r.getValue());
+        })
+        return m;
+    }
 
     getRef(concept: Concept): Reference {
         if (concept) {
