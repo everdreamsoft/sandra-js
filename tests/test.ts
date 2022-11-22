@@ -190,6 +190,31 @@ export class Test {
 
     }
 
+    async testBatchSpeed() {
+
+        console.log("inserting..");
+
+        let startTime = Date.now();
+
+        let planetFactory = new EntityFactory("planet", "planet_file", await SystemConcepts.get("name"));
+
+        for (let i = 0; i < 50000; i++) {
+            await planetFactory.create(
+                [
+                    await Utils.createDBReference("name", "planet" + i),
+                ]
+            );
+        }
+
+        await planetFactory.loadAllSubjects();
+        await planetFactory.pushBatch();
+
+        let endTime = Date.now();
+        console.log("pushed one batch, time taken - " + ((endTime - startTime) / 1000));
+
+
+    }
+
     async testMaxIdInsert() {
 
         try {
@@ -220,4 +245,4 @@ export class Test {
 }
 
 let test = new Test();
-test.testProcessEntity();
+test.testBatchSpeed();
