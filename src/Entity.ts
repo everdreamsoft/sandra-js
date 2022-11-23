@@ -32,10 +32,11 @@ export class Entity {
 
     getSubject() { return this.subject; }
     getTriplets() { return this.triplets; }
-    getRefs() { return this.references; }
+    
     getFactory() { return this.factory; }
     getPushedStatus() { return this.pushedStatus; }
 
+    getRefs() { return this.references; }
 
     getEntityRefsAsKeyValue() {
         let m: Map<string, string> = new Map();

@@ -21,9 +21,9 @@ class Entity {
     isUpsert() { return this.upsert; }
     getSubject() { return this.subject; }
     getTriplets() { return this.triplets; }
-    getRefs() { return this.references; }
     getFactory() { return this.factory; }
     getPushedStatus() { return this.pushedStatus; }
+    getRefs() { return this.references; }
     getEntityRefsAsKeyValue() {
         let m = new Map();
         this.references.forEach(r => {

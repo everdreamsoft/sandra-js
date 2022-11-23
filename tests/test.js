@@ -6,6 +6,47 @@ const EntityFactory_1 = require("../src/EntityFactory");
 const SystemConcepts_1 = require("../src/SystemConcepts");
 const Utils_1 = require("../src/Utils");
 class Test {
+    async testBlockLoad() {
+        let blockFactory = new EntityFactory_1.EntityFactory("blockchainBloc", "blockchainblocFile", await SystemConcepts_1.SystemConcepts.get("blockIndex"));
+        // Load all entity triplets 
+        await blockFactory.load(await Utils_1.Utils.createDBReference("ethereum-timestamp", "1"), false, false, 1000);
+        await blockFactory.loadAllTripletRefs();
+        // Update timestamp
+        for (let i = 0; i < blockFactory.getEntities().length; i++) {
+            let block = blockFactory.getEntities()[i];
+            let blockNumRef = block.getRef(await SystemConcepts_1.SystemConcepts.get("blockIndex"));
+            let valueRef = block.getRef(await SystemConcepts_1.SystemConcepts.get("ethereum-timestamp"));
+            valueRef.setValue("2");
+        }
+        await blockFactory.batchRefUpdate(await SystemConcepts_1.SystemConcepts.get("ethereum-timestamp"));
+        console.log("loaded");
+    }
+    async testBlocktimeUpdate() {
+        console.log("inserting...");
+        let startTime = Date.now();
+        let blockFactory = new EntityFactory_1.EntityFactory("blockchainBloc", "blockchainblocFile", await SystemConcepts_1.SystemConcepts.get("blockIndex"));
+        for (let i = 0; i < 50000; i++) {
+            let b = await blockFactory.create([
+                await Utils_1.Utils.createDBReference("blockIndex", i.toString()),
+                await Utils_1.Utils.createDBReference("ethereum-timestamp", "1"),
+                await Utils_1.Utils.createDBReference("creationTimestamp", "1"),
+            ]);
+        }
+        let memCrtTime = Date.now();
+        await blockFactory.loadAllSubjects();
+        let loadSTime = Date.now();
+        await blockFactory.pushBatch();
+        let endTime = Date.now();
+        let batchTime = ((endTime - startTime) / 1000);
+        let memTime = ((memCrtTime - startTime) / 1000);
+        let loadTime = ((loadSTime - memCrtTime) / 1000);
+        let insertTime = ((endTime - loadSTime) / 1000);
+        console.log("blocks added..");
+        console.log("Mem entity time " + memTime);
+        console.log("Loading time " + loadTime);
+        console.log("Insert time " + insertTime);
+        console.log("Total Batch time " + batchTime);
+    }
     async testProcessEntity() {
         let processFactory = new EntityFactory_1.EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts_1.SystemConcepts.get("jwiId"));
         let contractFactory = new EntityFactory_1.EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
@@ -166,5 +207,5 @@ class Test {
 }
 exports.Test = Test;
 let test = new Test();
-test.testBatchSpeed();
+test.testBlockLoad();
 //# sourceMappingURL=test.js.map

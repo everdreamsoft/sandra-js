@@ -109,10 +109,17 @@ class DBAdapter {
         let sql = "UNLOCK TABLES";
         await this.getConnection().query(sql);
     }
-    async getReferenceByTriplet(t) {
+    async getReferenceByTriplet(t, refConcept = null) {
+        let refCon = "";
+        if (refConcept) {
+            refCon = " and r.idConcept in (?)";
+        }
         let sql = "select r.id, c.id as cId, c.code, c.shortname, r.value from " + this.tables.get("references") + " as r " +
-            " join " + this.tables.get("concepts") + " as c on r.idConcept = c.id and r.linkReferenced = ?";
-        let res = await this.getConnection().query(sql, [t.getId()]);
+            " join " + this.tables.get("concepts") + " as c on r.idConcept = c.id and r.linkReferenced = ?" + refCon;
+        let v = [t.getId()];
+        if (refCon)
+            v = [...v, refConcept.getId()];
+        let res = await this.getConnection().query(sql, v);
         let refs = [];
         if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
             res.forEach(row => {
@@ -121,14 +128,28 @@ class DBAdapter {
         }
         return refs;
     }
+    async getReferenceByTriplets(triplets) {
+        let sql = "select r.id,  r.linkReferenced as tripletId, c.id as cId, c.code, c.shortname, r.value from " + this.tables.get("references") + " as r " +
+            " join " + this.tables.get("concepts") + " as c on r.idConcept = c.id and r.linkReferenced in (?)";
+        let v = [];
+        triplets.map(t => { v = [...v, t.getId()]; });
+        let res = await this.getConnection().query(sql, [v]);
+        let refs = [];
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
+            res.forEach(row => {
+                refs.push(new Reference_1.Reference(row.id, new Concept_1.Concept(row.cId, row.code, row.shortname), new Triplet_1.Triplet(row.tripletId, null, null, null), row.value));
+            });
+        }
+        return refs;
+    }
     /**
      *  Get the triplet attached with given verb and target linked to given reference
      */
-    async getEntityTriplet(verb, target, ref) {
+    async getEntityTriplet(verb, target, ref, limit = 1000) {
         let sql = "select t.id, c.id as subjectId, c.code as subjectCode, c.shortname as subjectShortname, t.idConceptLink as verb, t.idConceptTarget as target from " + this.tables.get("triplets") + " as t join  " + this.tables.get("references") + " as r" +
             " on t.id = r.linkReferenced and t.idConceptLink = ? and t.idConceptTarget = ? and r.value = ? and" +
-            " r.idConcept = ? join " + this.tables.get("concepts") + " as c on t.idConceptStart = c.id";
-        let res = await this.getConnection().query(sql, [verb.getId(), target.getId(), ref.getValue(), ref.getIdConcept().getId()]);
+            " r.idConcept = ? join " + this.tables.get("concepts") + " as c on t.idConceptStart = c.id limit ?";
+        let res = await this.getConnection().query(sql, [verb.getId(), target.getId(), ref.getValue(), ref.getIdConcept().getId(), limit]);
         let triplets = [];
         if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
             res.forEach(row => {
@@ -287,6 +308,34 @@ class DBAdapter {
             return ref;
         }
         return undefined;
+    }
+    async updateRefsBatch(refs) {
+        let caseStatemet = "";
+        let idCocept = [];
+        let linkReferenced = [];
+        idCocept = [...new Set(refs.map(item => (item.getIdConcept().getId())))];
+        linkReferenced = [...new Set(refs.map(item => (item.getTripletLink().getId())))];
+        refs.forEach(ref => {
+            caseStatemet = caseStatemet + " when idConcept = " + ref.getIdConcept().getId() + " and linkReferenced = " + ref.getTripletLink().getId() + " then value = " + ref.getValue();
+        });
+        let whereStatement = " where  idConcept in (?) and linkReferenced in (?)";
+        let sql = "update " + this.tables.get("references") + " set value = ( case " + caseStatemet + " end ) " + whereStatement;
+        console.log(sql);
+    }
+    async updateRefsBatchById(refs) {
+        let caseStatemet = "";
+        let ids = [];
+        ids = [...new Set(refs.map(item => (item.getId())))];
+        refs.forEach(ref => {
+            caseStatemet = caseStatemet + " when id = " + ref.getId() + " then " + ref.getValue();
+        });
+        let whereStatement = " where id in (" + ids.toString() + ")";
+        let sql = "update " + this.tables.get("references") + " set value = ( case " + caseStatemet + " end ) " + whereStatement;
+        let res = await this.getConnection().query(sql);
+        if (res) {
+            return true;
+        }
+        return false;
     }
     async addRefsBatch(refs) {
         let refData = [];

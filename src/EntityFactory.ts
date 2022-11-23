@@ -302,40 +302,61 @@ export class EntityFactory {
 
     }
 
+    async batchRefUpdate(conceptId: Concept) {
+
+        let refs: Reference[] = [];
+
+        this.entityArray.forEach(e => {
+            let r = e.getRefs().filter(r => { return r.getIdConcept().isSame(conceptId) });
+            if (r)
+                refs.push(...r);
+        });
+
+        await (await DBAdapter.getInstance()).updateRefsBatchById(refs);
+
+        console.log("updated..");
+
+    }
+
     // Loads all entities with the given reference 
-    async load(ref: Reference, iterateDown: boolean = false) {
+    async load(ref: Reference, loadAllEntityData: boolean = true, iterateDown: boolean = false, limit: number = 1000) {
 
         let entityTriplets: Triplet[] = await (await DBAdapter.getInstance()).getEntityTriplet(
             await SystemConcepts.get("contained_in_file"),
             await SystemConcepts.get(this.contained_in_file),
-            ref
+            ref, limit
         );
 
         for (let index = 0; index < entityTriplets?.length; index++) {
 
             let entityTriplet = entityTriplets[index];
             let refs: Reference[] = [];
+            let triplets: Triplet[] = [];
 
-            let triplets: Triplet[] = await (await DBAdapter.getInstance()).getTripletsBySubject(
-                entityTriplet.getSubject()
-            );
+            if (loadAllEntityData) {
 
-            for (let i = 0; i < triplets.length; i++) {
-
-                if (iterateDown) {
-
-                    let e = await this.loadBySubject(triplets[i].getTarget(), true);
-
-                    if (e) {
-                        triplets[i].setJoinedEntity(e);
-                    }
-                }
-
-                let r = await (await DBAdapter.getInstance()).getReferenceByTriplet(
-                    triplets[i]
+                triplets = await (await DBAdapter.getInstance()).getTripletsBySubject(
+                    entityTriplet.getSubject()
                 );
 
-                refs.push(...r);
+                for (let i = 0; i < triplets.length; i++) {
+
+                    if (iterateDown) {
+
+                        let e = await this.loadBySubject(triplets[i].getTarget(), true);
+
+                        if (e) {
+                            triplets[i].setJoinedEntity(e);
+                        }
+                    }
+
+                    let r = await (await DBAdapter.getInstance()).getReferenceByTriplet(
+                        triplets[i]
+                    );
+
+                    refs.push(...r);
+
+                }
 
             }
 
@@ -343,7 +364,12 @@ export class EntityFactory {
 
             e.setSubject(entityTriplet.getSubject());
             e.setPushedStatus(true);
-            e.getTriplets().push(...triplets);
+
+            if (loadAllEntityData)
+                e.getTriplets().push(...triplets);
+            else
+                e.getTriplets().push(entityTriplet);
+
             e.getRefs().push(...refs);
             e.setUniqueRefConcept(this.uniqueRefConcept);
             this.entityArray.push(e);
@@ -449,5 +475,46 @@ export class EntityFactory {
 
     }
 
+    async loadAllTripletRefs(refConcept: Concept = null) {
+
+        let ts = [];
+
+        this.entityArray.map(e => { ts = [...ts, ...e.getTriplets()] });
+
+        let refs = await (await DBAdapter.getInstance()).getReferenceByTriplets(
+            ts
+        );
+
+        for (let i = 0; i < this.entityArray?.length; i++) {
+            let e = this.entityArray[i];
+            let triplets = e.getTriplets();
+            triplets.forEach(t => {
+                let refBatch = refs.filter(r => { return r.getTripletLink().getId() == t.getId() });
+                if (refBatch && refBatch.length > 0) {
+                    refBatch?.forEach(r => { r.setTripletLink(t) });
+                    e.getRefs().push(...refBatch);
+                }
+            });
+        }
+
+
+        console.log("");
+
+        // for (let i = 0; i < this.entityArray?.length; i++) {
+
+        //     let e = this.entityArray[i];
+        //     let triplets = e.getTriplets();
+        //     let refs = e.getRefs();
+
+        //     for (let j = 0; j < triplets.length; j++) {
+        //         let r = await (await DBAdapter.getInstance()).getReferenceByTriplet(
+        //             triplets[j], refConcept
+        //         );
+        //         refs.push(...r);
+        //     }
+
+        // }
+
+    }
 }
 

@@ -6,6 +6,66 @@ import { Utils } from "../src/Utils";
 
 export class Test {
 
+    async testBlockLoad() {
+
+        let blockFactory: EntityFactory = new EntityFactory("blockchainBloc", "blockchainblocFile",
+            await SystemConcepts.get("blockIndex"));
+
+        // Load all entity triplets 
+        await blockFactory.load(await Utils.createDBReference("ethereum-timestamp", "1"), false, false, 1000);
+
+        await blockFactory.loadAllTripletRefs();
+
+        // Update timestamp
+        for (let i = 0; i < blockFactory.getEntities().length; i++) {
+            let block = blockFactory.getEntities()[i];
+            let blockNumRef = block.getRef(await SystemConcepts.get("blockIndex"));
+            let valueRef = block.getRef(await SystemConcepts.get("ethereum-timestamp"));
+            valueRef.setValue("2");
+        }
+
+        await blockFactory.batchRefUpdate(await SystemConcepts.get("ethereum-timestamp"));
+
+    }
+    async testBlocktimeUpdate() {
+
+        console.log("inserting...");
+
+        let startTime = Date.now();
+
+        let blockFactory: EntityFactory = new EntityFactory("blockchainBloc", "blockchainblocFile",
+            await SystemConcepts.get("blockIndex"));
+
+        for (let i = 0; i < 50000; i++) {
+            let b = await blockFactory.create([
+                await Utils.createDBReference("blockIndex", i.toString()),
+                await Utils.createDBReference("ethereum-timestamp", "1"),
+                await Utils.createDBReference("creationTimestamp", "1"),
+            ]);
+        }
+        let memCrtTime = Date.now();
+
+        await blockFactory.loadAllSubjects();
+        let loadSTime = Date.now();
+
+        await blockFactory.pushBatch();
+
+        let endTime = Date.now();
+        let batchTime = ((endTime - startTime) / 1000);
+        let memTime = ((memCrtTime - startTime) / 1000);
+        let loadTime = ((loadSTime - memCrtTime) / 1000);
+        let insertTime = ((endTime - loadSTime) / 1000);
+
+        console.log("blocks added..");
+
+        console.log("Mem entity time " + memTime)
+        console.log("Loading time " + loadTime)
+        console.log("Insert time " + insertTime)
+        console.log("Total Batch time " + batchTime)
+
+
+    }
+
     async testProcessEntity() {
 
         let processFactory = new EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts.get("jwiId"));
@@ -215,7 +275,7 @@ export class Test {
         await planetFactory.pushBatch();
 
         let endTime = Date.now();
-        
+
         console.log("pushed one batch, time taken - " + ((endTime - startTime) / 1000));
 
         let batchTime = ((endTime - startTime) / 1000);
@@ -262,4 +322,4 @@ export class Test {
 }
 
 let test = new Test();
-test.testBatchSpeed();
+test.testBlockLoad();
