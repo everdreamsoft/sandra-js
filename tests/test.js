@@ -123,15 +123,25 @@ class Test {
         console.log("inserting..");
         let startTime = Date.now();
         let planetFactory = new EntityFactory_1.EntityFactory("planet", "planet_file", await SystemConcepts_1.SystemConcepts.get("name"));
-        for (let i = 0; i < 50000; i++) {
+        for (let i = 0; i < 1; i++) {
             await planetFactory.create([
                 await Utils_1.Utils.createDBReference("name", "planet" + i),
             ]);
         }
+        let memCrtTime = Date.now();
         await planetFactory.loadAllSubjects();
+        let loadSTime = Date.now();
         await planetFactory.pushBatch();
         let endTime = Date.now();
         console.log("pushed one batch, time taken - " + ((endTime - startTime) / 1000));
+        let batchTime = ((endTime - startTime) / 1000);
+        let memTime = ((memCrtTime - startTime) / 1000);
+        let loadTime = ((loadSTime - memCrtTime) / 1000);
+        let insertTime = ((endTime - loadSTime) / 1000);
+        console.log("Mem entity time " + memTime);
+        console.log("Loading time " + loadTime);
+        console.log("Insert time " + insertTime);
+        console.log("Total Batch time " + batchTime);
     }
     async testMaxIdInsert() {
         try {

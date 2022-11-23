@@ -15,24 +15,22 @@ class SystemConcepts {
     }
     static async get(shortname) {
         // check if it exist in memory 
-        let c = SystemConcepts.concepts.find(concept => {
-            return concept.getShortname() === shortname;
-        });
+        let c = SystemConcepts.concepts.get(shortname);
         if (c) {
             return c;
         }
         // check if exist in DB
         c = await (await DBAdapter_1.DBAdapter.getInstance()).getConcept(shortname);
         if (c) {
-            SystemConcepts.concepts.push(c);
+            SystemConcepts.concepts.set(shortname, c);
             return c;
         }
         // add in DB and return 
         c = await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.SYSTEM_CONCEPT_CODE_PREFIX + shortname, shortname));
-        SystemConcepts.concepts.push(c);
+        SystemConcepts.concepts.set(shortname, c);
         return c;
     }
 }
 exports.SystemConcepts = SystemConcepts;
-SystemConcepts.concepts = [];
+SystemConcepts.concepts = new Map();
 //# sourceMappingURL=SystemConcepts.js.map
