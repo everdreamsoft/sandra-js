@@ -32,7 +32,7 @@ export class Entity {
 
     getSubject() { return this.subject; }
     getTriplets() { return this.triplets; }
-    
+
     getFactory() { return this.factory; }
     getPushedStatus() { return this.pushedStatus; }
 
@@ -69,6 +69,13 @@ export class Entity {
         })
         return m;
     }
+
+    getRefValByShortname(shortname: string) {
+        let i = this.references.findIndex(ref => { return ref.getIdConcept().getShortname() == shortname });
+        if (i >= 0)
+            return this.references[i].getValue();
+    }
+
 
     getRef(concept: Concept): Reference {
         if (concept) {

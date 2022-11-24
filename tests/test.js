@@ -19,7 +19,6 @@ class Test {
             valueRef.setValue("2");
         }
         await blockFactory.batchRefUpdate(await SystemConcepts_1.SystemConcepts.get("ethereum-timestamp"));
-        console.log("loaded");
     }
     async testBlocktimeUpdate() {
         console.log("inserting...");

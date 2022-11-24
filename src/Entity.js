@@ -48,6 +48,11 @@ class Entity {
         });
         return m;
     }
+    getRefValByShortname(shortname) {
+        let i = this.references.findIndex(ref => { return ref.getIdConcept().getShortname() == shortname; });
+        if (i >= 0)
+            return this.references[i].getValue();
+    }
     getRef(concept) {
         if (concept) {
             let i = this.references.findIndex(ref => { return ref.getIdConcept().isSame(concept); });
