@@ -1,5 +1,3 @@
-import { Concept } from "./Concept";
-import { DBAdapter } from "./DBAdapter";
 
 export class TemporaryId {
 

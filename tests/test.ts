@@ -1,6 +1,5 @@
 import { DBAdapter } from "../src/DBAdapter";
 import { EntityFactory } from "../src/EntityFactory";
-import { Reference } from "../src/Reference";
 import { SystemConcepts } from "../src/SystemConcepts";
 import { Utils } from "../src/Utils";
 

@@ -1,4 +1,3 @@
-import { Concept } from "./Concept";
 import { IDBConfig } from "./interfaces/IDBconfig";
 import { Reference } from "./Reference";
 import { SystemConcepts } from "./SystemConcepts";
@@ -20,7 +19,7 @@ export class Utils {
 
     }
 
-     static async createDBReference(shortname: string, value: string, tripletLink: Triplet = null): Promise<Reference> {
+    static async createDBReference(shortname: string, value: string, tripletLink: Triplet = null): Promise<Reference> {
         return new Reference(TemporaryId.create(), await SystemConcepts.get(shortname), tripletLink, value);
     }
 
