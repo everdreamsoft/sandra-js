@@ -6,6 +6,14 @@ export class TemporaryId {
     constructor() {
     }
 
+    static getCount() {
+        return TemporaryId.counter;
+    }
+    
+    static reset() {
+        TemporaryId.counter = 0;
+    }
+
     static create(): string {
         TemporaryId.counter = TemporaryId.counter + 1;
         return "temp-" + (TemporaryId.counter);

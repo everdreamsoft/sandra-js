@@ -479,7 +479,10 @@ export class EntityFactory {
 
         let ts = [];
 
-        this.entityArray.map(e => { ts = [...ts, ...e.getTriplets()] });
+        if (this.entityArray?.length == 0)
+            return;
+
+        this.entityArray?.map(e => { ts = [...ts, ...e.getTriplets()] });
 
         let refs = await (await DBAdapter.getInstance()).getReferenceByTriplets(
             ts
@@ -496,24 +499,6 @@ export class EntityFactory {
                 }
             });
         }
-
-
-        console.log("");
-
-        // for (let i = 0; i < this.entityArray?.length; i++) {
-
-        //     let e = this.entityArray[i];
-        //     let triplets = e.getTriplets();
-        //     let refs = e.getRefs();
-
-        //     for (let j = 0; j < triplets.length; j++) {
-        //         let r = await (await DBAdapter.getInstance()).getReferenceByTriplet(
-        //             triplets[j], refConcept
-        //         );
-        //         refs.push(...r);
-        //     }
-
-        // }
 
     }
 }

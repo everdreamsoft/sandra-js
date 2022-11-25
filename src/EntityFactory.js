@@ -324,11 +324,13 @@ class EntityFactory {
         });
     }
     async loadAllTripletRefs(refConcept = null) {
-        var _a;
+        var _a, _b, _c;
         let ts = [];
-        this.entityArray.map(e => { ts = [...ts, ...e.getTriplets()]; });
+        if (((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length) == 0)
+            return;
+        (_b = this.entityArray) === null || _b === void 0 ? void 0 : _b.map(e => { ts = [...ts, ...e.getTriplets()]; });
         let refs = await (await DBAdapter_1.DBAdapter.getInstance()).getReferenceByTriplets(ts);
-        for (let i = 0; i < ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length); i++) {
+        for (let i = 0; i < ((_c = this.entityArray) === null || _c === void 0 ? void 0 : _c.length); i++) {
             let e = this.entityArray[i];
             let triplets = e.getTriplets();
             triplets.forEach(t => {
@@ -339,18 +341,6 @@ class EntityFactory {
                 }
             });
         }
-        console.log("");
-        // for (let i = 0; i < this.entityArray?.length; i++) {
-        //     let e = this.entityArray[i];
-        //     let triplets = e.getTriplets();
-        //     let refs = e.getRefs();
-        //     for (let j = 0; j < triplets.length; j++) {
-        //         let r = await (await DBAdapter.getInstance()).getReferenceByTriplet(
-        //             triplets[j], refConcept
-        //         );
-        //         refs.push(...r);
-        //     }
-        // }
     }
 }
 exports.EntityFactory = EntityFactory;
