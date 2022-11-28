@@ -330,6 +330,11 @@ export class Test {
         console.log("loaded...");
 
     }
+
+    async testDeadlockScenario()
+    {
+
+    }
 }
 
 let test = new Test();
