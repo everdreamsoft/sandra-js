@@ -175,17 +175,19 @@ class EntityFactory {
             if (lastTipletToAdd)
                 lockTripTable = true;
             // Inserting and getting max ids 
-            // await (await DBAdapter.getInstance()).beginTransaction();
-            await (await DBAdapter_1.DBAdapter.getInstance()).lockTables(true, lockTripTable);
+            //await (await DBAdapter.getInstance()).beginTransaction();
+            await (await DBAdapter_1.DBAdapter.getInstance()).lockTables(true, false, false);
             let maxConceptId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxConceptId();
             lastConceptToAdd.setId(String(Number(maxConceptId) + totalNewConc));
             await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(lastConceptToAdd, true);
+            await (await DBAdapter_1.DBAdapter.getInstance()).unlockTable();
             if (lastTipletToAdd) {
+                await (await DBAdapter_1.DBAdapter.getInstance()).lockTables(false, true, false);
                 maxTripletId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxTripletId();
                 lastTipletToAdd.setId(String(Number(maxTripletId) + totalNewTrips));
                 await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(lastTipletToAdd, true);
+                await (await DBAdapter_1.DBAdapter.getInstance()).unlockTable();
             }
-            await (await DBAdapter_1.DBAdapter.getInstance()).unlockTable();
             // Add till second last because last id was already added
             for (let i = 0; i <= newConcepts.length - 2; i++) {
                 maxConceptId = maxConceptId + 1;

@@ -208,6 +208,8 @@ class Test {
         await eventFactory.load(await Utils_1.Utils.createDBReference("assetStatus", "pending"));
         console.log("loaded...");
     }
+    async testDeadlockScenario() {
+    }
 }
 exports.Test = Test;
 let test = new Test();
