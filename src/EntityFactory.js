@@ -175,7 +175,7 @@ class EntityFactory {
             if (lastTipletToAdd)
                 lockTripTable = true;
             // Inserting and getting max ids 
-            await (await DBAdapter_1.DBAdapter.getInstance()).beginTransaction();
+            // await (await DBAdapter.getInstance()).beginTransaction();
             await (await DBAdapter_1.DBAdapter.getInstance()).lockTables(true, lockTripTable);
             let maxConceptId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxConceptId();
             lastConceptToAdd.setId(String(Number(maxConceptId) + totalNewConc));
@@ -214,7 +214,7 @@ class EntityFactory {
                 await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(references, false);
             else
                 LogManager_1.LogManager.getInstance().info("No refs to push..");
-            await (await DBAdapter_1.DBAdapter.getInstance()).commit();
+            //await (await DBAdapter.getInstance()).commit();
             LogManager_1.LogManager.getInstance().info("Pushed factory batch - " + this.getFullName());
         }
         else {

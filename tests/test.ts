@@ -318,7 +318,19 @@ export class Test {
 
     }
 
+    async loadPendingEvents() {
+        
+        let eventFactory: EntityFactory = new EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts.get("txHash"));
+
+        await eventFactory.load
+            (
+                await Utils.createDBReference("assetStatus", "pending"),
+            )
+
+        console.log("loaded...");
+
+    }
 }
 
 let test = new Test();
-test.testBlockLoad();
+test.loadPendingEvents();

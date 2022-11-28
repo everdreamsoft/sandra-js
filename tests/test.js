@@ -203,8 +203,13 @@ class Test {
             await (await DBAdapter_1.DBAdapter.getInstance()).close();
         }
     }
+    async loadPendingEvents() {
+        let eventFactory = new EntityFactory_1.EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts_1.SystemConcepts.get("txHash"));
+        await eventFactory.load(await Utils_1.Utils.createDBReference("assetStatus", "pending"));
+        console.log("loaded...");
+    }
 }
 exports.Test = Test;
 let test = new Test();
-test.testBlockLoad();
+test.loadPendingEvents();
 //# sourceMappingURL=test.js.map
