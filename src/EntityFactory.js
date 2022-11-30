@@ -141,6 +141,24 @@ class EntityFactory {
         this.setPushedStatus(true);
         LogManager_1.LogManager.getInstance().info("Pushed factory  - " + this.getFullName());
     }
+    // Push references of all factory entities, insert or ignore statement fired.  
+    // Make sure that all triplets linked to references are loaded.
+    // loadAllSubjects() --> loadTriplets() --> pushRefsBatch()
+    async pushRefsBatch() {
+        let refs = [];
+        for (let i = 0; i < this.entityArray.length; i++) {
+            refs.push(...this.entityArray[i].getRefs());
+        }
+        await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(refs);
+    }
+    // Pushing triplets of factory entities, insert or ignore statmenet.
+    async pushTripletsBatch() {
+        let triplets = [];
+        for (let i = 0; i < this.entityArray.length; i++) {
+            triplets.push(...this.entityArray[i].getTriplets());
+        }
+        await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets, false);
+    }
     async pushBatch() {
         var _a;
         LogManager_1.LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
@@ -289,6 +307,17 @@ class EntityFactory {
         }
         return null;
     }
+    async loadByTriplet(triplets, limit) {
+        let concepts = await (await DBAdapter_1.DBAdapter.getInstance()).getEntitiesByTriplet(triplets, limit);
+        concepts.forEach((val, key) => {
+            let e = new Entity_1.Entity();
+            e.setSubject(key);
+            e.getTriplets().push(...val);
+            e.setPushedStatus(true);
+            e.setUniqueRefConcept(this.uniqueRefConcept);
+            this.entityArray.push(e);
+        });
+    }
     async loadEntityConcepts(lastId, limit) {
         let entityConcepts = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConcepts(this.is_a, lastId, limit);
         for (let index = 0; index < (entityConcepts === null || entityConcepts === void 0 ? void 0 : entityConcepts.length); index++) {
@@ -299,7 +328,32 @@ class EntityFactory {
             this.entityArray.push(e);
         }
     }
+    // Loading all the triplets of given factrory entities 
+    async loadTriplets() {
+        let s = [];
+        this.entityArray.forEach(e => {
+            s.push(e.getSubject());
+        });
+        let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTriplets(s);
+        this.entityArray.forEach(e => {
+            let subId = e.getSubject().getId();
+            let trps = triplets.filter(t => t.getSubject().getId() == subId);
+            trps.forEach(t => {
+                var _a;
+                let triplet = (_a = e.getTriplets()) === null || _a === void 0 ? void 0 : _a.find(tr => tr.getVerb().getId() == t.getVerb().getId() &&
+                    tr.getTarget().getId() == t.getTarget().getId());
+                if (triplet)
+                    triplet.setId(t.getId());
+                else {
+                    e.getTriplets().push(t);
+                }
+            });
+        });
+        console.log("");
+    }
     async loadAllSubjects() {
+        if (this.entityArray.length == 0)
+            return;
         let refs = this.entityArray.map(entity => {
             let r = entity.getRef(this.uniqueRefConcept);
             if (r)
@@ -338,8 +392,18 @@ class EntityFactory {
             triplets.forEach(t => {
                 let refBatch = refs.filter(r => { return r.getTripletLink().getId() == t.getId(); });
                 if (refBatch && refBatch.length > 0) {
-                    refBatch === null || refBatch === void 0 ? void 0 : refBatch.forEach(r => { r.setTripletLink(t); });
-                    e.getRefs().push(...refBatch);
+                    let existingRefs = e.getRefs();
+                    refBatch === null || refBatch === void 0 ? void 0 : refBatch.forEach(r => {
+                        let a = existingRefs.find(rf => rf.getIdConcept().getId() == r.getIdConcept().getId() && rf.getTripletLink().getId() == r.getTripletLink().getId());
+                        if (a) {
+                            a.setId(r.getId());
+                        }
+                        else {
+                            r.setTripletLink(t);
+                            e.getRefs().push(r);
+                        }
+                    });
+                    //e.getRefs().push(...refBatch);
                 }
             });
         }

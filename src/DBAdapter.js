@@ -30,6 +30,7 @@ const lock_status_1 = require("./enums/lock-status");
 const transaction_status_1 = require("./enums/transaction-status");
 const LogManager_1 = require("./loggers/LogManager");
 const Reference_1 = require("./Reference");
+const TemporaryId_1 = require("./TemporaryId");
 const Triplet_1 = require("./Triplet");
 const Utils_1 = require("./Utils");
 class DBAdapter {
@@ -158,8 +159,25 @@ class DBAdapter {
         }
         return triplets;
     }
+    async getTriplets(subjects) {
+        let subConcept = [];
+        subjects.forEach((subject) => {
+            subConcept.push(subject.getId());
+        });
+        let sql = "select t.id as id, t.idConceptStart as subId, t.idConceptLink as verbId, t.idConceptTarget as targetId from "
+            + this.tables.get("triplets")
+            + " as t where idConceptStart in (?)";
+        let res = await this.getConnection().query(sql, [subConcept]);
+        let triplets = [];
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
+            res.forEach(row => {
+                triplets.push(new Triplet_1.Triplet(row.id, new Concept_1.Concept(row.subId, null, null), new Concept_1.Concept(row.verbId, null, null), new Concept_1.Concept(row.targetId, null, null)));
+            });
+        }
+        return triplets;
+    }
     async getEntityConceptsByRefs(verb, target, refsValuesToSearch, refConcept) {
-        let refs = refsValuesToSearch.map(function (id) { return "'" + id + "'"; }).join(",");
+        // let refs = refsValuesToSearch.map(function (id) { return "'" + id + "'"; }).join(",");
         let sql = "select  c.id, c.code, c.shortname, r.value from " +
             this.tables.get("references") + "  as r " +
             " join " + this.tables.get("triplets") + " as t on t.id = r.linkReferenced" +
@@ -176,6 +194,46 @@ class DBAdapter {
             });
         }
         return map;
+    }
+    // Load all subject concpets for given triplet 
+    async getEntitiesByTriplet(t, limit = 1000) {
+        let sql = "";
+        let subject = t[0].getSubject();
+        let selectTripletId = [];
+        if (t.length > 1) {
+            selectTripletId.push("t0.id as t0id");
+            sql = "select t0.idConceptStart as idConceptStart , #ID# from " + this.tables.get("triplets") + " as t0";
+            for (let i = 1; i < t.length; i++) {
+                let table = "t" + (i).toString();
+                selectTripletId.push(table + ".id as " + table + "id");
+                sql = sql + " join " + this.tables.get("triplets") + " as " + table +
+                    " on " + table + ".idConceptStart = t0." + "idConceptStart and " +
+                    table + ".idConceptLink = " + t[i].getVerb().getId() + " and " +
+                    table + ".idConceptTarget = " + t[i].getTarget().getId() + " ";
+            }
+            sql = sql + " and t0.idConceptLink = " + t[0].getVerb().getId() + " and t0.idConceptTarget = " +
+                t[0].getTarget().getId();
+            sql = sql + " join " + this.tables.get("concepts") + " as c on c.id = t0.idConceptStart  and c.code = '" + subject.getCode() + "' limit " + limit;
+            sql = sql.replace("#ID#", selectTripletId.toString());
+        }
+        else {
+            sql = "select t.idConceptStart as idConceptStart, t.id as t0id from " + this.tables.get("triplets") + " as t join " +
+                this.tables.get("concepts") + " as c on c.id = t.idConceptStart and " +
+                "t.idConceptLink = " + t[0].getVerb().getId() + " and t.idConceptTarget = " + t[0].getTarget().getId()
+                + " and c.code = '" + subject.getCode() + "' limit " + limit;
+        }
+        let res = await this.getConnection().query(sql);
+        let data = new Map();
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
+            res.forEach(row => {
+                let triplets = [];
+                for (let i = 0; i < t.length; i++) {
+                    triplets.push(new Triplet_1.Triplet(row["t" + i + "id"], subject, t[i].getVerb(), t[i].getTarget()));
+                }
+                data.set(new Concept_1.Concept(row.idConceptStart, subject.getCode(), null), triplets);
+            });
+        }
+        return data;
     }
     async getTripletsBySubject(subject) {
         let sql = "SELECT t.id as id, " +
@@ -355,15 +413,19 @@ class DBAdapter {
         let res = await this.getConnection().batch(sql, conceptsData);
         return res;
     }
-    async addTripletsBatch(triplets) {
+    async addTripletsBatch(triplets, withId = true) {
         let tripletsData = [];
         triplets === null || triplets === void 0 ? void 0 : triplets.forEach(t => {
-            let arr = t.getDBArrayFormat(true);
-            arr.forEach(a => { if (a == "-1")
+            let arr = t.getDBArrayFormat(withId);
+            arr.forEach(a => { if (TemporaryId_1.TemporaryId.isValid(a))
                 throw new Error("Invalid batch insert, unlinked concept found"); });
             tripletsData.push(arr);
         });
-        let sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
+        let sql = "";
+        if (withId)
+            sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
+        else
+            sql = "insert ignore into " + this.tables.get("triplets") + " (idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?) ";
         let res = await this.getConnection().batch(sql, tripletsData);
         return res;
     }
@@ -371,9 +433,9 @@ class DBAdapter {
         let refsData = [];
         refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
             let arr = r.getDBArrayFormat(withId);
-            if (withId)
-                arr.forEach(a => { if (a == "-1")
-                    throw new Error("Invalid batch insert, unlinked concept found"); });
+            console.log(r.getId());
+            arr.forEach(a => { if (TemporaryId_1.TemporaryId.isValid(a))
+                throw new Error("Invalid batch insert, unlinked concept found"); });
             refsData.push(arr);
         });
         let values = " (id, idConcept, linkReferenced, value) values (?, ?, ?, ?) ";

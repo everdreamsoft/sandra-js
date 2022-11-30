@@ -1,6 +1,11 @@
+import { APIService } from "../src/APIService";
+import { Concept } from "../src/Concept";
 import { DBAdapter } from "../src/DBAdapter";
 import { EntityFactory } from "../src/EntityFactory";
+import { IAPIResponse } from "../src/interfaces/IAPIResponse";
 import { SystemConcepts } from "../src/SystemConcepts";
+import { TemporaryId } from "../src/TemporaryId";
+import { Triplet } from "../src/Triplet";
 import { Utils } from "../src/Utils";
 
 export class Test {
@@ -319,20 +324,171 @@ export class Test {
     }
 
     async loadPendingEvents() {
-        
-        let eventFactory: EntityFactory = new EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts.get("txHash"));
 
-        await eventFactory.load
-            (
-                await Utils.createDBReference("assetStatus", "pending"),
-            )
+        let eventFactory: EntityFactory = new EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts.get("txHash"));
+        let contractFactory: EntityFactory = new EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts.get("id"));
+        let tokenPathFactory: EntityFactory = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code"));
+        let assetFactory: EntityFactory = new EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts.get("assetId"));
+
+        await contractFactory.load(await Utils.createDBReference("id", "0x9227a3d959654c8004fa77dffc380ec40880fff6"), true);
+
+        if (contractFactory.getEntities()?.length == 0) {
+            throw new Error("Contract not found");
+        }
+
+        let contract = contractFactory.getEntities()[0];
+
+        let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            eventFactory.getIsAVerb(), null);
+
+        let t = new Triplet(
+            TemporaryId.create(),
+            subConcept,
+            await SystemConcepts.get("assetStatus"),
+            await SystemConcepts.get("pending")
+        )
+        let t1 = new Triplet(
+            TemporaryId.create(),
+            subConcept,
+            await SystemConcepts.get("onBlockchain"),
+            await SystemConcepts.get("ethereum")
+        )
+
+        let t2 = new Triplet(
+            TemporaryId.create(),
+            subConcept,
+            await SystemConcepts.get("blockchainContract"),
+            contract.getSubject()
+        )
+        await eventFactory.loadByTriplet([t, t1, t2], 10);
+        await eventFactory.loadAllTripletRefs()
+
+        let tokenList = [];
+
+        // Get tokens 
+        for (let i = 0; i < eventFactory.getEntities().length; i++) {
+            // Get token from reference with triplet link as t2
+            let e = eventFactory.getEntities()[i];
+            let tokenRef = e.getRef(await SystemConcepts.get("tokenId"));
+            if (tokenRef) {
+                tokenList.push(tokenRef.getValue());
+            }
+        }
+
+        // Get asset base meta data link for the collection and contract
+        await tokenPathFactory.loadAllSubjects();
+
+        let inCollectionVerb = await SystemConcepts.get("inCollection");
+        let assetKeyIdConcept = await SystemConcepts.get("assetKeyId");
+        let baseTokenVerb = await SystemConcepts.get("baseTokenUrl");
+        let codeVerb = await SystemConcepts.get("code");
+        let bindToCollVerb = await SystemConcepts.get("bindToCollection")
+        // Finding all inCollection triplets 
+        let collectionTriplet = contract.getTriplets().filter(t => {
+            return t.getVerb().isSame(inCollectionVerb)
+        });
+
+        // Get contract triplets for contract/colletion to get tokeuri and assetid 
+        for (let i = 0; i < collectionTriplet.length; i++) {
+
+            let t = collectionTriplet[i];
+
+            let assetKeyIdRef = contract.getRefs().find(r => {
+                return r.getTripletLink().getId() == t.getId() && r.getIdConcept().isSame(assetKeyIdConcept)
+            });
+
+            let baseUrlRef = contract.getRefs().find(r => {
+                return r.getTripletLink().getId() == t.getId() && r.getIdConcept().isSame(baseTokenVerb)
+            });
+
+            let assetId = assetKeyIdRef?.getValue();
+            let baseTokenUrl = baseUrlRef?.getValue();
+
+            for (let j = 0; j < tokenList.length; j++) {
+                let tokenId = tokenList[j];
+                let assetUrl = baseTokenUrl.replace("#TOKEN#", tokenId);
+
+                let res: IAPIResponse = await APIService.get(assetUrl);
+                let assetData: any;
+
+                if (res.data) {
+                    assetData = {
+                        assetId: assetId.includes("#TOKENID#") ? Utils.getHash(res.data) : res.data[assetId],
+                        name: res.data.name || "Not Known",
+                        imageUrl: res.data.image || "",
+                        description: res.data.description || "",
+                        test: res.data.test || "te",
+                        metadata: assetUrl
+                    }
+                }
+                else {
+                    assetData = {
+                        assetId: "NOT_FOUND",
+                        name: "Not Found",
+                        imageUrl: "",
+                        description: "",
+                        metadata: ""
+                    }
+                }
+
+                let asset = await assetFactory.create([
+                    await Utils.createDBReference("assetId", assetData.assetId),
+                    await Utils.createDBReference("name", assetData.name),
+                    await Utils.createDBReference("imageUrl", assetData.imageUrl),
+                    await Utils.createDBReference("description", assetData.description),
+                    await Utils.createDBReference("metadata", assetData.metadata),
+                ]);
+
+                await asset.join("bindToContract", contract);
+                await asset.addTriplet(bindToCollVerb, t.getTarget());
+
+                let token = await tokenPathFactory.create([
+                    await Utils.createDBReference("code", "tokenId" + "-" + tokenId)
+                ]);
+
+                await token.addTriplet(contract.getSubject(), asset.getSubject());
+
+            }
+        }
+
+        await assetFactory.loadAllSubjects();
+        await tokenPathFactory.loadAllSubjects();
+
+        await assetFactory.pushBatch();
+        await tokenPathFactory.pushTripletsBatch();
 
         console.log("loaded...");
 
     }
 
-    async testDeadlockScenario()
-    {
+    async insertIgnoreRef() {
+
+        let blockFactory: EntityFactory = new EntityFactory("blockchainBloc", "blockchainblocFile", await SystemConcepts.get("blockIndex"));
+
+        for (let i = 0; i < 100; i++) {
+            let b = await blockFactory.create([
+                await Utils.createDBReference("blockIndex", i.toString()),
+                await Utils.createDBReference("ethereum1-timestamp", "1"),
+                await Utils.createDBReference("creationTimestamp", "1"),
+            ]);
+            await b.brother("asset", "5");
+        }
+
+
+        await blockFactory.loadAllSubjects();
+
+        //await blockFactory.loadTriplets();
+        // await blockFactory.loadAllTripletRefs();
+        //await blockFactory.pushRefsBatch();
+
+        await blockFactory.pushTripletsBatch();
+        await blockFactory.pushBatch();
+
+        console.log("");
+
+    }
+
+    async testDeadlockScenario() {
 
     }
 }
