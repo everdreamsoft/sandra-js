@@ -213,8 +213,7 @@ class Test {
         Sandra_1.Sandra.APP_CONFIG = {
             IPFSServiceUrl: "https://ipfsc.crystalsuite.com/"
         };
-        let a = await APIService_1.APIService.get("ipfs://QmTDcCdt3yb6mZitzWBmQr65AW6Wska295Dg9nbEYpSUDR/2");
-        console.log("");
+        let res = await APIService_1.APIService.get("ipfs://QmTDcCdt3yb6mZitzWBmQr65AW6Wska295Dg9nbEYpSUDR/2");
         let eventFactory = new EntityFactory_1.EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts_1.SystemConcepts.get("txHash"));
         let contractFactory = new EntityFactory_1.EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
         let tokenPathFactory = new EntityFactory_1.EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts_1.SystemConcepts.get("code"));
