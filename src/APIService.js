@@ -11,6 +11,7 @@ class APIService {
     constructor() { }
     static async get(url, timeout = 60000, waitTimeInMs) {
         try {
+            url = Utils_1.Utils.createIPFSUrlIfFound(url);
             const source = axios_1.default.CancelToken.source();
             if (waitTimeInMs)
                 await Utils_1.Utils.wait(waitTimeInMs);

@@ -1,5 +1,4 @@
 import axios from "axios";
-import { IAPIError } from "./interfaces/IAPIError";
 import { IAPIResponse } from "./interfaces/IAPIResponse";
 import { LogManager } from "./loggers/LogManager";
 import { Utils } from "./Utils";
@@ -12,6 +11,8 @@ export class APIService {
     static async get(url: string, timeout: number = 60000, waitTimeInMs?: number): Promise<IAPIResponse> {
 
         try {
+
+            url = Utils.createIPFSUrlIfFound(url);
 
             const source = axios.CancelToken.source();
 
@@ -35,6 +36,7 @@ export class APIService {
         }
 
     }
+
 
     static createApiResponse(error: any, data: any): IAPIResponse {
 

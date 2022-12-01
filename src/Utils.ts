@@ -4,6 +4,7 @@ import { SystemConcepts } from "./SystemConcepts";
 import { TemporaryId } from "./TemporaryId";
 import { Triplet } from "./Triplet";
 import crypto from "crypto";
+import { Sandra } from "./Sandra";
 
 export class Utils {
 
@@ -19,4 +20,16 @@ export class Utils {
         return new Promise(resolve => setTimeout(resolve, milliseconds));
     }
 
+    static createIPFSUrlIfFound(url: string) {
+        const IPFS_PREFIX = "ipfs://";
+        url = url?.toLowerCase();
+
+        if (url?.indexOf(IPFS_PREFIX) >= 0) {
+            if (Sandra.APP_CONFIG.IPFSServiceUrl)
+                return url.replace(IPFS_PREFIX, Sandra.APP_CONFIG.IPFSServiceUrl);
+            else
+                throw new Error("IPFS service url not configured in snadra, Use Sandra.APP_CONFIG");
+        }
+
+    }
 }
