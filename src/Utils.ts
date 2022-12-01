@@ -21,12 +21,10 @@ export class Utils {
     }
 
     static createIPFSUrlIfFound(url: string) {
-        const IPFS_PREFIX = "ipfs://";
-        url = url?.toLowerCase();
 
-        if (url?.indexOf(IPFS_PREFIX) >= 0) {
+        if (url?.toLowerCase().indexOf("ipfs://") >= 0) {
             if (Sandra.APP_CONFIG.IPFSServiceUrl)
-                return url.replace(IPFS_PREFIX, Sandra.APP_CONFIG.IPFSServiceUrl);
+                return url.replace(/ipfs:\/\//i, Sandra.APP_CONFIG.IPFSServiceUrl);
             else
                 throw new Error("IPFS service url not configured in snadra, Use Sandra.APP_CONFIG");
         }

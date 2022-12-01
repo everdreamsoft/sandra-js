@@ -20,11 +20,9 @@ class Utils {
         return new Promise(resolve => setTimeout(resolve, milliseconds));
     }
     static createIPFSUrlIfFound(url) {
-        const IPFS_PREFIX = "ipfs://";
-        url = url === null || url === void 0 ? void 0 : url.toLowerCase();
-        if ((url === null || url === void 0 ? void 0 : url.indexOf(IPFS_PREFIX)) >= 0) {
+        if ((url === null || url === void 0 ? void 0 : url.toLowerCase().indexOf("ipfs://")) >= 0) {
             if (Sandra_1.Sandra.APP_CONFIG.IPFSServiceUrl)
-                return url.replace(IPFS_PREFIX, Sandra_1.Sandra.APP_CONFIG.IPFSServiceUrl);
+                return url.replace(/ipfs:\/\//i, Sandra_1.Sandra.APP_CONFIG.IPFSServiceUrl);
             else
                 throw new Error("IPFS service url not configured in snadra, Use Sandra.APP_CONFIG");
         }
