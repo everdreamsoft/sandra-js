@@ -360,10 +360,13 @@ export class Test {
             await SystemConcepts.get("blockchainContract"),
             contract.getSubject()
         )
-        await eventFactory.loadByTriplet([t, t1, t2], 10);
+        await eventFactory.loadByTriplet([t, t1, t2], 100);
         await eventFactory.loadAllTripletRefs()
 
         let tokenList = [];
+
+        let assetStatusVerb = await SystemConcepts.get("assetStatus");
+        let completedVerb = await SystemConcepts.get("completed");
 
         // Get tokens 
         for (let i = 0; i < eventFactory.getEntities().length; i++) {
@@ -373,6 +376,9 @@ export class Test {
             if (tokenRef) {
                 tokenList.push(tokenRef.getValue());
             }
+            let t = e.getTriplets().find(t => { return t.getVerb().isSame(assetStatusVerb) });
+            t.setTarget(completedVerb);
+            t.setUpsert(true);
         }
 
         // Get asset base meta data link for the collection and contract
@@ -434,9 +440,9 @@ export class Test {
                 let asset = await assetFactory.create([
                     await Utils.createDBReference("assetId", assetData.assetId),
                     await Utils.createDBReference("name", assetData.name),
-                    await Utils.createDBReference("imageUrl", assetData.imageUrl),
+                    await Utils.createDBReference("imgURL", assetData.imageUrl),
                     await Utils.createDBReference("description", assetData.description),
-                    await Utils.createDBReference("metadata", assetData.metadata),
+                    await Utils.createDBReference("metaDataURL", assetData.metadata),
                 ]);
 
                 await asset.join("bindToContract", contract);
@@ -456,6 +462,8 @@ export class Test {
 
         await assetFactory.pushBatch();
         await tokenPathFactory.pushTripletsBatch();
+
+        await eventFactory.upsertTripletsBatch();
 
         console.log("loaded...");
 

@@ -159,6 +159,13 @@ class EntityFactory {
         }
         await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets, false);
     }
+    async upsertTripletsBatch() {
+        let triplets = [];
+        for (let i = 0; i < this.entityArray.length; i++) {
+            triplets.push(...this.entityArray[i].getTriplets().filter(t => { return t.isUpsert(); }));
+        }
+        await (await DBAdapter_1.DBAdapter.getInstance()).updateTripletsBatchById(triplets);
+    }
     async pushBatch() {
         var _a;
         LogManager_1.LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));

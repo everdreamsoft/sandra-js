@@ -43,6 +43,9 @@ class Triplet {
     setJoinedEntity(entity) {
         this.joinedEntity = entity;
     }
+    setTarget(target) {
+        this.target = target;
+    }
     isEqual(t) {
         if (this.getVerb().isSame(t.getVerb()) && this.getTarget().isSame(t.getTarget())) {
             return true;

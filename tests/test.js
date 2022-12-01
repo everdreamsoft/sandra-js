@@ -223,9 +223,11 @@ class Test {
         let t = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, await SystemConcepts_1.SystemConcepts.get("assetStatus"), await SystemConcepts_1.SystemConcepts.get("pending"));
         let t1 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, await SystemConcepts_1.SystemConcepts.get("onBlockchain"), await SystemConcepts_1.SystemConcepts.get("ethereum"));
         let t2 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, await SystemConcepts_1.SystemConcepts.get("blockchainContract"), contract.getSubject());
-        await eventFactory.loadByTriplet([t, t1, t2], 10);
+        await eventFactory.loadByTriplet([t, t1, t2], 100);
         await eventFactory.loadAllTripletRefs();
         let tokenList = [];
+        let assetStatusVerb = await SystemConcepts_1.SystemConcepts.get("assetStatus");
+        let completedVerb = await SystemConcepts_1.SystemConcepts.get("completed");
         // Get tokens 
         for (let i = 0; i < eventFactory.getEntities().length; i++) {
             // Get token from reference with triplet link as t2
@@ -234,6 +236,9 @@ class Test {
             if (tokenRef) {
                 tokenList.push(tokenRef.getValue());
             }
+            let t = e.getTriplets().find(t => { return t.getVerb().isSame(assetStatusVerb); });
+            t.setTarget(completedVerb);
+            t.setUpsert(true);
         }
         // Get asset base meta data link for the collection and contract
         await tokenPathFactory.loadAllSubjects();
@@ -284,9 +289,9 @@ class Test {
                 let asset = await assetFactory.create([
                     await Utils_1.Utils.createDBReference("assetId", assetData.assetId),
                     await Utils_1.Utils.createDBReference("name", assetData.name),
-                    await Utils_1.Utils.createDBReference("imageUrl", assetData.imageUrl),
+                    await Utils_1.Utils.createDBReference("imgURL", assetData.imageUrl),
                     await Utils_1.Utils.createDBReference("description", assetData.description),
-                    await Utils_1.Utils.createDBReference("metadata", assetData.metadata),
+                    await Utils_1.Utils.createDBReference("metaDataURL", assetData.metadata),
                 ]);
                 await asset.join("bindToContract", contract);
                 await asset.addTriplet(bindToCollVerb, t.getTarget());
@@ -300,6 +305,7 @@ class Test {
         await tokenPathFactory.loadAllSubjects();
         await assetFactory.pushBatch();
         await tokenPathFactory.pushTripletsBatch();
+        await eventFactory.upsertTripletsBatch();
         console.log("loaded...");
     }
     async insertIgnoreRef() {

@@ -543,7 +543,6 @@ export class DBAdapter {
 
         let sql = "update " + this.tables.get("references") + " set value = ( case " + caseStatemet + " end ) " + whereStatement;
 
-
         console.log(sql);
 
     }
@@ -572,6 +571,33 @@ export class DBAdapter {
 
     }
 
+    async updateTripletsBatchById(triplets: Triplet[]) {
+
+        if (triplets?.length == 0)
+            return true;
+
+        let caseStatemet = "";
+        let ids = [];
+
+        ids = [...new Set(triplets.map(item => (item.getId())))];
+
+        triplets.forEach(t => {
+            caseStatemet = caseStatemet + " when id = " + t.getId() + " then " + t.getTarget().getId()
+        });
+
+        let whereStatement = " where id in (" + ids.toString() + ")";
+
+        let sql = "update " + this.tables.get("triplets") + " set idConceptTarget = ( case " + caseStatemet + " end ) " + whereStatement;
+
+        let res = await this.getConnection().query(sql);
+
+        if (res) {
+            return true;
+        }
+
+        return false;
+
+    }
     async addRefsBatch(refs: Reference[]): Promise<any> {
 
         let refData = [];

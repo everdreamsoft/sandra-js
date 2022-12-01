@@ -225,6 +225,18 @@ export class EntityFactory {
 
     }
 
+    async upsertTripletsBatch() {
+
+        let triplets = [];
+
+        for (let i = 0; i < this.entityArray.length; i++) {
+            triplets.push(...this.entityArray[i].getTriplets().filter(t => { return t.isUpsert() }));
+        }
+
+        await (await DBAdapter.getInstance()).updateTripletsBatchById(triplets);
+
+    }
+
     async pushBatch() {
 
         LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + this.entityArray?.length);
