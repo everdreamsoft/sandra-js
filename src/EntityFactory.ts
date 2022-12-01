@@ -355,8 +355,6 @@ export class EntityFactory {
 
         await (await DBAdapter.getInstance()).updateRefsBatchById(refs);
 
-        console.log("updated..");
-
     }
 
     // Loads all entities with the given reference 
@@ -528,8 +526,6 @@ export class EntityFactory {
 
         })
 
-        console.log("");
-
     }
 
     async loadAllSubjects() {
@@ -550,6 +546,7 @@ export class EntityFactory {
         );
 
         this.entityArray.forEach(entity => {
+            console.log(entity.getSubject().getId());
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
                 let loadedS = entityConceptsMap.get(r.getValue().toString());

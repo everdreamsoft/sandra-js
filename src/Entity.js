@@ -83,7 +83,7 @@ class Entity {
                 return t.isSame(verb, target);
             });
             if (i >= 0) {
-                LogManager_1.LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName());
+                // LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName())
                 this.triplets[i].setUpsert(upsert);
                 let existingRefs = this.getRefs();
                 // Add non existing refs with current entity or replace the value for same verb

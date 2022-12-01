@@ -119,7 +119,7 @@ export class Entity {
 
             if (i >= 0) {
 
-                LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName())
+                // LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName())
 
                 this.triplets[i].setUpsert(upsert);
 

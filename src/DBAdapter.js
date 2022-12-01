@@ -30,9 +30,9 @@ const lock_status_1 = require("./enums/lock-status");
 const transaction_status_1 = require("./enums/transaction-status");
 const LogManager_1 = require("./loggers/LogManager");
 const Reference_1 = require("./Reference");
+const Sandra_1 = require("./Sandra");
 const TemporaryId_1 = require("./TemporaryId");
 const Triplet_1 = require("./Triplet");
-const Utils_1 = require("./Utils");
 class DBAdapter {
     constructor(config) {
         this.tables = new Map();
@@ -45,7 +45,7 @@ class DBAdapter {
     }
     static async getInstance() {
         if (!DBAdapter.instance) {
-            DBAdapter.instance = new DBAdapter(Utils_1.Utils.getDBConfig());
+            DBAdapter.instance = new DBAdapter(Sandra_1.Sandra.DB_CONFIG);
             await DBAdapter.instance.connect();
         }
         return DBAdapter.instance;
@@ -450,7 +450,6 @@ class DBAdapter {
         let refsData = [];
         refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
             let arr = r.getDBArrayFormat(withId);
-            console.log(r.getId());
             arr.forEach(a => { if (TemporaryId_1.TemporaryId.isValid(a))
                 throw new Error("Invalid batch insert, unlinked concept found"); });
             refsData.push(arr);

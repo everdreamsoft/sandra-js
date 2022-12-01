@@ -3,6 +3,7 @@ import { Concept } from "../src/Concept";
 import { DBAdapter } from "../src/DBAdapter";
 import { EntityFactory } from "../src/EntityFactory";
 import { IAPIResponse } from "../src/interfaces/IAPIResponse";
+import { Sandra } from "../src/Sandra";
 import { SystemConcepts } from "../src/SystemConcepts";
 import { TemporaryId } from "../src/TemporaryId";
 import { Triplet } from "../src/Triplet";
@@ -325,6 +326,7 @@ export class Test {
 
     async loadPendingEvents() {
 
+
         let eventFactory: EntityFactory = new EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts.get("txHash"));
         let contractFactory: EntityFactory = new EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts.get("id"));
         let tokenPathFactory: EntityFactory = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code"));
@@ -500,6 +502,15 @@ export class Test {
 
     }
 }
+
+
+Sandra.DB_CONFIG = {
+    database: "ccc8",
+    host: "localhost",
+    env: "bsc",
+    password: "",
+    user: "root"
+};
 
 let test = new Test();
 test.loadPendingEvents();

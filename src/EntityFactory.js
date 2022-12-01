@@ -256,7 +256,6 @@ class EntityFactory {
                 refs.push(...r);
         });
         await (await DBAdapter_1.DBAdapter.getInstance()).updateRefsBatchById(refs);
-        console.log("updated..");
     }
     // Loads all entities with the given reference 
     async load(ref, loadAllEntityData = true, iterateDown = false, limit = 1000) {
@@ -356,7 +355,6 @@ class EntityFactory {
                 }
             });
         });
-        console.log("");
     }
     async loadAllSubjects() {
         if (this.entityArray.length == 0)
@@ -368,6 +366,7 @@ class EntityFactory {
         });
         let entityConceptsMap = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConceptsByRefs(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), refs, this.uniqueRefConcept);
         this.entityArray.forEach(entity => {
+            console.log(entity.getSubject().getId());
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
                 let loadedS = entityConceptsMap.get(r.getValue().toString());

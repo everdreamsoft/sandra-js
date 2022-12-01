@@ -6,6 +6,7 @@ import { EnumTransactionStatus } from "./enums/transaction-status";
 import { IDBConfig } from "./interfaces/IDBconfig";
 import { LogManager } from "./loggers/LogManager";
 import { Reference } from "./Reference";
+import { Sandra } from "./Sandra";
 import { TemporaryId } from "./TemporaryId";
 import { Triplet } from "./Triplet";
 import { Utils } from "./Utils";
@@ -36,7 +37,7 @@ export class DBAdapter {
     public static async getInstance(): Promise<DBAdapter> {
 
         if (!DBAdapter.instance) {
-            DBAdapter.instance = new DBAdapter(Utils.getDBConfig());
+            DBAdapter.instance = new DBAdapter(Sandra.DB_CONFIG);
             await DBAdapter.instance.connect();
         }
 
@@ -660,7 +661,6 @@ export class DBAdapter {
 
         refs?.forEach(r => {
             let arr = r.getDBArrayFormat(withId);
-            console.log(r.getId());
             arr.forEach(a => { if (TemporaryId.isValid(a)) throw new Error("Invalid batch insert, unlinked concept found") })
             refsData.push(arr);
         });

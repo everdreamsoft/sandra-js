@@ -5,6 +5,7 @@ const APIService_1 = require("../src/APIService");
 const Concept_1 = require("../src/Concept");
 const DBAdapter_1 = require("../src/DBAdapter");
 const EntityFactory_1 = require("../src/EntityFactory");
+const Sandra_1 = require("../src/Sandra");
 const SystemConcepts_1 = require("../src/SystemConcepts");
 const TemporaryId_1 = require("../src/TemporaryId");
 const Triplet_1 = require("../src/Triplet");
@@ -330,6 +331,13 @@ class Test {
     }
 }
 exports.Test = Test;
+Sandra_1.Sandra.DB_CONFIG = {
+    database: "ccc8",
+    host: "localhost",
+    env: "bsc",
+    password: "",
+    user: "root"
+};
 let test = new Test();
 test.loadPendingEvents();
 //# sourceMappingURL=test.js.map
