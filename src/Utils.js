@@ -28,6 +28,7 @@ class Utils {
             else
                 throw new Error("IPFS service url not configured in snadra, Use Sandra.APP_CONFIG");
         }
+        return url;
     }
 }
 exports.Utils = Utils;
