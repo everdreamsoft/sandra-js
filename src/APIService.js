@@ -6,15 +6,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.APIService = void 0;
 const axios_1 = __importDefault(require("axios"));
 const LogManager_1 = require("./loggers/LogManager");
+const Utils_1 = require("./Utils");
 class APIService {
     constructor() { }
-    static async get(url) {
+    static async get(url, timeout = 60000, waitTimeInMs) {
         try {
-            const response = await axios_1.default.get(url, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            const source = axios_1.default.CancelToken.source();
+            if (waitTimeInMs)
+                await Utils_1.Utils.wait(waitTimeInMs);
+            const timeoutFnc = setTimeout(() => {
+                source.cancel();
+            }, timeout);
+            const response = await axios_1.default.get(url, { cancelToken: source.token });
+            clearTimeout(timeoutFnc);
             return APIService.createApiResponse(null, response.data);
         }
         catch (e) {

@@ -15,6 +15,9 @@ class Utils {
     static getHash(value) {
         return crypto_1.default.createHash('md5').update(value).digest("hex");
     }
+    static wait(milliseconds) {
+        return new Promise(resolve => setTimeout(resolve, milliseconds));
+    }
 }
 exports.Utils = Utils;
 //# sourceMappingURL=Utils.js.map

@@ -15,4 +15,8 @@ export class Utils {
         return crypto.createHash('md5').update(value).digest("hex");
     }
 
+    static wait(milliseconds: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, milliseconds));
+    }
+
 }

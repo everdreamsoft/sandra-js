@@ -2,20 +2,29 @@ import axios from "axios";
 import { IAPIError } from "./interfaces/IAPIError";
 import { IAPIResponse } from "./interfaces/IAPIResponse";
 import { LogManager } from "./loggers/LogManager";
+import { Utils } from "./Utils";
 
 
 export class APIService {
 
     constructor() { }
 
-    static async get(url: string): Promise<IAPIResponse> {
+    static async get(url: string, timeout: number = 60000, waitTimeInMs?: number): Promise<IAPIResponse> {
+
         try {
 
-            const response = await axios.get(url, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            const source = axios.CancelToken.source();
+
+            if (waitTimeInMs)
+                await Utils.wait(waitTimeInMs);
+
+            const timeoutFnc = setTimeout(() => {
+                source.cancel();
+            }, timeout);
+
+            const response = await axios.get(url, { cancelToken: source.token });
+
+            clearTimeout(timeoutFnc)
 
             return APIService.createApiResponse(null, response.data);
 
@@ -24,6 +33,7 @@ export class APIService {
             LogManager.getInstance().error(e);
             return APIService.createApiResponse(e, null);
         }
+
     }
 
     static createApiResponse(error: any, data: any): IAPIResponse {
