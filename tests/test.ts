@@ -326,6 +326,10 @@ export class Test {
 
     async loadPendingEvents() {
 
+        Sandra.APP_CONFIG = {
+            IPFSServiceUrl: "https://ipfsc.crystalsuite.com/"
+        };
+        let res = await APIService.get("ipfs://QmTDcCdt3yb6mZitzWBmQr65AW6Wska295Dg9nbEYpSUDR/2");
 
         let eventFactory: EntityFactory = new EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts.get("txHash"));
         let contractFactory: EntityFactory = new EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts.get("id"));
