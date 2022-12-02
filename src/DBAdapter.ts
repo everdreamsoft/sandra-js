@@ -544,7 +544,6 @@ export class DBAdapter {
 
         let sql = "update " + this.tables.get("references") + " set value = ( case " + caseStatemet + " end ) " + whereStatement;
 
-        console.log(sql);
 
     }
 

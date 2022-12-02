@@ -366,7 +366,6 @@ class EntityFactory {
         });
         let entityConceptsMap = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConceptsByRefs(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), refs, this.uniqueRefConcept);
         this.entityArray.forEach(entity => {
-            console.log(entity.getSubject().getId());
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
                 let loadedS = entityConceptsMap.get(r.getValue().toString());

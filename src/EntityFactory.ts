@@ -546,7 +546,6 @@ export class EntityFactory {
         );
 
         this.entityArray.forEach(entity => {
-            console.log(entity.getSubject().getId());
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
                 let loadedS = entityConceptsMap.get(r.getValue().toString());

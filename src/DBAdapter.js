@@ -378,7 +378,6 @@ class DBAdapter {
         });
         let whereStatement = " where  idConcept in (?) and linkReferenced in (?)";
         let sql = "update " + this.tables.get("references") + " set value = ( case " + caseStatemet + " end ) " + whereStatement;
-        console.log(sql);
     }
     async updateRefsBatchById(refs) {
         let caseStatemet = "";
