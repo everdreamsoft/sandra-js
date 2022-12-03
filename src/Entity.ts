@@ -37,7 +37,7 @@ export class Entity {
 
     getRefs() { return this.references; }
 
-    getEntityRefsAsKeyValue() {
+     getEntityRefsAsKeyValue() {
         let m: Map<string, string> = new Map();
         this.references.forEach(r => {
             if (r.getTripletLink().getVerb().getShortname() == "contained_in_file")
