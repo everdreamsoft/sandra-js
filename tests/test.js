@@ -333,15 +333,24 @@ class Test {
     }
     async testDeadlockScenario() {
     }
+    async loadTransaction() {
+        var _a;
+        let eventFactory = new EntityFactory_1.EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts_1.SystemConcepts.get("txHash"));
+        await eventFactory.load(await Utils_1.Utils.createDBReference("parentHash", "0xb469cc14a7aa306b1a7cc1481d2e4da8d40e5644be2f70f5fa505584ff28b7c3"), true);
+        (_a = eventFactory.getEntities()) === null || _a === void 0 ? void 0 : _a.forEach(e => {
+            console.log(e.getEntityRefsAsJson());
+        });
+        console.log(eventFactory.getEntities()[0].getEntityRefsAsJson());
+    }
 }
 exports.Test = Test;
 Sandra_1.Sandra.DB_CONFIG = {
-    database: "ccc8",
-    host: "localhost",
-    env: "bsc",
-    password: "",
-    user: "root"
+    database: "lindt_helvetia",
+    host: "mysql-lindt.alwaysdata.net",
+    env: "raclette",
+    password: "!!Wak4bewq",
+    user: "lindt_ranjit"
 };
 let test = new Test();
-test.loadPendingEvents();
+test.loadTransaction();
 //# sourceMappingURL=test.js.map

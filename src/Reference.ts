@@ -39,6 +39,11 @@ export class Reference {
 
     setIdConcept(c: Concept) { this.concept = c; }
 
+    asJson(): any {
+        let json: any = {};
+        json[this.getIdConcept().getShortname()] = this.getValue();
+        return json;
+    }
 
     // Compare a ref object with current 
     isEqualTo(ref: Reference) {

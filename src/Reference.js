@@ -22,6 +22,11 @@ class Reference {
     setTripletLink(t) { this.tripletLink = t; }
     setValue(val) { this.value = val; }
     setIdConcept(c) { this.concept = c; }
+    asJson() {
+        let json = {};
+        json[this.getIdConcept().getShortname()] = this.getValue();
+        return json;
+    }
     // Compare a ref object with current 
     isEqualTo(ref) {
         return this.getIdConcept().isSame(ref.getIdConcept()) && this.getValue() == ref.getValue();
