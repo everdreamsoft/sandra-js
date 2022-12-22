@@ -506,21 +506,68 @@ export class Test {
 
     }
 
-
     async loadTransaction() {
-        
+
         let eventFactory: EntityFactory = new EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts.get("txHash"));
         await eventFactory.load(await Utils.createDBReference("parentHash", "0xb469cc14a7aa306b1a7cc1481d2e4da8d40e5644be2f70f5fa505584ff28b7c3"), true);
 
-        eventFactory.getEntities()?.forEach(e=>{
+        eventFactory.getEntities()?.forEach(e => {
             console.log(e.getEntityRefsAsJson());
         });
 
         console.log(eventFactory.getEntities()[0].getEntityRefsAsJson());
 
     }
-}
 
+
+    async pushTriplets() {
+
+        let assetLinkData = {
+            collection: "mutant-ape-yacht-club",
+            contract: "0x60e4d786628fea6478f785a6d7e704777c86a7c6",
+            assetKeyId: "#TOKENID#",
+            baseTokenUrl: "https://boredapeyachtclub.com/api/mutants/#TOKEN#"
+        };
+
+        let collectionFactory: EntityFactory = new EntityFactory("assetCollection", "assetCollectionFile", await SystemConcepts.get("collectionId"));
+        let contractFactory: EntityFactory = new EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts.get("id"));
+
+        let collection = await collectionFactory.create([
+            await Utils.createDBReference("collectionId", assetLinkData.collection),
+        ]);
+
+        let c = await contractFactory.create(
+            [
+                await Utils.createDBReference("id", assetLinkData.contract),
+            ]
+        );
+
+        await collectionFactory.loadAllSubjects();
+        await contractFactory.loadAllSubjects();
+
+        await contractFactory.loadTriplets();
+        await contractFactory.loadAllTripletRefs();
+
+        let inCollectionVerb = await SystemConcepts.get("inCollection")
+
+        let t = c.getTriplets().find(t => {
+            return (t.getVerb().isSame(inCollectionVerb) && t.getTarget().getId() == collection.getSubject().getId())
+        });
+
+        c.setUpsert(true);
+
+        await c.addTriplet(inCollectionVerb, collection.getSubject(), [
+            await Utils.createDBReference("assetKeyId", assetLinkData.assetKeyId),
+            await Utils.createDBReference("baseTokenUrl", assetLinkData.baseTokenUrl),
+        ], true, true);
+
+        await contractFactory.pushTriplets();
+        await contractFactory.pushRefs();
+
+        console.log("");
+
+    }
+}
 
 Sandra.DB_CONFIG = {
     database: "lindt_helvetia",
@@ -531,4 +578,4 @@ Sandra.DB_CONFIG = {
 };
 
 let test = new Test();
-test.loadTransaction();
+test.pushTriplets();

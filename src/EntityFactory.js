@@ -151,6 +151,37 @@ class EntityFactory {
         }
         await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(refs);
     }
+    async pushRefs() {
+        var _a;
+        for (let index = 0; index < ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length); index++) {
+            let entity = this.entityArray[index];
+            // Create refs
+            for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
+                if (entity.isUpsert()) {
+                    await (await DBAdapter_1.DBAdapter.getInstance()).upsertRefs(entity.getRefs()[indexRef]);
+                }
+                else {
+                    await (await DBAdapter_1.DBAdapter.getInstance()).addRefs(entity.getRefs()[indexRef]);
+                }
+            }
+        }
+    }
+    async pushTriplets() {
+        var _a;
+        for (let index = 0; index < ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length); index++) {
+            let entity = this.entityArray[index];
+            // Create triplets
+            for (let indexTriplet = 0; indexTriplet < entity.getTriplets().length; indexTriplet++) {
+                let t = entity.getTriplets()[indexTriplet];
+                if (t.isUpsert()) {
+                    await (await DBAdapter_1.DBAdapter.getInstance()).upsertTriplet(t);
+                }
+                else {
+                    await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(t);
+                }
+            }
+        }
+    }
     // Pushing triplets of factory entities, insert or ignore statmenet.
     async pushTripletsBatch() {
         let triplets = [];

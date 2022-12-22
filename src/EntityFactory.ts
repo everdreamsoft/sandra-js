@@ -212,6 +212,50 @@ export class EntityFactory {
 
     }
 
+    async pushRefs() {
+
+        for (let index = 0; index < this.entityArray?.length; index++) {
+
+            let entity = this.entityArray[index];
+
+            // Create refs
+            for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
+                if (entity.isUpsert()) {
+                    await (await DBAdapter.getInstance()).upsertRefs(entity.getRefs()[indexRef]);
+                } else {
+                    await (await DBAdapter.getInstance()).addRefs(entity.getRefs()[indexRef]);
+                }
+            }
+
+        }
+
+
+    }
+
+    async pushTriplets() {
+
+        for (let index = 0; index < this.entityArray?.length; index++) {
+
+            let entity = this.entityArray[index];
+
+            // Create triplets
+            for (let indexTriplet = 0; indexTriplet < entity.getTriplets().length; indexTriplet++) {
+
+                let t = entity.getTriplets()[indexTriplet];
+
+                if (t.isUpsert()) {
+                    await (await DBAdapter.getInstance()).upsertTriplet(t);
+                }
+                else {
+                    await (await DBAdapter.getInstance()).addTriplet(t);
+                }
+
+            }
+        }
+
+
+    }
+
     // Pushing triplets of factory entities, insert or ignore statmenet.
     async pushTripletsBatch() {
 
@@ -356,6 +400,7 @@ export class EntityFactory {
         await (await DBAdapter.getInstance()).updateRefsBatchById(refs);
 
     }
+
 
     // Loads all entities with the given reference 
     async load(ref: Reference, loadAllEntityData: boolean = true, iterateDown: boolean = false, limit: number = 1000) {

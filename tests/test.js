@@ -342,6 +342,38 @@ class Test {
         });
         console.log(eventFactory.getEntities()[0].getEntityRefsAsJson());
     }
+    async pushTriplets() {
+        let assetLinkData = {
+            collection: "mutant-ape-yacht-club",
+            contract: "0x60e4d786628fea6478f785a6d7e704777c86a7c6",
+            assetKeyId: "#TOKENID#",
+            baseTokenUrl: "https://boredapeyachtclub.com/api/mutants/#TOKEN#"
+        };
+        let collectionFactory = new EntityFactory_1.EntityFactory("assetCollection", "assetCollectionFile", await SystemConcepts_1.SystemConcepts.get("collectionId"));
+        let contractFactory = new EntityFactory_1.EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        let collection = await collectionFactory.create([
+            await Utils_1.Utils.createDBReference("collectionId", assetLinkData.collection),
+        ]);
+        let c = await contractFactory.create([
+            await Utils_1.Utils.createDBReference("id", assetLinkData.contract),
+        ]);
+        await collectionFactory.loadAllSubjects();
+        await contractFactory.loadAllSubjects();
+        await contractFactory.loadTriplets();
+        await contractFactory.loadAllTripletRefs();
+        let inCollectionVerb = await SystemConcepts_1.SystemConcepts.get("inCollection");
+        let t = c.getTriplets().find(t => {
+            return (t.getVerb().isSame(inCollectionVerb) && t.getTarget().getId() == collection.getSubject().getId());
+        });
+        c.setUpsert(true);
+        await c.addTriplet(inCollectionVerb, collection.getSubject(), [
+            await Utils_1.Utils.createDBReference("assetKeyId", assetLinkData.assetKeyId),
+            await Utils_1.Utils.createDBReference("baseTokenUrl", assetLinkData.baseTokenUrl),
+        ], true, true);
+        await contractFactory.pushTriplets();
+        await contractFactory.pushRefs();
+        console.log("");
+    }
 }
 exports.Test = Test;
 Sandra_1.Sandra.DB_CONFIG = {
@@ -352,5 +384,5 @@ Sandra_1.Sandra.DB_CONFIG = {
     user: "lindt_ranjit"
 };
 let test = new Test();
-test.loadTransaction();
+test.pushTriplets();
 //# sourceMappingURL=test.js.map
