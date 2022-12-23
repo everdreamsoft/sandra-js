@@ -37,6 +37,19 @@ export class APIService {
 
     }
 
+    static async post(url: string, payload: any) {
+
+        try {
+            const response = await axios.post(url, payload);
+            return APIService.createApiResponse(null, response.data);
+        } catch (e) {
+            e.appData = "Post Url - " + url;
+            LogManager.getInstance().error(e);
+            return APIService.createApiResponse(e, null);
+        }
+
+    }
+
 
     static createApiResponse(error: any, data: any): IAPIResponse {
 

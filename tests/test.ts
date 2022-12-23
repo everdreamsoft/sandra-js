@@ -567,6 +567,84 @@ export class Test {
         console.log("");
 
     }
+
+    async createNovastarDataFromBinanceMarket() {
+
+        // Get top 100 collection from binance  
+
+        let url = "https://www.binance.com/bapi/nft/v1/friendly/nft/ranking/top-collections-v2/bsc/all/volumeDesc/100";
+
+        let top100Coll = await APIService.get(url);
+
+        let collections = top100Coll.data.data;
+
+
+        let collIds = collections.map(c => { return c.collectionId });
+
+        let payload = {
+            "amountFrom": "", "amountTo": "", "categories": [], "currency": "",
+            "mediaType": [], "tradeType": [], "collections": collIds, "networks": [], "isVerified": [], "assetType": [],
+            "rarities": [], "page": 1, "rows": 1, "orderBy": "amount_sort", "orderType": 1, "isBack": "0", "properties": []
+        };
+        // get assset to get the contracts later 
+
+        for (let i = 0; i < collections.length; i++) {
+
+            url = "https://www.binance.com/bapi/nft/v1/friendly/nft/asset/market/asset-list";
+            let res = await APIService.post(url, payload);
+
+            let assetid = res.data.data.rows[0].nftInfoId;
+
+            url = "https://www.binance.com/bapi/nft/v1/friendly/nft/nft-asset/asset-detail?nftInfoId=" + assetid
+
+            res = await APIService.get(url)
+
+            let assetDetail = res.data.data.nftInfoDetailMgsVo;
+
+            // get asset data 
+            // nftInfoDetailMgsVo
+            // contractAddress
+            // tokenId
+
+            console.log(assetDetail);
+
+            let tokenId = assetDetail.tokenId;
+            let contractAddress = assetDetail.contractAddress;
+
+            // Get the first block for this contract 
+
+            url = "https://api.bscscan.com/api?module=account&action=txlist&address=" + "&startblock=0&endblock=99999999&page=1&offset=1&sort=asc&apikey=F4PDD8X9P86J3S1PXHZUGPBTQAR2APVD41";
+
+            let a = await APIService.get(url);
+
+            let fristBlock = a.data.result[0].blockNumber;
+
+            let d = {
+                "address": contractAddress.toLowerCase(),
+                "startBlock": fristBlock,
+                "endBlock": null,
+                "lastBlockProcessed": fristBlock - 5,
+                "range": 5000,
+                "standard": "erc721",
+                "active": true,
+                "chain": "ethereum",
+                "baseTokenUrl": "#TOKEN#",
+                "assetKeyId": "#TOKENID#",
+                "tokenIdUsedForUri": ""
+            }
+
+            // getting base token url 
+            
+
+
+        }
+
+
+        console.log("");
+
+
+    }
+
 }
 
 Sandra.DB_CONFIG = {
@@ -578,4 +656,4 @@ Sandra.DB_CONFIG = {
 };
 
 let test = new Test();
-test.pushTriplets();
+test.createNovastarDataFromBinanceMarket();

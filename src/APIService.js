@@ -28,6 +28,17 @@ class APIService {
             return APIService.createApiResponse(e, null);
         }
     }
+    static async post(url, payload) {
+        try {
+            const response = await axios_1.default.post(url, payload);
+            return APIService.createApiResponse(null, response.data);
+        }
+        catch (e) {
+            e.appData = "Post Url - " + url;
+            LogManager_1.LogManager.getInstance().error(e);
+            return APIService.createApiResponse(e, null);
+        }
+    }
     static createApiResponse(error, data) {
         var _a;
         if (error) {
