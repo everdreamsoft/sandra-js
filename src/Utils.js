@@ -21,8 +21,14 @@ class Utils {
     }
     static createIPFSUrlIfFound(url) {
         if ((url === null || url === void 0 ? void 0 : url.toLowerCase().indexOf("ipfs://")) >= 0) {
-            if (Sandra_1.Sandra.APP_CONFIG.IPFSServiceUrl)
-                return url.replace(/ipfs:\/\//i, Sandra_1.Sandra.APP_CONFIG.IPFSServiceUrl);
+            if (Sandra_1.Sandra.APP_CONFIG.IPFSServiceUrl) {
+                if ((url === null || url === void 0 ? void 0 : url.toLowerCase().indexOf("ipfs://ipfs/")) >= 0) {
+                    return url.replace(/ipfs:\/\/ipfs\//i, Sandra_1.Sandra.APP_CONFIG.IPFSServiceUrl);
+                }
+                if ((url === null || url === void 0 ? void 0 : url.toLowerCase().indexOf("ipfs://")) >= 0) {
+                    return url.replace(/ipfs:\/\//i, Sandra_1.Sandra.APP_CONFIG.IPFSServiceUrl);
+                }
+            }
             else
                 throw new Error("IPFS service url not configured in snadra, Use Sandra.APP_CONFIG");
         }
