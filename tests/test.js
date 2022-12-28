@@ -421,6 +421,15 @@ class Test {
         }
         console.log("");
     }
+    async getCollections() {
+        let collectionFactory = new EntityFactory_1.EntityFactory("assetCollection", "assetCollectionFile", await SystemConcepts_1.SystemConcepts.get("collectionId"));
+        await collectionFactory.loadEntityConcepts(null, "1");
+        await collectionFactory.loadEntityConceptsRefs();
+        collectionFactory.getEntities().forEach(e => {
+            let json = e.getEntityRefsAsJson();
+            console.log(json);
+        });
+    }
 }
 exports.Test = Test;
 Sandra_1.Sandra.DB_CONFIG = {
@@ -431,5 +440,5 @@ Sandra_1.Sandra.DB_CONFIG = {
     user: "lindt_ranjit"
 };
 let test = new Test();
-test.createNovastarDataFromBinanceMarket();
+test.getCollections();
 //# sourceMappingURL=test.js.map

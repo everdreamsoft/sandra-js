@@ -1,6 +1,7 @@
 import * as mariaDb from "mariadb";
 import { Connection } from "mariadb";
 import { Concept } from "./Concept";
+import { Entity } from "./Entity";
 import { EnumLockStatus } from "./enums/lock-status";
 import { EnumTransactionStatus } from "./enums/transaction-status";
 import { IDBConfig } from "./interfaces/IDBconfig";
@@ -418,6 +419,44 @@ export class DBAdapter {
         }
 
         return concpets;
+
+    }
+
+    async getEntityConceptsRefs(entities: Entity[], containedInFileConcept: Concept) {
+
+        if (entities?.length == 0) return;
+
+        let subjs = [];
+        subjs = entities.map(e => { return e.getSubject().getId() })
+
+        let sql = "select t.id as tId, t.idConceptStart as subjectId , c.id, c.code," +
+            " c.shortname, r.id as refId, r.idConcept as refCon, r.linkReferenced as refLink, " +
+            " r.value as refVal from  " +
+            this.tables.get("references") + "  as r " +
+            " join " + this.tables.get("triplets") + " as t on t.id = r.linkReferenced" +
+            " join " + this.tables.get("concepts") + " as c on r.idConcept = c.id" +
+            " and t.idConceptStart in (?) " +
+            " and t.idConceptLink =  ? ";
+
+        let res: any = await this.getConnection().query(sql, [subjs, containedInFileConcept.getId()]);
+
+        entities.forEach(e => {
+            let refsRows = res.filter(r => { return r.subjectId == e.getSubject().getId() });
+
+            if (refsRows?.length > 0) {
+
+                let t = new Triplet(refsRows[0].tId, e.getSubject(), containedInFileConcept, null);
+
+                let refs = refsRows.map(row => {
+                    let refConcept = new Concept(row.id, row.code, row.shortname);
+                    return new Reference(row.refId, refConcept, t, row.refVal);
+                });
+
+                e.setRefs(refs);
+                e.getTriplets().push(t);
+
+            }
+        });
 
     }
 

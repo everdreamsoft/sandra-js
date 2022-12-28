@@ -541,6 +541,12 @@ export class EntityFactory {
 
     }
 
+    async loadEntityConceptsRefs() {
+        await (await DBAdapter.getInstance()).getEntityConceptsRefs(
+            this.entityArray, await SystemConcepts.get("contained_in_file")
+        );
+    }
+
     // Loading all the triplets of given factrory entities 
     async loadTriplets() {
 

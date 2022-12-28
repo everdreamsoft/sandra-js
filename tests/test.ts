@@ -634,7 +634,7 @@ export class Test {
             }
 
             // getting base token url 
-            
+
 
 
         }
@@ -645,6 +645,17 @@ export class Test {
 
     }
 
+    async getCollections() {
+        let collectionFactory: EntityFactory = new EntityFactory("assetCollection", "assetCollectionFile", await SystemConcepts.get("collectionId"));
+        await collectionFactory.loadEntityConcepts(null, "1");
+        await collectionFactory.loadEntityConceptsRefs();
+
+        collectionFactory.getEntities().forEach(e => {
+            let json = e.getEntityRefsAsJson();
+            console.log(json);
+        });
+
+    }
 }
 
 Sandra.DB_CONFIG = {
@@ -656,4 +667,4 @@ Sandra.DB_CONFIG = {
 };
 
 let test = new Test();
-test.createNovastarDataFromBinanceMarket();
+test.getCollections();

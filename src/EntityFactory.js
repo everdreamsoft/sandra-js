@@ -365,6 +365,9 @@ class EntityFactory {
             this.entityArray.push(e);
         }
     }
+    async loadEntityConceptsRefs() {
+        await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConceptsRefs(this.entityArray, await SystemConcepts_1.SystemConcepts.get("contained_in_file"));
+    }
     // Loading all the triplets of given factrory entities 
     async loadTriplets() {
         let s = [];

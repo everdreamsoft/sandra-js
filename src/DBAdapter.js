@@ -290,6 +290,33 @@ class DBAdapter {
         }
         return concpets;
     }
+    async getEntityConceptsRefs(entities, containedInFileConcept) {
+        if ((entities === null || entities === void 0 ? void 0 : entities.length) == 0)
+            return;
+        let subjs = [];
+        subjs = entities.map(e => { return e.getSubject().getId(); });
+        let sql = "select t.id as tId, t.idConceptStart as subjectId , c.id, c.code," +
+            " c.shortname, r.id as refId, r.idConcept as refCon, r.linkReferenced as refLink, " +
+            " r.value as refVal from  " +
+            this.tables.get("references") + "  as r " +
+            " join " + this.tables.get("triplets") + " as t on t.id = r.linkReferenced" +
+            " join " + this.tables.get("concepts") + " as c on r.idConcept = c.id" +
+            " and t.idConceptStart in (?) " +
+            " and t.idConceptLink =  ? ";
+        let res = await this.getConnection().query(sql, [subjs, containedInFileConcept.getId()]);
+        entities.forEach(e => {
+            let refsRows = res.filter(r => { return r.subjectId == e.getSubject().getId(); });
+            if ((refsRows === null || refsRows === void 0 ? void 0 : refsRows.length) > 0) {
+                let t = new Triplet_1.Triplet(refsRows[0].tId, e.getSubject(), containedInFileConcept, null);
+                let refs = refsRows.map(row => {
+                    let refConcept = new Concept_1.Concept(row.id, row.code, row.shortname);
+                    return new Reference_1.Reference(row.refId, refConcept, t, row.refVal);
+                });
+                e.setRefs(refs);
+                e.getTriplets().push(t);
+            }
+        });
+    }
     async addConcept(c, withId = false) {
         let sql = "insert ignore into " + this.tables.get("concepts") + " set code = ?, shortname = ?";
         if (withId)
