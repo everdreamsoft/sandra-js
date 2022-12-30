@@ -164,14 +164,14 @@ class DBAdapter {
         subjects.forEach((subject) => {
             subConcept.push(subject.getId());
         });
-        let sql = "select t.id as id, t.idConceptStart as subId, t.idConceptLink as verbId, t.idConceptTarget as targetId from "
+        let sql = "select c.id as cId, c.shortname as cSN, c.code as cCode , t.id as id, t.idConceptStart as subId, t.idConceptLink as verbId, t.idConceptTarget as targetId from "
             + this.tables.get("triplets")
-            + " as t where idConceptStart in (?)";
+            + " as t join " + this.tables.get("concepts") + " as c on c.id = t.idConceptTarget and  t.idConceptStart in (?)";
         let res = await this.getConnection().query(sql, [subConcept]);
         let triplets = [];
         if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
-            res.forEach(row => {
-                triplets.push(new Triplet_1.Triplet(row.id, new Concept_1.Concept(row.subId, null, null), new Concept_1.Concept(row.verbId, null, null), new Concept_1.Concept(row.targetId, null, null)));
+            res.forEach((row) => {
+                triplets.push(new Triplet_1.Triplet(row.id, new Concept_1.Concept(row.subId, null, null), new Concept_1.Concept(row.verbId, null, null), new Concept_1.Concept(row.cId, row.cCode, row.cSN)));
             });
         }
         return triplets;
