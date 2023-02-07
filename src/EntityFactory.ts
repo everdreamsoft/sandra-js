@@ -579,6 +579,38 @@ export class EntityFactory {
 
     }
 
+    // Loading all the triplets of given factrory entities 
+    async loadTripletsWithVerb(verb: Concept) {
+
+        let s = [];
+        this.entityArray.forEach(e => {
+            s.push(e.getSubject())
+        })
+
+        let triplets = await (await DBAdapter.getInstance()).getTriplets(
+            s, [verb]
+        );
+
+        this.entityArray.forEach(e => {
+
+            let subId = e.getSubject().getId();
+            let trps = triplets.filter(t => t.getSubject().getId() == subId);
+
+            trps.forEach(t => {
+
+                let triplet = e.getTriplets()?.find(tr => tr.getVerb().getId() == t.getVerb().getId() &&
+                    tr.getTarget().getId() == t.getTarget().getId());
+                if (triplet)
+                    triplet.setId(t.getId());
+                else {
+                    e.getTriplets().push(t);
+                }
+            });
+
+        })
+
+    }
+
     async loadAllSubjects() {
 
         if (this.entityArray.length == 0)

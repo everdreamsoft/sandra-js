@@ -390,6 +390,28 @@ class EntityFactory {
             });
         });
     }
+    // Loading all the triplets of given factrory entities 
+    async loadTripletsWithVerb(verb) {
+        let s = [];
+        this.entityArray.forEach(e => {
+            s.push(e.getSubject());
+        });
+        let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTriplets(s, [verb]);
+        this.entityArray.forEach(e => {
+            let subId = e.getSubject().getId();
+            let trps = triplets.filter(t => t.getSubject().getId() == subId);
+            trps.forEach(t => {
+                var _a;
+                let triplet = (_a = e.getTriplets()) === null || _a === void 0 ? void 0 : _a.find(tr => tr.getVerb().getId() == t.getVerb().getId() &&
+                    tr.getTarget().getId() == t.getTarget().getId());
+                if (triplet)
+                    triplet.setId(t.getId());
+                else {
+                    e.getTriplets().push(t);
+                }
+            });
+        });
+    }
     async loadAllSubjects() {
         if (this.entityArray.length == 0)
             return;

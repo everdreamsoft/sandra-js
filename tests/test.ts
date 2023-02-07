@@ -1,8 +1,10 @@
 import { APIService } from "../src/APIService";
 import { Concept } from "../src/Concept";
 import { DBAdapter } from "../src/DBAdapter";
+import { Entity } from "../src/Entity";
 import { EntityFactory } from "../src/EntityFactory";
 import { IAPIResponse } from "../src/interfaces/IAPIResponse";
+import { Reference } from "../src/Reference";
 import { Sandra } from "../src/Sandra";
 import { SystemConcepts } from "../src/SystemConcepts";
 import { TemporaryId } from "../src/TemporaryId";
@@ -519,7 +521,6 @@ export class Test {
 
     }
 
-
     async pushTriplets() {
 
         let assetLinkData = {
@@ -656,6 +657,123 @@ export class Test {
         });
 
     }
+
+    async getEvents(limit: number = 1000) {
+
+        let eventFactory: EntityFactory = new EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts.get("txHash"));
+        let contractFactory: EntityFactory = new EntityFactory("blockchainContract", "blockchainContractFile", await SystemConcepts.get("id"));
+        let blockFactory: EntityFactory = new EntityFactory("blockchainBloc", "blockchainBlocFile", await SystemConcepts.get("id"));
+        let addressFactory: EntityFactory = new EntityFactory("blockchainAddress", "blockchainAddressFile", await SystemConcepts.get("address"));
+
+        await contractFactory.load(await Utils.createDBReference("id", "0x3bf2922f4520a8ba0c2efc3d2a1539678dad5e9d"), true);
+
+        if (contractFactory.getEntities()?.length == 0) {
+            throw new Error("Contract not found");
+        }
+
+        let contract = contractFactory.getEntities()[0];
+
+        let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            eventFactory.getIsAVerb(), null);
+
+        let sourceConcept = await SystemConcepts.get("source");
+        let chainConcept = await SystemConcepts.get("onBlockchain");
+        let destinationConcept = await SystemConcepts.get("hasSingleDestination");
+        let onBlockConcept = await SystemConcepts.get("onBlock");
+
+        let t1 = new Triplet(
+            TemporaryId.create(),
+            subConcept,
+            await SystemConcepts.get("blockchainContract"),
+            contract.getSubject()
+        );
+
+        let t2 = new Triplet(
+            TemporaryId.create(),
+            subConcept,
+            await SystemConcepts.get("contained_in_file"),
+            await SystemConcepts.get(eventFactory.getContainedInFileVerb())
+        );
+
+        await eventFactory.loadByTriplet([t2], limit);
+        await eventFactory.loadTriplets()
+        await eventFactory.loadAllTripletRefs()
+
+        let events = [];
+        let tokens = [];
+
+        for (let i = 0; i < eventFactory.getEntities()?.length; i++) {
+            let e = eventFactory.getEntities()[i];
+            let json: any = e.getEntityRefsAsJson();
+
+            let chainTriplet = e.getTriplets().find(t => t.getVerb().isSame(chainConcept));
+            json.blockchain = chainTriplet.getTarget()?.getShortname();
+
+            let destinationTriplet = e.getTriplets().find(t => t.getVerb().isSame(destinationConcept));
+            let sourceTriplet = e.getTriplets().find(t => t.getVerb().isSame(sourceConcept));
+            let onBlockTriplet = e.getTriplets().find(t => t.getVerb().isSame(onBlockConcept));
+
+            let a = await addressFactory.loadBySubject(sourceTriplet.getTarget());
+            let b = await addressFactory.loadBySubject(destinationTriplet.getTarget());
+            let c = await blockFactory.loadBySubject(onBlockTriplet.getTarget());
+
+            json.token = e.getRef(await SystemConcepts.get("tokenId"))?.getValue();
+            json.orbs = [];
+            json.from = a.getRefValByShortname("address");
+            json.destination = b.getRefValByShortname("address");
+            json.timestamp = c.getRefValByShortname(json.blockchain + "-timestamp");
+            json.blockHeight = c.getRefValByShortname("blockIndex");
+
+            tokens.push(json.token);
+            events.push(json);
+
+        }
+
+        let orbs = await this.getOrbs(tokens, contract);
+
+        events.forEach(e => {
+            orbs["tokenId-" + e.token].forEach( o => {
+                e.orbs.push({ "asset": { "imgURL": o } });
+            })
+        });
+
+        console.log(events);
+
+        return events;
+
+    }
+
+    async getOrbs(tokens: any[], contract: Entity) {
+
+        let res = [];
+
+        let tokenPathFactory = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code"));
+        let assetFactory: EntityFactory = new EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts.get("assetId"));
+
+        for (let i = 0; i < tokens.length; i++) {
+            await tokenPathFactory.create([await Utils.createDBReference("code", "tokenId-" + tokens[i])]);
+        }
+
+        await tokenPathFactory.loadAllSubjects();
+        await tokenPathFactory.loadTripletsWithVerb(contract.getSubject());
+
+        for (let i = 0; i < tokenPathFactory.getEntities()?.length; i++) {
+
+            let e = tokenPathFactory.getEntities()[i];
+            let ts = e.getTriplets().filter(t => { return t.getVerb().getId() == contract.getSubject().getId() });
+            res[e.getRefValByShortname("code")] = [];
+
+            for (let j = 0; j < ts?.length; j++) {
+                let t = ts[j];
+                let a = await assetFactory.loadBySubject(t.getTarget());
+                res[e.getRefValByShortname("code")].push(a.getRefValByShortname("imgURL"));
+            }
+
+        }
+
+        return res;
+
+    }
 }
 
 Sandra.DB_CONFIG = {
@@ -667,4 +785,5 @@ Sandra.DB_CONFIG = {
 };
 
 let test = new Test();
-test.getCollections();
+
+test.getEvents(10);

@@ -159,15 +159,26 @@ class DBAdapter {
         }
         return triplets;
     }
-    async getTriplets(subjects) {
+    async getTriplets(subjects, verbs = null) {
         let subConcept = [];
+        let verbConcept = [];
         subjects.forEach((subject) => {
             subConcept.push(subject.getId());
         });
+        verbs === null || verbs === void 0 ? void 0 : verbs.forEach((verb) => {
+            verbConcept.push(verb.getId());
+        });
         let sql = "select c.id as cId, c.shortname as cSN, c.code as cCode , t.id as id, t.idConceptStart as subId, t.idConceptLink as verbId, t.idConceptTarget as targetId from "
             + this.tables.get("triplets")
-            + " as t join " + this.tables.get("concepts") + " as c on c.id = t.idConceptTarget and  t.idConceptStart in (?)";
-        let res = await this.getConnection().query(sql, [subConcept]);
+            + " as t join " + this.tables.get("concepts") + " as c on c.id = t.idConceptTarget "
+            + " and t.idConceptStart in (?)";
+        let res;
+        if ((verbs === null || verbs === void 0 ? void 0 : verbs.length) > 0) {
+            sql = sql + " and t.idConceptLink in (?)";
+            res = await this.getConnection().query(sql, [subConcept, verbConcept]);
+        }
+        else
+            res = await this.getConnection().query(sql, [subConcept]);
         let triplets = [];
         if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
             res.forEach((row) => {

@@ -214,18 +214,32 @@ export class DBAdapter {
 
     }
 
-    async getTriplets(subjects: Concept[]) {
+    async getTriplets(subjects: Concept[], verbs: Concept[] = null) {
 
         let subConcept = [];
+        let verbConcept = [];
+
         subjects.forEach((subject) => {
             subConcept.push(subject.getId())
         });
 
+        verbs?.forEach((verb) => {
+            verbConcept.push(verb.getId())
+        });
+
         let sql = "select c.id as cId, c.shortname as cSN, c.code as cCode , t.id as id, t.idConceptStart as subId, t.idConceptLink as verbId, t.idConceptTarget as targetId from "
             + this.tables.get("triplets")
-            + " as t join " + this.tables.get("concepts") + " as c on c.id = t.idConceptTarget and  t.idConceptStart in (?)";
+            + " as t join " + this.tables.get("concepts") + " as c on c.id = t.idConceptTarget "
+            + " and t.idConceptStart in (?)";
 
-        let res: any = await this.getConnection().query(sql, [subConcept]);
+        let res: any;
+
+        if (verbs?.length > 0) {
+            sql = sql + " and t.idConceptLink in (?)";
+            res = await this.getConnection().query(sql, [subConcept, verbConcept]);
+        }
+        else res = await this.getConnection().query(sql, [subConcept]);
+
         let triplets: Triplet[] = [];
 
         if (res?.length > 0) {
