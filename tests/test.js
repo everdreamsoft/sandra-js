@@ -505,15 +505,76 @@ class Test {
         }
         return res;
     }
+    async addProcess(chain) {
+        let processFactory = new EntityFactory_1.EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        let p = await processFactory.create([
+            await Utils_1.Utils.createDBReference("id", "jetski_" + chain.toLowerCase()),
+            await Utils_1.Utils.createDBReference("title", "jetski_title_1" + chain.toLowerCase()),
+            await Utils_1.Utils.createDBReference("desc", "jetski_desc_2" + chain.toLowerCase()),
+        ], true);
+        await p.brother("lastStopTime", "", [], true);
+        await p.brother("lastStartTime", "", [], true);
+        await p.brother("onBlockchain", chain === null || chain === void 0 ? void 0 : chain.toLowerCase(), [], true);
+        await p.brother("status", "stop", [], true);
+        await processFactory.loadAllSubjects();
+        await processFactory.push();
+    }
+    async joinAddressWithProcess(address, chain) {
+        let jwiAddressFactory = new EntityFactory_1.EntityFactory("jwiAddress", "jwiAddressFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        let processFactory = new EntityFactory_1.EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        let a = await jwiAddressFactory.create([
+            await Utils_1.Utils.createDBReference("id", address.toLowerCase()),
+        ]);
+        let p = await processFactory.create([
+            await Utils_1.Utils.createDBReference("id", "jetski_" + chain.toLowerCase()),
+        ]);
+        await p.join("joinedAddress", a);
+        await jwiAddressFactory.loadAllSubjects();
+        await processFactory.loadAllSubjects();
+        await processFactory.pushTriplets();
+    }
+    async addProcessAddress(address) {
+        let jwiAddressFactory = new EntityFactory_1.EntityFactory("jwiAddress", "jwiAddressFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        let a = await jwiAddressFactory.create([
+            await Utils_1.Utils.createDBReference("id", address.toLowerCase()),
+            await Utils_1.Utils.createDBReference("blockRange", address.toLowerCase()),
+            await Utils_1.Utils.createDBReference("status", address.toLowerCase()),
+            await Utils_1.Utils.createDBReference("lastBlockProcessed", address.toLowerCase()),
+            await Utils_1.Utils.createDBReference("lastBlockSaved", address.toLowerCase()),
+            await Utils_1.Utils.createDBReference("lastUpdateTime", address.toLowerCase()),
+            await Utils_1.Utils.createDBReference("startBlock", address.toLowerCase()),
+            await Utils_1.Utils.createDBReference("endBlock", address.toLowerCase()),
+            await Utils_1.Utils.createDBReference("standard", address.toLowerCase())
+        ], true);
+        await jwiAddressFactory.loadAllSubjects();
+        await jwiAddressFactory.push();
+    }
+    async getProcess() {
+    }
+    async getActiveBlockchains() {
+        let activeBlockchainFactory = new EntityFactory_1.EntityFactory("activeBlockchain", "activeBlockchainFile", await SystemConcepts_1.SystemConcepts.get("blockchain"));
+        // await activeBlockchainFactory.load(await Utils.createDBReference("blockchain", "ethereum"), true);
+        await activeBlockchainFactory.load(null, true);
+        console.log("");
+    }
 }
 exports.Test = Test;
-Sandra_1.Sandra.DB_CONFIG = {
+const LOCAL = true;
+const DB_CONFIG = {
     database: "lindt_helvetia",
     host: "mysql-lindt.alwaysdata.net",
     env: "raclette",
     password: "!!Wak4bewq",
     user: "lindt_ranjit"
 };
+const DB_CONFIG_LOCAL = {
+    database: "ccc8",
+    host: "localhost",
+    env: "bsc",
+    password: "",
+    user: "root"
+};
+Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.getEvents(10);
+test.getActiveBlockchains();
 //# sourceMappingURL=test.js.map

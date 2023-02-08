@@ -732,7 +732,7 @@ export class Test {
         let orbs = await this.getOrbs(tokens, contract);
 
         events.forEach(e => {
-            orbs["tokenId-" + e.token].forEach( o => {
+            orbs["tokenId-" + e.token].forEach(o => {
                 e.orbs.push({ "asset": { "imgURL": o } });
             })
         });
@@ -774,9 +774,85 @@ export class Test {
         return res;
 
     }
+
+    async addProcess(chain: string) {
+
+        let processFactory = new EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts.get("id"));
+
+        let p = await processFactory.create([
+            await Utils.createDBReference("id", "jetski_" + chain.toLowerCase()),
+            await Utils.createDBReference("title", "jetski_title_1" + chain.toLowerCase()),
+            await Utils.createDBReference("desc", "jetski_desc_2" + chain.toLowerCase()),
+        ], true);
+
+        await p.brother("lastStopTime", "", [], true);
+        await p.brother("lastStartTime", "", [], true);
+        await p.brother("onBlockchain", chain?.toLowerCase(), [], true);
+        await p.brother("status", "stop", [], true);
+
+        await processFactory.loadAllSubjects();
+        await processFactory.push();
+
+    }
+
+    async joinAddressWithProcess(address, chain) {
+
+        let jwiAddressFactory = new EntityFactory("jwiAddress", "jwiAddressFile", await SystemConcepts.get("id"));
+        let processFactory = new EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts.get("id"));
+
+        let a = await jwiAddressFactory.create([
+            await Utils.createDBReference("id", address.toLowerCase()),
+        ]);
+
+        let p = await processFactory.create([
+            await Utils.createDBReference("id", "jetski_" + chain.toLowerCase()),
+        ]);
+
+        await p.join("joinedAddress", a);
+
+        await jwiAddressFactory.loadAllSubjects();
+        await processFactory.loadAllSubjects();
+        await processFactory.pushTriplets();
+
+    }
+
+    async addProcessAddress(address: string) {
+
+        let jwiAddressFactory = new EntityFactory("jwiAddress", "jwiAddressFile", await SystemConcepts.get("id"));
+
+        let a = await jwiAddressFactory.create([
+            await Utils.createDBReference("id", address.toLowerCase()),
+            await Utils.createDBReference("blockRange", address.toLowerCase()),
+            await Utils.createDBReference("status", address.toLowerCase()),
+            await Utils.createDBReference("lastBlockProcessed", address.toLowerCase()),
+            await Utils.createDBReference("lastBlockSaved", address.toLowerCase()),
+            await Utils.createDBReference("lastUpdateTime", address.toLowerCase()),
+            await Utils.createDBReference("startBlock", address.toLowerCase()),
+            await Utils.createDBReference("endBlock", address.toLowerCase()),
+            await Utils.createDBReference("standard", address.toLowerCase())
+        ], true);
+
+        await jwiAddressFactory.loadAllSubjects();
+        await jwiAddressFactory.push();
+
+    }
+
+    async getProcess() {
+    }
+
+    async getActiveBlockchains() {
+        let activeBlockchainFactory = new EntityFactory("activeBlockchain", "activeBlockchainFile", await SystemConcepts.get("blockchain"));
+        await activeBlockchainFactory.load(null, true);
+        
+        console.log("");
+    }
+
+
 }
 
-Sandra.DB_CONFIG = {
+const LOCAL = true;
+
+const DB_CONFIG = {
     database: "lindt_helvetia",
     host: "mysql-lindt.alwaysdata.net",
     env: "raclette",
@@ -784,6 +860,16 @@ Sandra.DB_CONFIG = {
     user: "lindt_ranjit"
 };
 
+const DB_CONFIG_LOCAL = {
+    database: "ccc8",
+    host: "localhost",
+    env: "bsc",
+    password: "",
+    user: "root"
+};
+
+Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
+
 let test = new Test();
 
-test.getEvents(10);
+test.getActiveBlockchains();

@@ -189,11 +189,21 @@ export class DBAdapter {
      */
     async getEntityTriplet(verb: Concept, target: Concept, ref: Reference, limit: number = 1000): Promise<Triplet[]> {
 
-        let sql = "select t.id, c.id as subjectId, c.code as subjectCode, c.shortname as subjectShortname, t.idConceptLink as verb, t.idConceptTarget as target from " + this.tables.get("triplets") + " as t join  " + this.tables.get("references") + " as r" +
-            " on t.id = r.linkReferenced and t.idConceptLink = ? and t.idConceptTarget = ? and r.value = ? and" +
-            " r.idConcept = ? join " + this.tables.get("concepts") + " as c on t.idConceptStart = c.id limit ?";
+        let sql = "";
+        let res = [];
 
-        let res: any = await this.getConnection().query(sql, [verb.getId(), target.getId(), ref.getValue(), ref.getIdConcept().getId(), limit]);
+        if (ref) {
+            sql = "select t.id, c.id as subjectId, c.code as subjectCode, c.shortname as subjectShortname, t.idConceptLink as verb, t.idConceptTarget as target from " + this.tables.get("triplets") + " as t join  " + this.tables.get("references") + " as r" +
+                " on t.id = r.linkReferenced and t.idConceptLink = ? and t.idConceptTarget = ? and r.value = ? and" +
+                " r.idConcept = ? join " + this.tables.get("concepts") + " as c on t.idConceptStart = c.id limit ?";
+            res = await this.getConnection().query(sql, [verb.getId(), target.getId(), ref.getValue(), ref.getIdConcept().getId(), limit]);
+        }
+        else {
+            sql = "select t.id, c.id as subjectId, c.code as subjectCode, c.shortname as subjectShortname, t.idConceptLink as verb, t.idConceptTarget as target from " + this.tables.get("triplets") + " as t join " +
+                this.tables.get("concepts") + " as c on  t.idConceptStart = c.id and  t.idConceptLink = ? and t.idConceptTarget = ? limit ? ";
+            res = await this.getConnection().query(sql, [verb.getId(), target.getId(), limit]);
+        }
+
         let triplets: Triplet[] = [];
 
         if (res?.length > 0) {
