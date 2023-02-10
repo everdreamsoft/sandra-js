@@ -665,7 +665,7 @@ export class Test {
         let blockFactory: EntityFactory = new EntityFactory("blockchainBloc", "blockchainBlocFile", await SystemConcepts.get("id"));
         let addressFactory: EntityFactory = new EntityFactory("blockchainAddress", "blockchainAddressFile", await SystemConcepts.get("address"));
 
-        await contractFactory.load(await Utils.createDBReference("id", "0x3bf2922f4520a8ba0c2efc3d2a1539678dad5e9d"), true);
+        await contractFactory.load(await Utils.createDBReference("id", "0x1ddb2c0897daf18632662e71fdd2dbdc0eb3a9ec"), true);
 
         if (contractFactory.getEntities()?.length == 0) {
             throw new Error("Contract not found");
@@ -783,10 +783,11 @@ export class Test {
             await Utils.createDBReference("id", "jetski_" + chain.toLowerCase()),
             await Utils.createDBReference("title", "jetski_title_1" + chain.toLowerCase()),
             await Utils.createDBReference("desc", "jetski_desc_2" + chain.toLowerCase()),
+            await Utils.createDBReference("lastStopTime", "" + chain.toLowerCase()),
+            await Utils.createDBReference("lastStartTime", "" + chain.toLowerCase()),
+
         ], true);
 
-        await p.brother("lastStopTime", "", [], true);
-        await p.brother("lastStartTime", "", [], true);
         await p.brother("onBlockchain", chain?.toLowerCase(), [], true);
         await p.brother("status", "stop", [], true);
 
@@ -837,13 +838,33 @@ export class Test {
 
     }
 
-    async getProcess() {
+    async getProcess(chain: string) {
+        let processFactory = new EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts.get("id"));
+        await processFactory.load(await Utils.createDBReference("id", "jetski_" + chain.toLowerCase()), true, true)
+        let res = [];
+
+        processFactory.getEntities()?.forEach(p => {
+            let values = p.getEntityRefsAsJson();
+            p.getTriplets()?.forEach(t => {
+                values[t.getVerb().getShortname()] = t.getTarget().getShortname()
+            });
+
+            values["appName"] = "EVM Jetski";
+            values["blockchain"] = values["onBlockchain"];
+            values["processDescription"] = values["desc"];
+            values["processID"] = "";
+            values["processTitle"] = values["title"];
+
+            res.push(values);
+        });
+
+        console.log(res);
+
     }
 
     async getActiveBlockchains() {
         let activeBlockchainFactory = new EntityFactory("activeBlockchain", "activeBlockchainFile", await SystemConcepts.get("blockchain"));
         await activeBlockchainFactory.load(null, true);
-        
         console.log("");
     }
 
@@ -872,4 +893,4 @@ Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 
 let test = new Test();
 
-test.getActiveBlockchains();
+test.getEvents();

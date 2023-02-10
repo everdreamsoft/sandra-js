@@ -436,7 +436,7 @@ class Test {
         let contractFactory = new EntityFactory_1.EntityFactory("blockchainContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
         let blockFactory = new EntityFactory_1.EntityFactory("blockchainBloc", "blockchainBlocFile", await SystemConcepts_1.SystemConcepts.get("id"));
         let addressFactory = new EntityFactory_1.EntityFactory("blockchainAddress", "blockchainAddressFile", await SystemConcepts_1.SystemConcepts.get("address"));
-        await contractFactory.load(await Utils_1.Utils.createDBReference("id", "0x3bf2922f4520a8ba0c2efc3d2a1539678dad5e9d"), true);
+        await contractFactory.load(await Utils_1.Utils.createDBReference("id", "0x1ddb2c0897daf18632662e71fdd2dbdc0eb3a9ec"), true);
         if (((_a = contractFactory.getEntities()) === null || _a === void 0 ? void 0 : _a.length) == 0) {
             throw new Error("Contract not found");
         }
@@ -511,9 +511,9 @@ class Test {
             await Utils_1.Utils.createDBReference("id", "jetski_" + chain.toLowerCase()),
             await Utils_1.Utils.createDBReference("title", "jetski_title_1" + chain.toLowerCase()),
             await Utils_1.Utils.createDBReference("desc", "jetski_desc_2" + chain.toLowerCase()),
+            await Utils_1.Utils.createDBReference("lastStopTime", "" + chain.toLowerCase()),
+            await Utils_1.Utils.createDBReference("lastStartTime", "" + chain.toLowerCase()),
         ], true);
-        await p.brother("lastStopTime", "", [], true);
-        await p.brother("lastStartTime", "", [], true);
         await p.brother("onBlockchain", chain === null || chain === void 0 ? void 0 : chain.toLowerCase(), [], true);
         await p.brother("status", "stop", [], true);
         await processFactory.loadAllSubjects();
@@ -549,11 +549,28 @@ class Test {
         await jwiAddressFactory.loadAllSubjects();
         await jwiAddressFactory.push();
     }
-    async getProcess() {
+    async getProcess(chain) {
+        var _a;
+        let processFactory = new EntityFactory_1.EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        await processFactory.load(await Utils_1.Utils.createDBReference("id", "jetski_" + chain.toLowerCase()), true, true);
+        let res = [];
+        (_a = processFactory.getEntities()) === null || _a === void 0 ? void 0 : _a.forEach(p => {
+            var _a;
+            let values = p.getEntityRefsAsJson();
+            (_a = p.getTriplets()) === null || _a === void 0 ? void 0 : _a.forEach(t => {
+                values[t.getVerb().getShortname()] = t.getTarget().getShortname();
+            });
+            values["appName"] = "EVM Jetski";
+            values["blockchain"] = values["onBlockchain"];
+            values["processDescription"] = values["desc"];
+            values["processID"] = "";
+            values["processTitle"] = values["title"];
+            res.push(values);
+        });
+        console.log(res);
     }
     async getActiveBlockchains() {
         let activeBlockchainFactory = new EntityFactory_1.EntityFactory("activeBlockchain", "activeBlockchainFile", await SystemConcepts_1.SystemConcepts.get("blockchain"));
-        // await activeBlockchainFactory.load(await Utils.createDBReference("blockchain", "ethereum"), true);
         await activeBlockchainFactory.load(null, true);
         console.log("");
     }
@@ -576,5 +593,5 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.getActiveBlockchains();
+test.getEvents();
 //# sourceMappingURL=test.js.map
