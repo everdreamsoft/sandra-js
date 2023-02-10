@@ -485,6 +485,8 @@ class Test {
     }
     async getOrbs(tokens, contract) {
         var _a;
+        if ((tokens === null || tokens === void 0 ? void 0 : tokens.length) == 0)
+            return [];
         let res = [];
         let tokenPathFactory = new EntityFactory_1.EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts_1.SystemConcepts.get("code"));
         let assetFactory = new EntityFactory_1.EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts_1.SystemConcepts.get("assetId"));

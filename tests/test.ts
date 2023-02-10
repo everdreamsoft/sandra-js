@@ -745,6 +745,8 @@ export class Test {
 
     async getOrbs(tokens: any[], contract: Entity) {
 
+        if (tokens?.length == 0) return [];
+
         let res = [];
 
         let tokenPathFactory = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code"));

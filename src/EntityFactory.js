@@ -370,6 +370,9 @@ class EntityFactory {
     }
     // Loading all the triplets of given factrory entities 
     async loadTriplets() {
+        var _a;
+        if (((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length) == 0)
+            return;
         let s = [];
         this.entityArray.forEach(e => {
             s.push(e.getSubject());
