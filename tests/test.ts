@@ -870,7 +870,53 @@ export class Test {
         console.log("");
     }
 
+    async getContractProcess1(id: string) {
+        let processFactory = new EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts.get("id"));
+        await processFactory.load(await Utils.createDBReference("id", id), true, true)
+        console.log("");
+    }
 
+    async getContractProcess(address: string) {
+
+        let process: any = {};
+
+        let processFactory = new EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts.get("id"));
+        let jwiAddressFactory = new EntityFactory("jwiAddress", "jwiAddressFile", await SystemConcepts.get("id"));
+
+        await jwiAddressFactory.load(await Utils.createDBReference("id", address), true);
+
+        if (jwiAddressFactory.getEntities()?.length == 0)
+            return process;
+
+        let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            processFactory.getIsAVerb(), null);
+        let joinedAddressConcept = await SystemConcepts.get("joinedAddress");
+
+        let targetCon = jwiAddressFactory.getEntities()[0].getSubject();
+
+
+        let t = new Triplet(TemporaryId.create(), subConcept, joinedAddressConcept, targetCon);
+        let t2 = new Triplet(
+            TemporaryId.create(),
+            subConcept,
+            await SystemConcepts.get("contained_in_file"),
+            await SystemConcepts.get(processFactory.getContainedInFileVerb())
+        );
+        // Loading by filter 
+        await processFactory.loadByTriplet([t, t2], 1);
+        await processFactory.loadAllTripletRefs();
+
+        let e: Entity = processFactory.getEntities()[0];
+
+        let a = e.getEntityRefsAsJson();
+
+        return;
+
+
+    }
+
+
+    
 }
 
 const LOCAL = true;
@@ -895,4 +941,4 @@ Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 
 let test = new Test();
 
-test.getEvents();
+test.getContractProcess("0x1ddb2c0897daf18632662e71fdd2dbdc0eb3a9ec");

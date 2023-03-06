@@ -576,6 +576,32 @@ class Test {
         await activeBlockchainFactory.load(null, true);
         console.log("");
     }
+    async getContractProcess1(id) {
+        let processFactory = new EntityFactory_1.EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        await processFactory.load(await Utils_1.Utils.createDBReference("id", id), true, true);
+        console.log("");
+    }
+    async getContractProcess(address) {
+        var _a;
+        let process = {};
+        let processFactory = new EntityFactory_1.EntityFactory("jwiProcess", "jwiProcessFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        let jwiAddressFactory = new EntityFactory_1.EntityFactory("jwiAddress", "jwiAddressFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        await jwiAddressFactory.load(await Utils_1.Utils.createDBReference("id", address), true);
+        if (((_a = jwiAddressFactory.getEntities()) === null || _a === void 0 ? void 0 : _a.length) == 0)
+            return process;
+        let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            processFactory.getIsAVerb(), null);
+        let joinedAddressConcept = await SystemConcepts_1.SystemConcepts.get("joinedAddress");
+        let targetCon = jwiAddressFactory.getEntities()[0].getSubject();
+        let t = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, joinedAddressConcept, targetCon);
+        let t2 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(processFactory.getContainedInFileVerb()));
+        // Loading by filter 
+        await processFactory.loadByTriplet([t, t2], 1);
+        await processFactory.loadAllTripletRefs();
+        let e = processFactory.getEntities()[0];
+        let a = e.getEntityRefsAsJson();
+        return;
+    }
 }
 exports.Test = Test;
 const LOCAL = true;
@@ -595,5 +621,5 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.getEvents();
+test.getContractProcess("0x1ddb2c0897daf18632662e71fdd2dbdc0eb3a9ec");
 //# sourceMappingURL=test.js.map

@@ -661,6 +661,7 @@ export class DBAdapter {
         return false;
 
     }
+    
     async addRefsBatch(refs: Reference[]): Promise<any> {
 
         let refData = [];
