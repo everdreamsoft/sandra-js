@@ -606,7 +606,7 @@ class Test {
     async getOwner() {
         var _a;
         let contractAddress = "0x9227a3d959654c8004fa77dffc380ec40880fff6";
-        let tokenId = "";
+        let tokenId = "1";
         let eventFactory = new EntityFactory_1.EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts_1.SystemConcepts.get("txHash"));
         let contractFactory = new EntityFactory_1.EntityFactory("blockchainContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
         await contractFactory.load(await Utils_1.Utils.createDBReference("id", contractAddress), true);
