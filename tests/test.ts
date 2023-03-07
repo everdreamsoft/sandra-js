@@ -265,7 +265,7 @@ export class Test {
 
         let planetFactory = new EntityFactory("planet", "planet_file", await SystemConcepts.get("name"));
 
-        for (let i = 0; i < 1; i++) {
+        for (let i = 0; i < 100; i++) {
             await planetFactory.create(
                 [
                     await Utils.createDBReference("name", "planet" + i),
@@ -915,8 +915,60 @@ export class Test {
 
     }
 
+    async getOwner() {
 
-    
+        let contractAddress = "0x9227a3d959654c8004fa77dffc380ec40880fff6";
+        let tokenId = "1";
+
+        let eventFactory: EntityFactory = new EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts.get("txHash"));
+        let contractFactory: EntityFactory = new EntityFactory("blockchainContract", "blockchainContractFile", await SystemConcepts.get("id"));
+
+        await contractFactory.load(await Utils.createDBReference("id", contractAddress), true);
+
+        if (contractFactory.getEntities()?.length == 0) {
+            throw new Error("Contract not found");
+        }
+
+        let blockchainEventFileConcpet = await SystemConcepts.get("blockchainEventFile");
+        let cifConcpet = await SystemConcepts.get("contained_in_file");
+        let contractFileConcept = await SystemConcepts.get("blockchainContract");
+        let quantityConcept = await SystemConcepts.get("quantity");
+        let tokenIdConcept = await SystemConcepts.get("tokenId");
+
+        let contract = contractFactory.getEntities()[0];
+
+        let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            eventFactory.getIsAVerb(), null);
+
+        let t1 = new Triplet(
+            TemporaryId.create(),
+            subConcept,
+            cifConcpet,
+            blockchainEventFileConcpet
+        );
+
+        let t2 = new Triplet(
+            TemporaryId.create(),
+            subConcept,
+            contractFileConcept,
+            contract.getSubject()
+        );
+
+        let r1 = new Reference("", quantityConcept, t1, "");
+        let r2 = new Reference("", tokenIdConcept, t2, tokenId);
+
+        await eventFactory.filter([t1, t2], [r1, r2], 100);
+
+        console.log("");
+
+        await eventFactory.loadTriplets();
+
+        console.log("");
+
+
+    }
+
+
 }
 
 const LOCAL = true;
@@ -930,9 +982,9 @@ const DB_CONFIG = {
 };
 
 const DB_CONFIG_LOCAL = {
-    database: "ccc8",
+    database: "ccc8_batch",
     host: "localhost",
-    env: "bsc",
+    env: "fondue",
     password: "",
     user: "root"
 };
@@ -941,4 +993,4 @@ Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 
 let test = new Test();
 
-test.getContractProcess("0x1ddb2c0897daf18632662e71fdd2dbdc0eb3a9ec");
+test.getOwner();

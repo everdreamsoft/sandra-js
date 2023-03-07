@@ -5,6 +5,7 @@ const APIService_1 = require("../src/APIService");
 const Concept_1 = require("../src/Concept");
 const DBAdapter_1 = require("../src/DBAdapter");
 const EntityFactory_1 = require("../src/EntityFactory");
+const Reference_1 = require("../src/Reference");
 const Sandra_1 = require("../src/Sandra");
 const SystemConcepts_1 = require("../src/SystemConcepts");
 const TemporaryId_1 = require("../src/TemporaryId");
@@ -168,7 +169,7 @@ class Test {
         console.log("inserting..");
         let startTime = Date.now();
         let planetFactory = new EntityFactory_1.EntityFactory("planet", "planet_file", await SystemConcepts_1.SystemConcepts.get("name"));
-        for (let i = 0; i < 1; i++) {
+        for (let i = 0; i < 100; i++) {
             await planetFactory.create([
                 await Utils_1.Utils.createDBReference("name", "planet" + i),
             ]);
@@ -602,6 +603,33 @@ class Test {
         let a = e.getEntityRefsAsJson();
         return;
     }
+    async getOwner() {
+        var _a;
+        let contractAddress = "0x9227a3d959654c8004fa77dffc380ec40880fff6";
+        let tokenId = "";
+        let eventFactory = new EntityFactory_1.EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts_1.SystemConcepts.get("txHash"));
+        let contractFactory = new EntityFactory_1.EntityFactory("blockchainContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        await contractFactory.load(await Utils_1.Utils.createDBReference("id", contractAddress), true);
+        if (((_a = contractFactory.getEntities()) === null || _a === void 0 ? void 0 : _a.length) == 0) {
+            throw new Error("Contract not found");
+        }
+        let blockchainEventFileConcpet = await SystemConcepts_1.SystemConcepts.get("blockchainEventFile");
+        let cifConcpet = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+        let contractFileConcept = await SystemConcepts_1.SystemConcepts.get("blockchainContract");
+        let quantityConcept = await SystemConcepts_1.SystemConcepts.get("quantity");
+        let tokenIdConcept = await SystemConcepts_1.SystemConcepts.get("tokenId");
+        let contract = contractFactory.getEntities()[0];
+        let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            eventFactory.getIsAVerb(), null);
+        let t1 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, cifConcpet, blockchainEventFileConcpet);
+        let t2 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, contractFileConcept, contract.getSubject());
+        let r1 = new Reference_1.Reference("", quantityConcept, t1, "");
+        let r2 = new Reference_1.Reference("", tokenIdConcept, t2, tokenId);
+        await eventFactory.filter([t1, t2], [r1, r2], 100);
+        console.log("");
+        await eventFactory.loadTriplets();
+        console.log("");
+    }
 }
 exports.Test = Test;
 const LOCAL = true;
@@ -613,13 +641,13 @@ const DB_CONFIG = {
     user: "lindt_ranjit"
 };
 const DB_CONFIG_LOCAL = {
-    database: "ccc8",
+    database: "ccc8_batch",
     host: "localhost",
-    env: "bsc",
+    env: "fondue",
     password: "",
     user: "root"
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.getContractProcess("0x1ddb2c0897daf18632662e71fdd2dbdc0eb3a9ec");
+test.getOwner();
 //# sourceMappingURL=test.js.map

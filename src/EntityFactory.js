@@ -279,6 +279,78 @@ class EntityFactory {
             LogManager_1.LogManager.getInstance().info("No new entity to push.. - " + this.getFullName());
         }
     }
+    //TODO - This function needs triggers setup on concept and triplets table with maxid table
+    async pushBatchWithTransaction() {
+        var _a;
+        LogManager_1.LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
+        let concepts = [];
+        let triplets = [];
+        let references = [];
+        let newEntities = this.entityArray.filter(e => {
+            if (TemporaryId_1.TemporaryId.isValid(e.getSubject().getId())) {
+                return e;
+            }
+        });
+        let newConcepts = newEntities.map(e => {
+            return e.getSubject();
+        });
+        if ((newConcepts === null || newConcepts === void 0 ? void 0 : newConcepts.length) > 0) {
+            let newTriplets = [];
+            newEntities.forEach(e => {
+                newTriplets = [...newTriplets, ...e.getTriplets()];
+            });
+            let newRef = [];
+            newEntities.forEach(e => {
+                newRef = [...newRef, ...e.getRefs()];
+            });
+            let totalNewConc = newConcepts === null || newConcepts === void 0 ? void 0 : newConcepts.length;
+            let totalNewTrips = newTriplets === null || newTriplets === void 0 ? void 0 : newTriplets.length;
+            let lastConceptToAdd = newConcepts[newConcepts.length - 1];
+            let lastTipletToAdd;
+            let maxTripletId = -1;
+            if (newTriplets.length > 0)
+                lastTipletToAdd = newTriplets[newTriplets.length - 1];
+            // Inserting and getting max ids 
+            //await (await DBAdapter.getInstance()).beginTransaction();
+            await (await DBAdapter_1.DBAdapter.getInstance()).beginTransaction();
+            await (await DBAdapter_1.DBAdapter.getInstance()).disbaleTrigger();
+            let maxConceptId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxConceptIdFromMaxTable();
+            let maxConId = String(Number(maxConceptId) + totalNewConc);
+            await (await DBAdapter_1.DBAdapter.getInstance()).updateMaxConceptIdFromMaxTable(maxConId);
+            lastConceptToAdd.setId(maxConId);
+            await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(lastConceptToAdd, true);
+            if (lastTipletToAdd) {
+                maxTripletId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxTripletIdFromMaxTable();
+                let maxTripId = String(Number(maxTripletId) + totalNewTrips);
+                await (await DBAdapter_1.DBAdapter.getInstance()).updateMaxTripletIdFromMaxTable(maxTripId);
+                lastTipletToAdd.setId(maxTripId);
+                await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(lastTipletToAdd, true);
+            }
+            await (await DBAdapter_1.DBAdapter.getInstance()).enableTrigger();
+            await (await DBAdapter_1.DBAdapter.getInstance()).commit();
+            // Add till second last because last id was already added
+            for (let i = 0; i <= newConcepts.length - 2; i++) {
+                maxConceptId = maxConceptId + 1;
+                let c = newConcepts[i];
+                c.setId(maxConceptId);
+                concepts.push(c);
+            }
+            for (let i = 0; i <= newTriplets.length - 2; i++) {
+                maxTripletId = maxTripletId + 1;
+                let t = newTriplets[i];
+                t.setId(maxTripletId);
+                triplets.push(t);
+            }
+            for (let i = 0; i <= newRef.length - 1; i++) {
+                references.push(newRef[i]);
+            }
+            await (await DBAdapter_1.DBAdapter.getInstance()).addBatchWithTransaction(concepts, triplets, references);
+            LogManager_1.LogManager.getInstance().info("Pushed factory batch - " + this.getFullName());
+        }
+        else {
+            LogManager_1.LogManager.getInstance().info("No new entity to push.. - " + this.getFullName());
+        }
+    }
     async batchRefUpdate(conceptId) {
         let refs = [];
         this.entityArray.forEach(e => {
@@ -346,6 +418,51 @@ class EntityFactory {
     }
     async loadByTriplet(triplets, limit) {
         let concepts = await (await DBAdapter_1.DBAdapter.getInstance()).getEntitiesByTriplet(triplets, limit);
+        concepts.forEach((val, key) => {
+            let e = new Entity_1.Entity();
+            e.setSubject(key);
+            e.getTriplets().push(...val);
+            e.setPushedStatus(true);
+            e.setUniqueRefConcept(this.uniqueRefConcept);
+            this.entityArray.push(e);
+        });
+    }
+    // Note - Not thoroughly tested but works for the scenarios tested. Amazing feature!!
+    // Optimized funtion for filtering.
+    // Filter all the entities values with provided triplets and reference values 
+    // Filter by triplets and refernce, if a refrence is added then reference should have 
+    // tripletLink set and this triplet should be provided with triplets parameter.
+    // Code Example -         
+    // let blockchainEventFileConcpet = await SystemConcepts.get("blockchainEventFile");
+    // let cifConcpet = await SystemConcepts.get("contained_in_file");
+    // let contractFileConcept = await SystemConcepts.get("blockchainContract");
+    // let quantityConcept = await SystemConcepts.get("quantity");
+    // let tokenIdConcept = await SystemConcepts.get("tokenId");
+    // let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX +
+    // eventFactory.getIsAVerb(), null);
+    // let t1 = new Triplet(
+    //     TemporaryId.create(),
+    //     subConcept,
+    //     cifConcpet,
+    //     blockchainEventFileConcpet
+    // );
+    // let t2 = new Triplet(
+    //     TemporaryId.create(),
+    //     subConcept,
+    //     contractFileConcept,
+    //     contract.getSubject()
+    // );
+    // let t3 = new Triplet(
+    //     TemporaryId.create(),
+    //     subConcept,
+    //     await SystemConcepts.get("balanced"),
+    //     await SystemConcepts.get("true")
+    // );
+    // let r1 = new Reference("", quantityConcept, t1, "");
+    // let r2 = new Reference("", tokenIdConcept, t2, "1");
+    // await eventFactory.filter([t1, t2, t3], [r1, r2], 100);
+    async filter(triplets, refs, limit) {
+        let concepts = await (await DBAdapter_1.DBAdapter.getInstance()).filter(triplets, refs, limit);
         concepts.forEach((val, key) => {
             let e = new Entity_1.Entity();
             e.setSubject(key);

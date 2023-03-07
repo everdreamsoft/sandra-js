@@ -42,6 +42,7 @@ class DBAdapter {
         this.tables.set("concepts", this.config.env + "_SandraConcept");
         this.tables.set("references", this.config.env + "_SandraReferences");
         this.tables.set("triplets", this.config.env + "_SandraTriplets");
+        this.tables.set("maxid", this.config.env + "_maxid");
     }
     static async getInstance() {
         if (!DBAdapter.instance) {
@@ -251,6 +252,57 @@ class DBAdapter {
                     triplets.push(new Triplet_1.Triplet(row["t" + i + "id"], subject, t[i].getVerb(), t[i].getTarget()));
                 }
                 data.set(new Concept_1.Concept(row.idConceptStart, subject.getCode(), null), triplets);
+            });
+        }
+        return data;
+    }
+    // Filter by triplets and refernce, if a refrence is added then reference should have 
+    // tripletLink set and this triplet should be provided with triplets parameter.
+    async filter(triplets, refs, limit = 1000) {
+        let sql = "";
+        let subject;
+        // Add triplet filter
+        if ((triplets === null || triplets === void 0 ? void 0 : triplets.length) > 0) {
+            subject = triplets[0].getSubject();
+            sql = "select t0.id as t0id, t0.idConceptStart t0idConceptStart ,#SELECT# from " + this.tables.get("triplets") + " as t0 ";
+            for (let index = 1; index < triplets.length; index++) {
+                let t = triplets[index];
+                sql = sql.replace("#SELECT#", "t" + index + ".id as t" + index + "id ,#SELECT#");
+                sql = sql + " join " + this.tables.get("triplets") + " as t" + index + " on t0.idConceptStart = " + "t" + index + ".idConceptStart";
+                sql = sql + " and t" + index + ".idConceptTarget = " + t.getTarget().getId();
+            }
+            sql = sql + " and t0.idConceptTarget = " + triplets[0].getTarget().getId();
+        }
+        else {
+            // need atleast one triplet even if a reference is provided, 
+            return null;
+        }
+        if ((refs === null || refs === void 0 ? void 0 : refs.length) > 0) {
+            refs.forEach((r, index) => {
+                var _a;
+                // Get the triplet linked to this reference to get the table alias from previous query
+                let t = r.getTripletLink();
+                let i = triplets.findIndex(tp => { return t.getId() == tp.getId(); });
+                if (i >= 0 && t) {
+                    sql = sql.replace("#SELECT#", "r" + index + ".id as r" + index + "id ,#SELECT#");
+                    sql = sql + " join " + this.tables.get("references") + " as r" + index + " on t" + i + ".id = r" + index + ".linkReferenced";
+                    sql = sql + " and r" + index + ".idConcept = " + r.getIdConcept().getId();
+                    if (((_a = r.getValue()) === null || _a === void 0 ? void 0 : _a.length) > 0)
+                        sql = sql + " and r" + index + ".value = '" + r.getValue() + "' ";
+                }
+            });
+        }
+        sql = sql.replace(",#SELECT#", " ");
+        let res = await this.getConnection().query(sql);
+        let data = new Map();
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
+            res.forEach((row) => {
+                let ts = [];
+                let subConcept = new Concept_1.Concept(row.t0idConceptStart, subject.getCode(), null);
+                for (let i = 0; i < triplets.length; i++) {
+                    ts.push(new Triplet_1.Triplet(row["t" + i + "id"], subConcept, triplets[i].getVerb(), triplets[i].getTarget()));
+                }
+                data.set(subConcept, ts);
             });
         }
         return data;
@@ -467,6 +519,51 @@ class DBAdapter {
         let res = await this.getConnection().batch(sql, [refData]);
         return res;
     }
+    async addBatchWithTransaction(concepts, triplets, refs, tripletWithId = false, refWithId = false) {
+        let conceptsData = [];
+        let tripletsData = [];
+        let refsData = [];
+        concepts === null || concepts === void 0 ? void 0 : concepts.forEach(concept => {
+            conceptsData.push(concept.getDBArrayFormat(true));
+        });
+        triplets === null || triplets === void 0 ? void 0 : triplets.forEach(t => {
+            let arr = t.getDBArrayFormat(tripletWithId);
+            arr.forEach(a => { if (TemporaryId_1.TemporaryId.isValid(a))
+                throw new Error("Invalid batch insert, unlinked concept found"); });
+            tripletsData.push(arr);
+        });
+        refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
+            let arr = r.getDBArrayFormat(refWithId);
+            arr.forEach(a => { if (TemporaryId_1.TemporaryId.isValid(a))
+                throw new Error("Invalid batch insert, unlinked concept found"); });
+            refsData.push(arr);
+        });
+        this.beginTransaction();
+        let sql = "";
+        if (conceptsData.length > 0) {
+            sql = "insert into " + this.tables.get("concepts") + " (id, code, shortname) values (?, ? ,?)";
+            await this.getConnection().batch(sql, conceptsData);
+        }
+        sql = "";
+        if (tripletsData.length > 0) {
+            if (tripletWithId)
+                sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
+            else
+                sql = "insert ignore into " + this.tables.get("triplets") + " (idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?) ";
+            await this.getConnection().batch(sql, tripletsData);
+        }
+        sql = "";
+        if (refsData.length > 0) {
+            let values = " (id, idConcept, linkReferenced, value) values (?, ?, ?, ?) ";
+            if (!refWithId) {
+                values = values = " (idConcept, linkReferenced, value) values (?, ?, ?) ";
+            }
+            sql = "insert ignore into " + this.tables.get("references") + values;
+            await this.getConnection().batch(sql, refsData);
+        }
+        this.commit();
+        return;
+    }
     async addConceptsBatch(concepts) {
         let conceptsData = [];
         concepts === null || concepts === void 0 ? void 0 : concepts.forEach(concept => {
@@ -528,6 +625,42 @@ class DBAdapter {
         if ((res === null || res === void 0 ? void 0 : res.length) > 0)
             return res[0].id;
         return 0;
+    }
+    async getMaxConceptIdFromMaxTable() {
+        let sql = "select id from " + this.tables.get("maxid") + " as m where m.table = 'concept' for update ";
+        let res = await this.getConnection().query(sql);
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
+            return res[0].id;
+        return 0;
+    }
+    async updateMaxConceptIdFromMaxTable(id) {
+        let sql = "update " + this.tables.get("maxid") + " as m set id = ? where m.table = 'concept'";
+        let res = await this.getConnection().query(sql, id);
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
+            return res[0].id;
+        return 0;
+    }
+    async getMaxTripletIdFromMaxTable() {
+        let sql = "select id from " + this.tables.get("maxid") + " as m where m.table = 'triplets' for update ";
+        let res = await this.getConnection().query(sql);
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
+            return res[0].id;
+        return 0;
+    }
+    async updateMaxTripletIdFromMaxTable(id) {
+        let sql = "update " + this.tables.get("maxid") + " as m set id = ? where m.table = 'triplets'";
+        let res = await this.getConnection().query(sql, id);
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
+            return res[0].id;
+        return 0;
+    }
+    async disbaleTrigger() {
+        let sql = "set @TRIGGER_DISABLED = 1";
+        return await this.getConnection().query(sql);
+    }
+    async enableTrigger() {
+        let sql = "set @TRIGGER_DISABLED = 0";
+        return await this.getConnection().query(sql);
     }
 }
 exports.DBAdapter = DBAdapter;
