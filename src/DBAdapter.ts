@@ -47,6 +47,8 @@ export class DBAdapter {
         return DBAdapter.instance;
     }
 
+    public static getInstanceObject(): DBAdapter { return DBAdapter.instance; }
+
     async connect() {
         try {
             LogManager.getInstance().info("Creating DB connection..");

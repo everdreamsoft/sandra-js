@@ -51,6 +51,7 @@ class DBAdapter {
         }
         return DBAdapter.instance;
     }
+    static getInstanceObject() { return DBAdapter.instance; }
     async connect() {
         try {
             LogManager_1.LogManager.getInstance().info("Creating DB connection..");

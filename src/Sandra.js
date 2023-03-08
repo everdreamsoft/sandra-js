@@ -4,7 +4,12 @@ exports.Sandra = void 0;
 const DBAdapter_1 = require("./DBAdapter");
 class Sandra {
     static async closeConncetion() {
-        return (await DBAdapter_1.DBAdapter.getInstance()).close();
+        if (DBAdapter_1.DBAdapter.getInstanceObject()) {
+            console.log("closing sandra connection ");
+            return (await DBAdapter_1.DBAdapter.getInstance()).close();
+        }
+        console.log("closing sandra connection / instance not found");
+        return Promise.resolve(0);
     }
 }
 exports.Sandra = Sandra;

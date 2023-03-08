@@ -7,7 +7,12 @@ export class Sandra {
     public static APP_CONFIG: IAppConfig;
 
     static async closeConncetion() {
-        return (await DBAdapter.getInstance()).close();
+        if (DBAdapter.getInstanceObject()) {
+            console.log("closing sandra connection ")
+            return (await DBAdapter.getInstance()).close();
+        }
+        console.log("closing sandra connection / instance not found");
+        return Promise.resolve(0);
     }
 
 }
