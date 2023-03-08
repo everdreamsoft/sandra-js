@@ -15,23 +15,15 @@ class EntityFactory {
         this.contained_in_file = contained_in_file;
         this.uniqueRefConcept = uniqueRefConcept;
     }
+    setPushedStatus(status) { this.pushedStatus = status; }
     getEntities() { return this.entityArray; }
     getPushedStatus() { return this.pushedStatus; }
-    setPushedStatus(status) { this.pushedStatus = status; }
-    getIsAVerb() {
-        return this.is_a;
-    }
-    getFullName() {
-        return this.is_a + "/" + this.contained_in_file;
-    }
-    getContainedInFileVerb() {
-        return this.contained_in_file;
-    }
+    getIsAVerb() { return this.is_a; }
+    getFullName() { return this.is_a + "/" + this.contained_in_file; }
+    getContainedInFileVerb() { return this.contained_in_file; }
+    getUniqueRefConcept() { return this.uniqueRefConcept; }
     isSame(factory) {
         return this.is_a == factory.getIsAVerb() && this.contained_in_file == factory.getContainedInFileVerb();
-    }
-    getUniqueRefConcept() {
-        return this.uniqueRefConcept;
     }
     getEntityByRef(ref) {
         let index = this.entityArray.findIndex(e => {
@@ -97,7 +89,6 @@ class EntityFactory {
         }
         return e;
     }
-    // Pushing entities to database, without batch insertion //
     async push() {
         var _a, _b, _c;
         LogManager_1.LogManager.getInstance().info("Pushing factory  - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
@@ -141,9 +132,6 @@ class EntityFactory {
         this.setPushedStatus(true);
         LogManager_1.LogManager.getInstance().info("Pushed factory  - " + this.getFullName());
     }
-    // Push references of all factory entities, insert or ignore statement fired.  
-    // Make sure that all triplets linked to references are loaded.
-    // loadAllSubjects() --> loadTriplets() --> pushRefsBatch()
     async pushRefsBatch() {
         let refs = [];
         for (let i = 0; i < this.entityArray.length; i++) {
@@ -182,7 +170,6 @@ class EntityFactory {
             }
         }
     }
-    // Pushing triplets of factory entities, insert or ignore statmenet.
     async pushTripletsBatch() {
         let triplets = [];
         for (let i = 0; i < this.entityArray.length; i++) {
@@ -227,11 +214,7 @@ class EntityFactory {
             let maxTripletId = -1;
             if (newTriplets.length > 0)
                 lastTipletToAdd = newTriplets[newTriplets.length - 1];
-            let lockTripTable = false;
-            if (lastTipletToAdd)
-                lockTripTable = true;
             // Inserting and getting max ids 
-            //await (await DBAdapter.getInstance()).beginTransaction();
             await (await DBAdapter_1.DBAdapter.getInstance()).lockTables(true, false, false);
             let maxConceptId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxConceptId();
             lastConceptToAdd.setId(String(Number(maxConceptId) + totalNewConc));
@@ -260,19 +243,14 @@ class EntityFactory {
             for (let i = 0; i <= newRef.length - 1; i++) {
                 references.push(newRef[i]);
             }
+            await (await DBAdapter_1.DBAdapter.getInstance()).beginTransaction();
             if (concepts.length > 0)
                 await (await DBAdapter_1.DBAdapter.getInstance()).addConceptsBatch(concepts);
-            else
-                LogManager_1.LogManager.getInstance().info("No concepts to push..");
             if (triplets.length > 0)
                 await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets);
-            else
-                LogManager_1.LogManager.getInstance().info("No triplets to push..");
             if (references.length > 0)
                 await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(references, false);
-            else
-                LogManager_1.LogManager.getInstance().info("No refs to push..");
-            //await (await DBAdapter.getInstance()).commit();
+            await (await DBAdapter_1.DBAdapter.getInstance()).commit();
             LogManager_1.LogManager.getInstance().info("Pushed factory batch - " + this.getFullName());
         }
         else {
@@ -360,7 +338,6 @@ class EntityFactory {
         });
         await (await DBAdapter_1.DBAdapter.getInstance()).updateRefsBatchById(refs);
     }
-    // Loads all entities with the given reference 
     async load(ref, loadAllEntityData = true, iterateDown = false, limit = 1000) {
         let entityTriplets = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), ref, limit);
         for (let index = 0; index < (entityTriplets === null || entityTriplets === void 0 ? void 0 : entityTriplets.length); index++) {
@@ -427,7 +404,7 @@ class EntityFactory {
             this.entityArray.push(e);
         });
     }
-    // Note - Not thoroughly tested but works for the scenarios tested. Amazing feature!!
+    // Note - Not thoroughly tested but works for the scenarios tested.
     // Optimized funtion for filtering.
     // Filter all the entities values with provided triplets and reference values 
     // Filter by triplets and refernce, if a refrence is added then reference should have 
@@ -531,14 +508,6 @@ class EntityFactory {
             });
         });
     }
-    async addSubjectAsEntity(subject) {
-        let i = this.entityArray.findIndex(e => { return e.getSubject().isSame(subject); });
-        if (i >= 0)
-            return;
-        let e = new Entity_1.Entity();
-        e.setSubject(subject);
-        this.entityArray.push(e);
-    }
     async loadAllSubjects() {
         if (this.entityArray.length == 0)
             return;
@@ -595,6 +564,14 @@ class EntityFactory {
                 }
             });
         }
+    }
+    async addSubjectAsEntity(subject) {
+        let i = this.entityArray.findIndex(e => { return e.getSubject().isSame(subject); });
+        if (i >= 0)
+            return;
+        let e = new Entity_1.Entity();
+        e.setSubject(subject);
+        this.entityArray.push(e);
     }
 }
 exports.EntityFactory = EntityFactory;

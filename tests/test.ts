@@ -139,21 +139,21 @@ export class Test {
 
         await planetFactory.create(
             [
-                await Utils.createDBReference("name", "earth1"),
+                await Utils.createDBReference("name", "earth2"),
                 await Utils.createDBReference("age", "3.5B")
             ]
         );
 
         await planetFactory.create(
             [
-                await Utils.createDBReference("name", "venus1"),
+                await Utils.createDBReference("name", "venus2"),
                 await Utils.createDBReference("age", "3.5B")
             ]
         );
 
         let e = await planetFactory.create(
             [
-                await Utils.createDBReference("name", "earth1"),
+                await Utils.createDBReference("name", "earth2"),
                 await Utils.createDBReference("age", "3B"),
                 await Utils.createDBReference("atmosphere", "yes"),
                 await Utils.createDBReference("pressure", "1"),
@@ -1043,4 +1043,4 @@ Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 
 let test = new Test();
 
-test.getOwner();
+test.testEntityPush();

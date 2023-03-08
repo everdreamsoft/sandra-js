@@ -163,7 +163,6 @@ export class Entity {
         return t;
     }
 
-
     isEqualTo(entity: Entity) {
 
         // Check the entity triplets is_a and contained_in_file 

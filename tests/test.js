@@ -91,15 +91,15 @@ class Test {
         let planetFactory = new EntityFactory_1.EntityFactory("exo_planet", "exo_planet_file", await SystemConcepts_1.SystemConcepts.get("name"));
         let moonFactory = new EntityFactory_1.EntityFactory("moon", "moon_file", await SystemConcepts_1.SystemConcepts.get("name"));
         await planetFactory.create([
-            await Utils_1.Utils.createDBReference("name", "earth1"),
+            await Utils_1.Utils.createDBReference("name", "earth2"),
             await Utils_1.Utils.createDBReference("age", "3.5B")
         ]);
         await planetFactory.create([
-            await Utils_1.Utils.createDBReference("name", "venus1"),
+            await Utils_1.Utils.createDBReference("name", "venus2"),
             await Utils_1.Utils.createDBReference("age", "3.5B")
         ]);
         let e = await planetFactory.create([
-            await Utils_1.Utils.createDBReference("name", "earth1"),
+            await Utils_1.Utils.createDBReference("name", "earth2"),
             await Utils_1.Utils.createDBReference("age", "3B"),
             await Utils_1.Utils.createDBReference("atmosphere", "yes"),
             await Utils_1.Utils.createDBReference("pressure", "1"),
@@ -686,5 +686,5 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.getOwner();
+test.testEntityPush();
 //# sourceMappingURL=test.js.map
