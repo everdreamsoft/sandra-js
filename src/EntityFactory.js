@@ -510,7 +510,6 @@ class EntityFactory {
             });
         });
     }
-    // Loading all the triplets of given factrory entities 
     async loadTripletsWithVerb(verb) {
         let s = [];
         this.entityArray.forEach(e => {
@@ -531,6 +530,14 @@ class EntityFactory {
                 }
             });
         });
+    }
+    async addSubjectAsEntity(subject) {
+        let i = this.entityArray.findIndex(e => { return e.getSubject().isSame(subject); });
+        if (i >= 0)
+            return;
+        let e = new Entity_1.Entity();
+        e.setSubject(subject);
+        this.entityArray.push(e);
     }
     async loadAllSubjects() {
         if (this.entityArray.length == 0)

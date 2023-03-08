@@ -31,13 +31,11 @@ export class Entity {
 
     getSubject() { return this.subject; }
     getTriplets() { return this.triplets; }
-
     getFactory() { return this.factory; }
     getPushedStatus() { return this.pushedStatus; }
-
     getRefs() { return this.references; }
 
-     getEntityRefsAsKeyValue() {
+    getEntityRefsAsKeyValue() {
         let m: Map<string, string> = new Map();
         this.references.forEach(r => {
             if (r.getTripletLink().getVerb().getShortname() == "contained_in_file")
@@ -75,6 +73,15 @@ export class Entity {
             return this.references[i].getValue();
     }
 
+    getTripletBrothersAsJson() {
+        let json = {};
+        this.triplets.forEach(t => {
+            if (t.getVerb()?.getShortname()?.length > 0 && t.getTarget()?.getShortname()?.length > 0) {
+                json[t.getVerb()?.getShortname()] = t.getTarget()?.getShortname();
+            }
+        })
+        return json;
+    }
 
     getRef(concept: Concept): Reference {
         if (concept) {

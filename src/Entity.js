@@ -53,6 +53,16 @@ class Entity {
         if (i >= 0)
             return this.references[i].getValue();
     }
+    getTripletBrothersAsJson() {
+        let json = {};
+        this.triplets.forEach(t => {
+            var _a, _b, _c, _d, _e, _f;
+            if (((_b = (_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) === null || _b === void 0 ? void 0 : _b.length) > 0 && ((_d = (_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getShortname()) === null || _d === void 0 ? void 0 : _d.length) > 0) {
+                json[(_e = t.getVerb()) === null || _e === void 0 ? void 0 : _e.getShortname()] = (_f = t.getTarget()) === null || _f === void 0 ? void 0 : _f.getShortname();
+            }
+        });
+        return json;
+    }
     getRef(concept) {
         if (concept) {
             let i = this.references.findIndex(ref => { return ref.getIdConcept().isSame(concept); });

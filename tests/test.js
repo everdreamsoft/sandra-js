@@ -609,6 +609,7 @@ class Test {
         let tokenId = "1";
         let eventFactory = new EntityFactory_1.EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts_1.SystemConcepts.get("txHash"));
         let contractFactory = new EntityFactory_1.EntityFactory("blockchainContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        let addressFactory = new EntityFactory_1.EntityFactory("blockchainAddress", "blockchainAddressFile", await SystemConcepts_1.SystemConcepts.get("address"));
         await contractFactory.load(await Utils_1.Utils.createDBReference("id", contractAddress), true);
         if (((_a = contractFactory.getEntities()) === null || _a === void 0 ? void 0 : _a.length) == 0) {
             throw new Error("Contract not found");
@@ -627,7 +628,43 @@ class Test {
         let r2 = new Reference_1.Reference("", tokenIdConcept, t2, tokenId);
         await eventFactory.filter([t1, t2], [r1, r2], 100);
         console.log("");
-        await eventFactory.loadTriplets();
+        let sourceConcept = await SystemConcepts_1.SystemConcepts.get("source");
+        let hasSingleDestConcept = await SystemConcepts_1.SystemConcepts.get("hasSingleDestination");
+        await eventFactory.loadAllTripletRefs();
+        await eventFactory.loadTripletsWithVerb(sourceConcept);
+        await eventFactory.loadTripletsWithVerb(hasSingleDestConcept);
+        console.log("");
+        let events = [];
+        eventFactory.getEntities().forEach(e => {
+            let json = { "transfers": {} };
+            json["transfers"]["ids"] = [tokenId];
+            json["transfers"]["values"] = [e.getRefValByShortname("quantity")];
+            json["subjectId"] = e.getSubject().getId();
+            let sourceTripIndex = e.getTriplets().findIndex(t => { return t.getVerb().isSame(sourceConcept); });
+            let destTripIndex = e.getTriplets().findIndex(t => { return t.getVerb().isSame(hasSingleDestConcept); });
+            if (sourceTripIndex >= 0) {
+                json["sourceSubId"] = e.getTriplets()[sourceTripIndex].getTarget().getId();
+                addressFactory.addSubjectAsEntity(e.getTriplets()[sourceTripIndex].getTarget());
+            }
+            if (destTripIndex >= 0) {
+                json["destinationSubId"] = e.getTriplets()[destTripIndex].getTarget().getId();
+                addressFactory.addSubjectAsEntity(e.getTriplets()[destTripIndex].getTarget());
+            }
+            events.push(json);
+            // let fromAddress = event.transfers.from;
+            // let toAddress = event.transfers.to;
+            // let tokensIds = event.transfers.ids;
+            // let values = event.transfers.values;
+            // let blockNumber = Number(tillBlockNumber);
+        });
+        await addressFactory.loadEntityConceptsRefs();
+        let addressEntities = addressFactory.getEntities();
+        events.forEach(e => {
+            let sIndex = addressEntities.findIndex(a => { return e["sourceSubId"] == a.getSubject().getId(); });
+            let dIndex = addressEntities.findIndex(a => { return e["destinationSubId"] == a.getSubject().getId(); });
+            e["transfers"]["from"] = addressEntities[sIndex].getRefValByShortname("address");
+            e["transfers"]["to"] = addressEntities[dIndex].getRefValByShortname("address");
+        });
         console.log("");
     }
 }

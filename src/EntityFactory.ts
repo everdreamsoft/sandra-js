@@ -731,7 +731,6 @@ export class EntityFactory {
 
     }
 
-    // Loading all the triplets of given factrory entities 
     async loadTripletsWithVerb(verb: Concept) {
 
         let s = [];
@@ -760,6 +759,20 @@ export class EntityFactory {
             });
 
         })
+
+    }
+
+    async addSubjectAsEntity(subject: Concept) {
+
+        let i = this.entityArray.findIndex(e => { return e.getSubject().isSame(subject) });
+
+        if (i >= 0)
+            return;
+
+        let e = new Entity();
+        e.setSubject(subject);
+
+        this.entityArray.push(e);
 
     }
 
