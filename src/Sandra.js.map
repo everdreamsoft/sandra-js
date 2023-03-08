@@ -1,1 +1,1 @@
-{"version":3,"file":"Sandra.js","sourceRoot":"","sources":["Sandra.ts"],"names":[],"mappings":";;;AAGA,MAAa,MAAM;CAIlB;AAJD,wBAIC"}
+{"version":3,"file":"Sandra.js","sourceRoot":"","sources":["Sandra.ts"],"names":[],"mappings":";;;AAAA,2CAAwC;AAIxC,MAAa,MAAM;IAIf,MAAM,CAAC,KAAK,CAAC,eAAe;QACxB,OAAO,CAAC,MAAM,qBAAS,CAAC,WAAW,EAAE,CAAC,CAAC,KAAK,EAAE,CAAC;IACnD,CAAC;CAEJ;AARD,wBAQC"}
