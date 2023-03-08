@@ -63,8 +63,10 @@ export class DBAdapter {
 
     async close() {
         try {
-            if (this.connection)
+            if (this.connection) {
                 await this.connection.end();
+                DBAdapter.instance = null;
+            }
         } catch (e) {
             console.error(e);
         }

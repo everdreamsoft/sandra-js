@@ -9,5 +9,5 @@ export class Sandra {
     static async closeConncetion() {
         return (await DBAdapter.getInstance()).close();
     }
-    
+
 }
