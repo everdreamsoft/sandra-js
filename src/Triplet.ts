@@ -50,10 +50,10 @@ export class Triplet {
 
         if (withId)
             return [this.id.toString(), this.subject.getId().toString(), this.verb.getId().toString(),
-            this.target.getId().toString()];
+            this.target.getId().toString(), (this.flag ? "1" : "0")];
         else
             return [this.subject.getId().toString(), this.verb.getId().toString(),
-            this.target.getId().toString()];
+            this.target.getId().toString(), (this.flag ? "1" : "0")];
 
     }
 
@@ -67,8 +67,7 @@ export class Triplet {
         this.joinedEntity = entity;
     }
 
-    setTarget(target:Concept)
-    {
+    setTarget(target: Concept) {
         this.target = target;
     }
 

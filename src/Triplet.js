@@ -31,10 +31,10 @@ class Triplet {
     getDBArrayFormat(withId = true) {
         if (withId)
             return [this.id.toString(), this.subject.getId().toString(), this.verb.getId().toString(),
-                this.target.getId().toString()];
+                this.target.getId().toString(), (this.flag ? "1" : "0")];
         else
             return [this.subject.getId().toString(), this.verb.getId().toString(),
-                this.target.getId().toString()];
+                this.target.getId().toString(), (this.flag ? "1" : "0")];
     }
     setId(id) {
         this.id = id;

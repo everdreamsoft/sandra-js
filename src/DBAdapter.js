@@ -406,9 +406,9 @@ class DBAdapter {
     async addTriplet(t, withId = false) {
         let sql = "";
         if (withId)
-            sql = "insert ignore into " + this.tables.get("triplets") + " set id = ?, idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+            sql = "insert ignore into " + this.tables.get("triplets") + " set id = ?, idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
         else
-            sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+            sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
         let res = await this.getConnection().query(sql, t.getDBArrayFormat(withId));
         if (res && (res === null || res === void 0 ? void 0 : res.insertId)) {
             t.setId(res.insertId);
@@ -437,7 +437,7 @@ class DBAdapter {
         }
         else {
             // Insert
-            sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?";
+            sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
             let resInsert = await this.getConnection().query(sql, t.getDBArrayFormat(false));
             if (resInsert && (resInsert === null || resInsert === void 0 ? void 0 : resInsert.insertId)) {
                 t.setId(resInsert.insertId);
@@ -550,9 +550,9 @@ class DBAdapter {
         sql = "";
         if (tripletsData.length > 0) {
             if (tripletWithId)
-                sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
+                sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget, flag) values (?, ?, ?, ?, ?) ";
             else
-                sql = "insert ignore into " + this.tables.get("triplets") + " (idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?) ";
+                sql = "insert ignore into " + this.tables.get("triplets") + " (idConceptStart, idConceptLink, idConceptTarget, flag) values (?, ?, ?, ?) ";
             await this.getConnection().batch(sql, tripletsData);
         }
         sql = "";
@@ -586,9 +586,9 @@ class DBAdapter {
         });
         let sql = "";
         if (withId)
-            sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?, ?) ";
+            sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget, flag) values (?, ?, ?, ?, ?) ";
         else
-            sql = "insert ignore into " + this.tables.get("triplets") + " (idConceptStart, idConceptLink, idConceptTarget) values (?, ?, ?) ";
+            sql = "insert ignore into " + this.tables.get("triplets") + " (idConceptStart, idConceptLink, idConceptTarget, flag) values (?, ?, ?, ?) ";
         let res = await this.getConnection().batch(sql, tripletsData);
         return res;
     }

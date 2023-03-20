@@ -669,13 +669,13 @@ class Test {
     }
 }
 exports.Test = Test;
-const LOCAL = true;
+const LOCAL = false;
 const DB_CONFIG = {
-    database: "lindt_helvetia",
-    host: "mysql-lindt.alwaysdata.net",
-    env: "raclette",
-    password: "!!Wak4bewq",
-    user: "lindt_ranjit"
+    database: "jetski",
+    host: "139.144.74.232",
+    env: "fondue",
+    password: "xH108MAdCn",
+    user: "admin"
 };
 const DB_CONFIG_LOCAL = {
     database: "ccc8_batch",
@@ -686,5 +686,5 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.testEntityPush();
+test.testBatchPush();
 //# sourceMappingURL=test.js.map
