@@ -959,7 +959,7 @@ export class Test {
         let r1 = new Reference("", quantityConcept, t1, "");
         let r2 = new Reference("", tokenIdConcept, t2, tokenId);
 
-        await eventFactory.filter([t1, t2], [r1, r2], 100);
+        await eventFactory.filter([t1, t2], [r1, r2], 1);
 
         console.log("");
         let sourceConcept = await SystemConcepts.get("source");
@@ -1044,4 +1044,4 @@ Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 
 let test = new Test();
 
-test.testBatchPush();
+test.getOwner();

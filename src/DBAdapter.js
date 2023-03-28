@@ -295,7 +295,7 @@ class DBAdapter {
                 }
             });
         }
-        sql = sql.replace(",#SELECT#", " ");
+        sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
         let res = await this.getConnection().query(sql);
         let data = new Map();
         if ((res === null || res === void 0 ? void 0 : res.length) > 0) {

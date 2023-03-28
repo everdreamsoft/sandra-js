@@ -626,7 +626,7 @@ class Test {
         let t2 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, contractFileConcept, contract.getSubject());
         let r1 = new Reference_1.Reference("", quantityConcept, t1, "");
         let r2 = new Reference_1.Reference("", tokenIdConcept, t2, tokenId);
-        await eventFactory.filter([t1, t2], [r1, r2], 100);
+        await eventFactory.filter([t1, t2], [r1, r2], 1);
         console.log("");
         let sourceConcept = await SystemConcepts_1.SystemConcepts.get("source");
         let hasSingleDestConcept = await SystemConcepts_1.SystemConcepts.get("hasSingleDestination");
@@ -686,5 +686,5 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.testBatchPush();
+test.getOwner();
 //# sourceMappingURL=test.js.map

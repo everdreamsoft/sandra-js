@@ -403,7 +403,7 @@ export class DBAdapter {
             });
         }
 
-        sql = sql.replace(",#SELECT#", " ");
+        sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
 
         let res: any = await this.getConnection().query(sql);
         let data: Map<Concept, Triplet[]> = new Map();
