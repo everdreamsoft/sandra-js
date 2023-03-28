@@ -13,6 +13,7 @@ import { Utils } from "../src/Utils";
 
 export class Test {
 
+
     async testBlockLoad() {
 
         let blockFactory: EntityFactory = new EntityFactory("blockchainBloc", "blockchainblocFile",
@@ -247,7 +248,7 @@ export class Test {
         await e.join("moon", moon1);
         await e.join("moon", moon2);
 
-        
+
         await moonFactory.pushBatch();
 
         await planetFactory.pushBatch();
@@ -1019,6 +1020,35 @@ export class Test {
 
     }
 
+    async testTokenPathForAsset() {
+
+        let contractAddress = "0x9227a3d959654c8004fa77dffc380ec40880fff6";
+        let tokenId = "1";
+
+        let tokenPathFactory: EntityFactory = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code"));
+        let contractFactory: EntityFactory = new EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts.get("id"));
+
+        await contractFactory.load(await Utils.createDBReference("id", contractAddress), true);
+
+        let contract = contractFactory.getEntities().length > 0 ? contractFactory.getEntities()[0] : null;
+
+        let token = await tokenPathFactory.create([
+            await Utils.createDBReference("code", "tokenId" + "-" + tokenId)
+        ]);
+
+        let target = await SystemConcepts.get("completed");
+
+        token.addTriplet(contract.getSubject(), target);
+
+        await tokenPathFactory.loadAllSubjects();
+        await tokenPathFactory.loadTripletsWithVerb(contract.getSubject());
+
+        await tokenPathFactory.pushTripletsBatchWithVerb(contract.getSubject(), true);
+
+        console.log("");
+
+    }
+
 
 }
 
@@ -1044,4 +1074,4 @@ Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 
 let test = new Test();
 
-test.getOwner();
+test.testTokenPathForAsset();

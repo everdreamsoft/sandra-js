@@ -667,6 +667,23 @@ class Test {
         });
         console.log("");
     }
+    async testTokenPathForAsset() {
+        let contractAddress = "0x9227a3d959654c8004fa77dffc380ec40880fff6";
+        let tokenId = "1";
+        let tokenPathFactory = new EntityFactory_1.EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts_1.SystemConcepts.get("code"));
+        let contractFactory = new EntityFactory_1.EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        await contractFactory.load(await Utils_1.Utils.createDBReference("id", contractAddress), true);
+        let contract = contractFactory.getEntities().length > 0 ? contractFactory.getEntities()[0] : null;
+        let token = await tokenPathFactory.create([
+            await Utils_1.Utils.createDBReference("code", "tokenId" + "-" + tokenId)
+        ]);
+        let target = await SystemConcepts_1.SystemConcepts.get("completed");
+        token.addTriplet(contract.getSubject(), target);
+        await tokenPathFactory.loadAllSubjects();
+        await tokenPathFactory.loadTripletsWithVerb(contract.getSubject());
+        await tokenPathFactory.pushTripletsBatchWithVerb(contract.getSubject(), true);
+        console.log("");
+    }
 }
 exports.Test = Test;
 const LOCAL = false;
@@ -686,5 +703,5 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.getOwner();
+test.testTokenPathForAsset();
 //# sourceMappingURL=test.js.map

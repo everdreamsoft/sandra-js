@@ -177,6 +177,28 @@ class EntityFactory {
         }
         await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets, false);
     }
+    // Pushes all the triplets with given verb, if triplets is loaded before and ignoreIfVerbExist is 
+    // true then it will be ignored.
+    // Use case when you need to add a triplet with given verb only but also dont want 
+    // to add another triplet with same verb
+    async pushTripletsBatchWithVerb(verb, ignoreIfVerbExist = false) {
+        let triplets = [];
+        for (let i = 0; i < this.entityArray.length; i++) {
+            let filtered = this.entityArray[i].getTriplets().filter(t => t.getVerb().isSame(verb));
+            if ((filtered === null || filtered === void 0 ? void 0 : filtered.length) > 0) {
+                if (ignoreIfVerbExist) {
+                    let index = filtered.findIndex(f => { return !TemporaryId_1.TemporaryId.isValid(f.getId()); });
+                    if (index < 0) {
+                        triplets.push(...filtered);
+                    }
+                }
+                else
+                    triplets.push(...filtered);
+            }
+        }
+        if (triplets.length > 0)
+            await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets, false);
+    }
     async upsertTripletsBatch() {
         let triplets = [];
         for (let i = 0; i < this.entityArray.length; i++) {
