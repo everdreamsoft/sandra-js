@@ -1049,6 +1049,28 @@ export class Test {
 
     }
 
+    async testFilter()
+    {
+        let tokenPathFactory: EntityFactory = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code"));
+        let contractFactory: EntityFactory = new EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts.get("id"));
+        let assetFactory: EntityFactory = new EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts.get("assetId"));
+
+        await contractFactory.load(await Utils.createDBReference("id", "0x198d33fb8f75ac6a7cb968962c743f09c486cca6"), true);
+        let contract = contractFactory.getEntities()[0];
+
+        await assetFactory.load(await Utils.createDBReference("assetId", "Pending"), true);
+        let pendingAsset = assetFactory.getEntities()[0];
+
+
+        let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            contractFactory.getIsAVerb(), null);
+
+        let t1 = new Triplet(TemporaryId.create(), subConcept, contract.getSubject(), pendingAsset.getSubject());
+        await tokenPathFactory.filter([t1], [], 100);
+
+        console.log("done.. ");
+
+    }
 
 }
 
@@ -1074,4 +1096,4 @@ Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 
 let test = new Test();
 
-test.testTokenPathForAsset();
+test.getOwner();

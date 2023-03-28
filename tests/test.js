@@ -684,6 +684,20 @@ class Test {
         await tokenPathFactory.pushTripletsBatchWithVerb(contract.getSubject(), true);
         console.log("");
     }
+    async testFilter() {
+        let tokenPathFactory = new EntityFactory_1.EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts_1.SystemConcepts.get("code"));
+        let contractFactory = new EntityFactory_1.EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        let assetFactory = new EntityFactory_1.EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts_1.SystemConcepts.get("assetId"));
+        await contractFactory.load(await Utils_1.Utils.createDBReference("id", "0x198d33fb8f75ac6a7cb968962c743f09c486cca6"), true);
+        let contract = contractFactory.getEntities()[0];
+        await assetFactory.load(await Utils_1.Utils.createDBReference("assetId", "Pending"), true);
+        let pendingAsset = assetFactory.getEntities()[0];
+        let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            contractFactory.getIsAVerb(), null);
+        let t1 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, contract.getSubject(), pendingAsset.getSubject());
+        await tokenPathFactory.filter([t1], [], 100);
+        console.log("done.. ");
+    }
 }
 exports.Test = Test;
 const LOCAL = false;
@@ -703,5 +717,5 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.testTokenPathForAsset();
+test.getOwner();
 //# sourceMappingURL=test.js.map

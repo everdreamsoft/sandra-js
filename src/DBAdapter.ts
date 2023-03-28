@@ -378,7 +378,9 @@ export class DBAdapter {
                 sql = sql + " join " + this.tables.get("triplets") + " as t" + index + " on t0.idConceptStart = " + "t" + index + ".idConceptStart";
                 sql = sql + " and t" + index + ".idConceptTarget = " + t.getTarget().getId();
             }
-            sql = sql + " and t0.idConceptTarget = " + triplets[0].getTarget().getId();
+            sql = sql +
+                (triplets?.length == 1 && refs?.length == 0 ? " where " : " and ") +
+                " t0.idConceptTarget = " + triplets[0].getTarget().getId();
         }
         else {
             // need atleast one triplet even if a reference is provided, 
