@@ -1049,13 +1049,12 @@ export class Test {
 
     }
 
-    async testFilter()
-    {
+    async testFilter(address: string) {
         let tokenPathFactory: EntityFactory = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code"));
-        let contractFactory: EntityFactory = new EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts.get("id"));
+        let contractFactory: EntityFactory = new EntityFactory("bscContract", "blockchainContractFile", await SystemConcepts.get("id"));
         let assetFactory: EntityFactory = new EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts.get("assetId"));
 
-        await contractFactory.load(await Utils.createDBReference("id", "0x198d33fb8f75ac6a7cb968962c743f09c486cca6"), true);
+        await contractFactory.load(await Utils.createDBReference("id", address), true);
         let contract = contractFactory.getEntities()[0];
 
         await assetFactory.load(await Utils.createDBReference("assetId", "Pending"), true);
@@ -1063,10 +1062,19 @@ export class Test {
 
 
         let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX +
-            contractFactory.getIsAVerb(), null);
+            tokenPathFactory.getIsAVerb(), null);
+        let fileConcept = await SystemConcepts.get("tokenPathFile");
+        let cifConcpet = await SystemConcepts.get("contained_in_file");
 
-        let t1 = new Triplet(TemporaryId.create(), subConcept, contract.getSubject(), pendingAsset.getSubject());
-        await tokenPathFactory.filter([t1], [], 100);
+        let t1 = new Triplet(TemporaryId.create(), subConcept, cifConcpet, fileConcept);
+        let t3 = new Triplet(TemporaryId.create(), subConcept, cifConcpet, fileConcept);
+        let t2 = new Triplet(TemporaryId.create(), subConcept, contract.getSubject(), pendingAsset.getSubject());
+
+        await tokenPathFactory.filter([t1, t2], [], 10000);
+
+        await tokenPathFactory.loadEntityConcepts();
+
+        console.log("Total tokens found" + tokenPathFactory.getEntities().length);
 
         console.log("done.. ");
 
@@ -1096,4 +1104,4 @@ Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 
 let test = new Test();
 
-test.getOwner();
+test.testFilter("0x1ec94be5c72cf0e0524d6ecb6e7bd0ba1700bf70");

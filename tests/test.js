@@ -684,18 +684,24 @@ class Test {
         await tokenPathFactory.pushTripletsBatchWithVerb(contract.getSubject(), true);
         console.log("");
     }
-    async testFilter() {
+    async testFilter(address) {
         let tokenPathFactory = new EntityFactory_1.EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts_1.SystemConcepts.get("code"));
-        let contractFactory = new EntityFactory_1.EntityFactory("ethContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        let contractFactory = new EntityFactory_1.EntityFactory("bscContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
         let assetFactory = new EntityFactory_1.EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts_1.SystemConcepts.get("assetId"));
-        await contractFactory.load(await Utils_1.Utils.createDBReference("id", "0x198d33fb8f75ac6a7cb968962c743f09c486cca6"), true);
+        await contractFactory.load(await Utils_1.Utils.createDBReference("id", address), true);
         let contract = contractFactory.getEntities()[0];
         await assetFactory.load(await Utils_1.Utils.createDBReference("assetId", "Pending"), true);
         let pendingAsset = assetFactory.getEntities()[0];
         let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX +
-            contractFactory.getIsAVerb(), null);
-        let t1 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, contract.getSubject(), pendingAsset.getSubject());
-        await tokenPathFactory.filter([t1], [], 100);
+            tokenPathFactory.getIsAVerb(), null);
+        let fileConcept = await SystemConcepts_1.SystemConcepts.get("tokenPathFile");
+        let cifConcpet = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+        let t1 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, cifConcpet, fileConcept);
+        let t3 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, cifConcpet, fileConcept);
+        let t2 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, contract.getSubject(), pendingAsset.getSubject());
+        await tokenPathFactory.filter([t1, t2], [], 10000);
+        await tokenPathFactory.loadEntityConcepts();
+        console.log("Total tokens found" + tokenPathFactory.getEntities().length);
         console.log("done.. ");
     }
 }
@@ -717,5 +723,5 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.getOwner();
+test.testFilter("0x1ec94be5c72cf0e0524d6ecb6e7bd0ba1700bf70");
 //# sourceMappingURL=test.js.map

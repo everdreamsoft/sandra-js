@@ -273,6 +273,7 @@ class DBAdapter {
                 sql = sql.replace("#SELECT#", "t" + index + ".id as t" + index + "id ,#SELECT#");
                 sql = sql + " join " + this.tables.get("triplets") + " as t" + index + " on t0.idConceptStart = " + "t" + index + ".idConceptStart";
                 sql = sql + " and t" + index + ".idConceptTarget = " + t.getTarget().getId();
+                sql = sql + " and t" + index + ".idConceptLink = " + t.getVerb().getId();
             }
             sql = sql +
                 ((triplets === null || triplets === void 0 ? void 0 : triplets.length) == 1 && (refs === null || refs === void 0 ? void 0 : refs.length) == 0 ? " where " : " and ") +
