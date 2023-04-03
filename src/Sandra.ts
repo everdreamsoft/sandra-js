@@ -1,5 +1,5 @@
 import { DBAdapter } from "./DBAdapter";
-import { IAppConfig } from "./interfaces/IAPPConfig";
+import { IAppConfig } from "./interfaces/IAppConfig";
 import { IDBConfig } from "./interfaces/IDBconfig";
 
 export class Sandra {

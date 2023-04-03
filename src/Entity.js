@@ -24,6 +24,21 @@ class Entity {
     getFactory() { return this.factory; }
     getPushedStatus() { return this.pushedStatus; }
     getRefs() { return this.references; }
+    async addRef(ref) {
+        if (ref.getTripletLink()) {
+            this.references.push(ref);
+        }
+        else {
+            let c = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+            let i = this.triplets.findIndex(t => { return t.getVerb().isSame(c); });
+            if (i >= 0) {
+                ref.setTripletLink(this.triplets[i]);
+                this.references.push(ref);
+                return;
+            }
+            throw new Error("No triplet found to link reference");
+        }
+    }
     getEntityRefsAsKeyValue() {
         let m = new Map();
         this.references.forEach(r => {

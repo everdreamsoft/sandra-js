@@ -30,6 +30,11 @@ export class EntityFactory {
     getContainedInFileVerb() { return this.contained_in_file; }
     getUniqueRefConcept() { return this.uniqueRefConcept; }
 
+    reset()
+    {
+        this.entityArray = [];
+    }
+
     isSame(factory: EntityFactory): boolean {
         return this.is_a == factory.getIsAVerb() && this.contained_in_file == factory.getContainedInFileVerb();
     }

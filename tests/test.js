@@ -697,7 +697,6 @@ class Test {
         let fileConcept = await SystemConcepts_1.SystemConcepts.get("tokenPathFile");
         let cifConcpet = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
         let t1 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, cifConcpet, fileConcept);
-        let t3 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, cifConcpet, fileConcept);
         let t2 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, contract.getSubject(), pendingAsset.getSubject());
         await tokenPathFactory.filter([t1, t2], [], 10000);
         await tokenPathFactory.loadEntityConcepts();

@@ -1067,7 +1067,6 @@ export class Test {
         let cifConcpet = await SystemConcepts.get("contained_in_file");
 
         let t1 = new Triplet(TemporaryId.create(), subConcept, cifConcpet, fileConcept);
-        let t3 = new Triplet(TemporaryId.create(), subConcept, cifConcpet, fileConcept);
         let t2 = new Triplet(TemporaryId.create(), subConcept, contract.getSubject(), pendingAsset.getSubject());
 
         await tokenPathFactory.filter([t1, t2], [], 10000);

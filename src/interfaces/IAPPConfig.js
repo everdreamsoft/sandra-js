@@ -1,3 +1,3 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-//# sourceMappingURL=IAPPConfig.js.map
+//# sourceMappingURL=IAppConfig.js.map

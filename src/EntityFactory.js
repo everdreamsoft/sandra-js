@@ -22,6 +22,9 @@ class EntityFactory {
     getFullName() { return this.is_a + "/" + this.contained_in_file; }
     getContainedInFileVerb() { return this.contained_in_file; }
     getUniqueRefConcept() { return this.uniqueRefConcept; }
+    reset() {
+        this.entityArray = [];
+    }
     isSame(factory) {
         return this.is_a == factory.getIsAVerb() && this.contained_in_file == factory.getContainedInFileVerb();
     }
