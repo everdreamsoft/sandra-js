@@ -372,6 +372,7 @@ export class DBAdapter {
         if (triplets?.length > 0) {
             subject = triplets[0].getSubject();
             sql = "select t0.id as t0id, t0.idConceptStart t0idConceptStart ,#SELECT# from " + this.tables.get("triplets") + " as t0 ";
+
             for (let index = 1; index < triplets.length; index++) {
                 let t = triplets[index];
                 sql = sql.replace("#SELECT#", "t" + index + ".id as t" + index + "id ,#SELECT#");
@@ -380,9 +381,7 @@ export class DBAdapter {
                 sql = sql + " and t" + index + ".idConceptLink = " + t.getVerb().getId();
 
             }
-            sql = sql +
-                (triplets?.length == 1 && refs?.length == 0 ? " where " : " and ") +
-                " t0.idConceptTarget = " + triplets[0].getTarget().getId();
+
         }
         else {
             // need atleast one triplet even if a reference is provided, 
@@ -406,6 +405,11 @@ export class DBAdapter {
 
             });
         }
+
+
+        sql = sql +
+            (triplets?.length == 1 && refs?.length == 0 ? " where " : " and ") +
+            " t0.idConceptTarget = " + triplets[0].getTarget().getId();
 
         sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
 

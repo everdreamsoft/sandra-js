@@ -9,6 +9,7 @@ const TemporaryId_1 = require("../src/TemporaryId");
 const Triplet_1 = require("../src/Triplet");
 const Utils_1 = require("../src/Utils");
 const LogManager_1 = require("../src/loggers/LogManager");
+const JSONQuery_1 = require("../src/JSONQuery");
 /// This is planet test class, it implements various functions to load and push data
 /// It can be taken as reference to use this plug in. 
 class PlanetTest {
@@ -32,6 +33,23 @@ class PlanetTest {
     }
     async run() {
         LogManager_1.LogManager.log = false;
+        let json = {
+            "is_a": "planet",
+            "contained_in_file": "planet_file",
+            "uniqueRef": "name",
+            "refs": {
+                "diameter": "10000"
+            },
+            "brothers": {},
+            "joined": {},
+            "options": {
+                "limit": 100,
+                "load_data": true
+            }
+        };
+        let r = await JSONQuery_1.JSONQuery.select(json);
+        console.log("");
+        // await this.select();
         // Load and Push one by one 
         //await this.push();
         //await this.load("planet1");
@@ -43,7 +61,7 @@ class PlanetTest {
         // Load with paging 
         //await this.loadTopPlanetsWithPaging(100);
         // Using Filters 
-        await this.filter("moon1");
+        //await this.filter("moon1");
     }
     async push() {
         console.log("\n### Push ####");
@@ -238,7 +256,6 @@ class PlanetTest {
     async filter(moonName) {
         var _a, _b;
         console.log("\n### Filter entities with given moon  ####");
-        let time = Date.now();
         let planetFactory = new EntityFactory_1.EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts_1.SystemConcepts.get("name"));
         let moonFactory = new EntityFactory_1.EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts_1.SystemConcepts.get("name"));
         await moonFactory.load(await Utils_1.Utils.createDBReference("name", moonName));
@@ -248,13 +265,25 @@ class PlanetTest {
             this.print(moon);
             // Creating a temp subject concept for the facotry 
             let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + planetFactory.getIsAVerb(), null);
-            let planetFile = await SystemConcepts_1.SystemConcepts.get("planet_file");
             // Filter all entities with joined moon as moon1 
             let t1 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, await SystemConcepts_1.SystemConcepts.get("moon"), moon.getSubject());
-            let t2 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, await SystemConcepts_1.SystemConcepts.get("contained_in_file"), planetFile);
-            let ref = await Utils_1.Utils.createDBReference("name", "planet975", t2);
-            // Loading by filter 
+            await planetFactory.filter([t1], [], 999);
+            // In case you also want to filter on bases of references then use this code
+            // NOTE: while creating ref you need to link its triplet alos in filter array if triplets as well.
+            /*
+            let planetFile = await SystemConcepts.get("planet_file");
+            let t2 = new Triplet(
+                TemporaryId.create(),
+                subConcept,
+                await SystemConcepts.get("contained_in_file"),
+                planetFile
+            );
+            // Above triplet is used here to link with reference
+            let ref = await Utils.createDBReference("name", "planet975", t2);
+
+            // Loading by filter including the reference
             await planetFactory.filter([t1, t2], [ref], 999);
+            */
             console.log("Total - " + ((_b = planetFactory.getEntities()) === null || _b === void 0 ? void 0 : _b.length));
             // Loading other data if required 
             await planetFactory.loadTriplets();
@@ -306,6 +335,75 @@ class PlanetTest {
         else {
             console.log("Not found");
         }
+    }
+    async QueryJSON(json, level = 0) {
+        var _a;
+        let limit = 1;
+        if (level == 0)
+            limit = json.limit;
+        let uniqueRefConcept = await SystemConcepts_1.SystemConcepts.get(json["uniqueRef"]);
+        let factory = new EntityFactory_1.EntityFactory(json["is_a"], json["contained_in_file"], uniqueRefConcept);
+        let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + factory.getIsAVerb(), null);
+        let cFile = await SystemConcepts_1.SystemConcepts.get(json["contained_in_file"]);
+        let sysCiF = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+        let t2 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysCiF, cFile);
+        let refsArr = [];
+        let refKeys = Object.keys(json.refs);
+        for (let i = 0; i < refKeys.length; i++) {
+            let ref = await Utils_1.Utils.createDBReference(refKeys[i], json.refs[refKeys[i]], t2);
+            refsArr.push(ref);
+        }
+        let tripletsArr = [t2];
+        let tripletsKeys = Object.keys(json.brothers);
+        for (let i = 0; i < tripletsKeys.length; i++) {
+            tripletsArr.push(new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, await SystemConcepts_1.SystemConcepts.get(tripletsKeys[i]), await SystemConcepts_1.SystemConcepts.get(json.brothers[tripletsKeys[i]])));
+        }
+        let joinedKeys = Object.keys(json.joined);
+        for (let i = 0; i < (joinedKeys === null || joinedKeys === void 0 ? void 0 : joinedKeys.length); i++) {
+            let verbConcept = await SystemConcepts_1.SystemConcepts.get(joinedKeys[i]);
+            let targets = await this.QueryJSON(json.joined[joinedKeys[i]], level + 1);
+            if ((targets === null || targets === void 0 ? void 0 : targets.length) > 0) {
+                tripletsArr.push(new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, verbConcept, targets[0].getSubject()));
+            }
+            else {
+                return [];
+            }
+        }
+        await factory.filter(tripletsArr, refsArr, limit);
+        console.log(level + " count - " + ((_a = factory.getEntities()) === null || _a === void 0 ? void 0 : _a.length));
+        await this.printFactory(factory);
+        return Promise.resolve(factory.getEntities());
+    }
+    async select() {
+        let json = {
+            "is_a": "planet",
+            "contained_in_file": "planet_file",
+            "uniqueRef": "name",
+            "refs": {
+                "name": "planet1"
+            },
+            "brothers": {
+                "hasMoon": "true"
+            },
+            "joined": {
+                "moon": {
+                    "is_a": "moon",
+                    "contained_in_file": "moon_file",
+                    "uniqueRef": "name",
+                    "refs": {
+                        "name": "moon44"
+                    },
+                    "brothers": {},
+                    "joined": {}
+                }
+            },
+            "options": {
+                "limit": 10,
+                "load_data": false
+            }
+        };
+        let r = await JSONQuery_1.JSONQuery.select(json);
+        console.log("Final out - " + (r === null || r === void 0 ? void 0 : r.length));
     }
 }
 exports.PlanetTest = PlanetTest;
