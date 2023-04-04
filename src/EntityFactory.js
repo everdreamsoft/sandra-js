@@ -512,8 +512,9 @@ class EntityFactory {
                 var _a;
                 let triplet = (_a = e.getTriplets()) === null || _a === void 0 ? void 0 : _a.find(tr => tr.getVerb().getId() == t.getVerb().getId() &&
                     tr.getTarget().getId() == t.getTarget().getId());
-                if (triplet)
+                if (triplet) {
                     triplet.setId(t.getId());
+                }
                 else {
                     e.getTriplets().push(t);
                 }

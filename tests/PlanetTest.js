@@ -44,9 +44,9 @@ class PlanetTest {
         // Load with paging 
         //await this.loadTopPlanetsWithPaging(100);
         // Using Filters 
-        await this.filter("moon1");
+        //await this.filter("moon1");
         // Using JSON query 
-        //await this.select();
+        await this.select();
     }
     async push() {
         console.log("\n### Push ####");
@@ -281,14 +281,27 @@ class PlanetTest {
     }
     async select() {
         let json = {
-            "is_a": "blockchainEvent",
-            "contained_in_file": "blockchainEventFile",
-            "uniqueRef": "txHash",
+            "is_a": "planet",
+            "contained_in_file": "planet_file",
+            "uniqueRef": "name",
             "refs": {},
-            "brothers": {
-                "assetStatus": "pending"
+            "brothers": {},
+            "joined": {
+                "moon": {
+                    "is_a": "moon",
+                    "contained_in_file": "moon_file",
+                    "uniqueRef": "name",
+                    "refs": {
+                        "name": "moon44"
+                    },
+                    "brothers": {},
+                    "joined": {},
+                    "options": {
+                        "limit": 1,
+                        "load_data": true
+                    }
+                }
             },
-            "joined": {},
             "options": {
                 "limit": 10,
                 "load_data": true

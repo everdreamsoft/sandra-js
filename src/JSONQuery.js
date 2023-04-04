@@ -55,7 +55,9 @@ class JSONQuery {
             let verbConcept = await SystemConcepts_1.SystemConcepts.get(joinedKeys[i]);
             let targets = await this.QueryJSON(json.joined[joinedKeys[i]], level + 1);
             if ((targets === null || targets === void 0 ? void 0 : targets.length) > 0) {
-                tripletsArr.push(new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, verbConcept, targets[0].getSubject()));
+                let triplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, verbConcept, targets[0].getSubject());
+                triplet.setJoinedEntity(targets[0]);
+                tripletsArr.push(triplet);
             }
             else {
                 return [];
@@ -63,7 +65,7 @@ class JSONQuery {
         }
         await factory.filter(tripletsArr, refsArr, limit);
         console.log(level + " count - " + ((_a = factory.getEntities()) === null || _a === void 0 ? void 0 : _a.length));
-        if (level == 0 && json.options.load_data) {
+        if (json.options.load_data) {
             await factory.loadTriplets(true);
             await factory.loadAllTripletRefs();
         }

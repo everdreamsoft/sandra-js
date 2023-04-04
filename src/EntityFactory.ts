@@ -729,8 +729,9 @@ export class EntityFactory {
 
                 let triplet = e.getTriplets()?.find(tr => tr.getVerb().getId() == t.getVerb().getId() &&
                     tr.getTarget().getId() == t.getTarget().getId());
-                if (triplet)
+                if (triplet) {
                     triplet.setId(t.getId());
+                }
                 else {
                     e.getTriplets().push(t);
                 }

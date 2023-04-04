@@ -435,14 +435,15 @@ export class DBAdapter {
                 let ts: Triplet[] = [];
                 let subConcept = new Concept(row.t0idConceptStart, subject.getCode(), null);
                 for (let i = 0; i < triplets.length; i++) {
-                    ts.push(
-                        new Triplet(
-                            row["t" + i + "id"],
-                            subConcept,
-                            triplets[i].getVerb(),
-                            triplets[i].getTarget()
-                        )
+
+                    let t = new Triplet(
+                        row["t" + i + "id"],
+                        subConcept,
+                        triplets[i].getVerb(),
+                        triplets[i].getTarget()
                     );
+                    t.setJoinedEntity(triplets[i].getJoinedEntity());
+                    ts.push(t);
                 }
                 data.set(subConcept, ts)
             });

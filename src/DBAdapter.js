@@ -319,7 +319,9 @@ class DBAdapter {
                 let ts = [];
                 let subConcept = new Concept_1.Concept(row.t0idConceptStart, subject.getCode(), null);
                 for (let i = 0; i < triplets.length; i++) {
-                    ts.push(new Triplet_1.Triplet(row["t" + i + "id"], subConcept, triplets[i].getVerb(), triplets[i].getTarget()));
+                    let t = new Triplet_1.Triplet(row["t" + i + "id"], subConcept, triplets[i].getVerb(), triplets[i].getTarget());
+                    t.setJoinedEntity(triplets[i].getJoinedEntity());
+                    ts.push(t);
                 }
                 data.set(subConcept, ts);
             });
