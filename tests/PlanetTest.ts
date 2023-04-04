@@ -23,7 +23,7 @@ export class PlanetTest {
         database: "jetski",
         host: "139.144.74.232",
         env: "fondue",
-        password: "xH108MAdCn",
+        password: "",
         user: "admin",
     };
 
