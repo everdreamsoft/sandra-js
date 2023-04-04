@@ -56,15 +56,16 @@ class Entity {
         return json;
     }
     asJSON() {
+        var _a;
         let json = {};
-        json["subjectId"] = this.getSubject().getId();
+        json["subjectId"] = (_a = this.getSubject()) === null || _a === void 0 ? void 0 : _a.getId();
         this.references.forEach(r => {
             json[r.getIdConcept().getShortname()] = r.getValue();
         });
         json["brothers"] = {};
         json["joined"] = {};
         this.triplets.forEach((t, i) => {
-            var _a, _b, _c, _d, _e;
+            var _a, _b, _c, _d, _e, _f;
             let verb = ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) ? (_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getShortname() : "tripletVerb" + i;
             if (((_c = t.getTarget().getShortname()) === null || _c === void 0 ? void 0 : _c.length) > 0) {
                 json["brothers"][verb] = (_d = t.getTarget()) === null || _d === void 0 ? void 0 : _d.getShortname();
@@ -75,7 +76,7 @@ class Entity {
                 }
                 else {
                     json["joined"][verb] = {
-                        "subjectId": t.getTarget().getId()
+                        "subjectId": (_f = t.getTarget()) === null || _f === void 0 ? void 0 : _f.getId()
                     };
                 }
             }

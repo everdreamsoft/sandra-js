@@ -77,7 +77,7 @@ export class Entity {
 
         let json: any = {};
 
-        json["subjectId"] = this.getSubject().getId();
+        json["subjectId"] = this.getSubject()?.getId();
 
         this.references.forEach(r => {
             json[r.getIdConcept().getShortname()] = r.getValue();
@@ -99,7 +99,7 @@ export class Entity {
                 }
                 else {
                     json["joined"][verb] = {
-                        "subjectId": t.getTarget().getId()
+                        "subjectId": t.getTarget()?.getId()
                     }
                 }
 
