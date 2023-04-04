@@ -1,3 +1,4 @@
+import { APIService } from "../src/APIService";
 import { Concept } from "../src/Concept";
 import { Entity } from "../src/Entity";
 import { EntityFactory } from "../src/EntityFactory";
@@ -20,11 +21,11 @@ export class PlanetTest {
     readonly MOON_ISA = "moon";
 
     readonly DB_CONFIG_LOCAL = {
-        database: "jetski",
-        host: "139.144.74.232",
+        database: "ccc8_batch",
+        host: "localhost",
         env: "fondue",
         password: "",
-        user: "admin",
+        user: "root",
     };
 
     readonly APP_CONFIG_LOCAL = {
@@ -54,10 +55,10 @@ export class PlanetTest {
         //await this.loadTopPlanetsWithPaging(100);
 
         // Using Filters 
-        //await this.filter("moon1");
+        await this.filter("moon1");
 
         // Using JSON query 
-        await this.select();
+        //await this.select();
 
     }
 
@@ -380,7 +381,7 @@ export class PlanetTest {
             console.log("Total - " + planetFactory.getEntities()?.length);
 
             // Loading other data if required 
-            await planetFactory.loadTriplets();
+            await planetFactory.loadTriplets(true);
             await planetFactory.loadAllTripletRefs();
 
             await this.printFactory(planetFactory);
@@ -405,7 +406,7 @@ export class PlanetTest {
                 "assetStatus": "pending"
             },
             "joined": {
-                
+
             },
             "options": {
                 "limit": 10,

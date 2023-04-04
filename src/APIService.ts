@@ -40,8 +40,14 @@ export class APIService {
     static async post(url: string, payload: any) {
 
         try {
-            const response = await axios.post(url, payload);
+            const response = await axios.post(url, payload,
+                {
+                    headers: { 'content-type': 'application/json' }
+                }
+            );
+
             return APIService.createApiResponse(null, response.data);
+
         } catch (e) {
             e.appData = "Post Url - " + url;
             LogManager.getInstance().error(e);

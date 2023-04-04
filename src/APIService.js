@@ -30,7 +30,9 @@ class APIService {
     }
     static async post(url, payload) {
         try {
-            const response = await axios_1.default.post(url, payload);
+            const response = await axios_1.default.post(url, payload, {
+                headers: { 'content-type': 'application/json' }
+            });
             return APIService.createApiResponse(null, response.data);
         }
         catch (e) {

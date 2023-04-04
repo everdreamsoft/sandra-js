@@ -116,7 +116,7 @@ export class JSONQuery {
         console.log(level + " count - " + factory.getEntities()?.length);
 
         if (level == 0 && json.options.load_data) {
-            await factory.loadTriplets();
+            await factory.loadTriplets(true);
             await factory.loadAllTripletRefs();
         }
 

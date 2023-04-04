@@ -496,7 +496,7 @@ class EntityFactory {
         await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConceptsRefs(this.entityArray, await SystemConcepts_1.SystemConcepts.get("contained_in_file"));
     }
     // Loading all the triplets of given factrory entities 
-    async loadTriplets() {
+    async loadTriplets(loadVerbData = false) {
         var _a;
         if (((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length) == 0)
             return;
@@ -504,7 +504,7 @@ class EntityFactory {
         this.entityArray.forEach(e => {
             s.push(e.getSubject());
         });
-        let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTriplets(s);
+        let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTriplets(s, null, loadVerbData);
         this.entityArray.forEach(e => {
             let subId = e.getSubject().getId();
             let trps = triplets.filter(t => t.getSubject().getId() == subId);
@@ -520,12 +520,12 @@ class EntityFactory {
             });
         });
     }
-    async loadTripletsWithVerb(verb) {
+    async loadTripletsWithVerb(verb, loadVerbData = false) {
         let s = [];
         this.entityArray.forEach(e => {
             s.push(e.getSubject());
         });
-        let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTriplets(s, [verb]);
+        let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTriplets(s, [verb], loadVerbData);
         this.entityArray.forEach(e => {
             let subId = e.getSubject().getId();
             let trps = triplets.filter(t => t.getSubject().getId() == subId);

@@ -229,7 +229,7 @@ export class DBAdapter {
 
     }
 
-    async getTriplets(subjects: Concept[], verbs: Concept[] = null) {
+    async getTriplets(subjects: Concept[], verbs: Concept[] = null, loadVerbData: boolean = false) {
 
         let subConcept = [];
         let verbConcept = [];
@@ -242,18 +242,32 @@ export class DBAdapter {
             verbConcept.push(verb.getId())
         });
 
-        let sql = "select c.id as cId, c.shortname as cSN, c.code as cCode , t.id as id, t.idConceptStart as subId, t.idConceptLink as verbId, t.idConceptTarget as targetId from "
+        let sql = "select c.id as cId, c.shortname as cSN, c.code as cCode , t.id as id, t.idConceptStart as subId, t.idConceptLink as verbId, t.idConceptTarget as targetId #VERB_SELECT# from "
             + this.tables.get("triplets")
             + " as t join " + this.tables.get("concepts") + " as c on c.id = t.idConceptTarget "
             + " and t.idConceptStart in (?)";
+
+        if (loadVerbData) {
+            sql = sql.replace("#VERB_SELECT#", " , c1.code as verbCode, c1.shortname as verbSn ")
+        } else
+            sql = sql.replace("#VERB_SELECT#", " , null as verbCode, null as verbSn ")
+
 
         let res: any;
 
         if (verbs?.length > 0) {
             sql = sql + " and t.idConceptLink in (?)";
+            if (loadVerbData) {
+                sql = sql + " join " + this.tables.get("concepts") + " as c1 on c1.id = t.idConceptLink "
+            }
             res = await this.getConnection().query(sql, [subConcept, verbConcept]);
         }
-        else res = await this.getConnection().query(sql, [subConcept]);
+        else {
+            if (loadVerbData) {
+                sql = sql + " join " + this.tables.get("concepts") + " as c1 on c1.id = t.idConceptLink "
+            }
+            res = await this.getConnection().query(sql, [subConcept])
+        };
 
         let triplets: Triplet[] = [];
 
@@ -263,7 +277,7 @@ export class DBAdapter {
                     new Triplet(
                         row.id,
                         new Concept(row.subId, null, null),
-                        new Concept(row.verbId, null, null),
+                        new Concept(row.verbId, row.verbCode, row.verbSn),
                         new Concept(row.cId, row.cCode, row.cSN)
                     )
                 );

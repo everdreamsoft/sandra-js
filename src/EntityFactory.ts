@@ -30,8 +30,7 @@ export class EntityFactory {
     getContainedInFileVerb() { return this.contained_in_file; }
     getUniqueRefConcept() { return this.uniqueRefConcept; }
 
-    reset()
-    {
+    reset() {
         this.entityArray = [];
     }
 
@@ -707,7 +706,7 @@ export class EntityFactory {
     }
 
     // Loading all the triplets of given factrory entities 
-    async loadTriplets() {
+    async loadTriplets(loadVerbData: boolean = false) {
 
         if (this.entityArray?.length == 0) return;
 
@@ -718,7 +717,7 @@ export class EntityFactory {
         })
 
         let triplets = await (await DBAdapter.getInstance()).getTriplets(
-            s
+            s, null, loadVerbData
         );
 
         this.entityArray.forEach(e => {
@@ -741,7 +740,7 @@ export class EntityFactory {
 
     }
 
-    async loadTripletsWithVerb(verb: Concept) {
+    async loadTripletsWithVerb(verb: Concept, loadVerbData: boolean = false) {
 
         let s = [];
         this.entityArray.forEach(e => {
@@ -749,7 +748,7 @@ export class EntityFactory {
         })
 
         let triplets = await (await DBAdapter.getInstance()).getTriplets(
-            s, [verb]
+            s, [verb], loadVerbData
         );
 
         this.entityArray.forEach(e => {

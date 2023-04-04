@@ -19,11 +19,11 @@ class PlanetTest {
         this.MOON_FILE = "moon_file";
         this.MOON_ISA = "moon";
         this.DB_CONFIG_LOCAL = {
-            database: "jetski",
-            host: "139.144.74.232",
+            database: "ccc8_batch",
+            host: "localhost",
             env: "fondue",
             password: "",
-            user: "admin",
+            user: "root",
         };
         this.APP_CONFIG_LOCAL = {
             IPFSServiceUrl: ""
@@ -44,9 +44,9 @@ class PlanetTest {
         // Load with paging 
         //await this.loadTopPlanetsWithPaging(100);
         // Using Filters 
-        //await this.filter("moon1");
+        await this.filter("moon1");
         // Using JSON query 
-        await this.select();
+        //await this.select();
     }
     async push() {
         console.log("\n### Push ####");
@@ -271,7 +271,7 @@ class PlanetTest {
             */
             console.log("Total - " + ((_b = planetFactory.getEntities()) === null || _b === void 0 ? void 0 : _b.length));
             // Loading other data if required 
-            await planetFactory.loadTriplets();
+            await planetFactory.loadTriplets(true);
             await planetFactory.loadAllTripletRefs();
             await this.printFactory(planetFactory);
         }

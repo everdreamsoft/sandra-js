@@ -64,7 +64,7 @@ class JSONQuery {
         await factory.filter(tripletsArr, refsArr, limit);
         console.log(level + " count - " + ((_a = factory.getEntities()) === null || _a === void 0 ? void 0 : _a.length));
         if (level == 0 && json.options.load_data) {
-            await factory.loadTriplets();
+            await factory.loadTriplets(true);
             await factory.loadAllTripletRefs();
         }
         return Promise.resolve(factory.getEntities());
