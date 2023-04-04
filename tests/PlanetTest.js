@@ -3,13 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlanetTest = void 0;
 const Concept_1 = require("../src/Concept");
 const EntityFactory_1 = require("../src/EntityFactory");
+const JSONQuery_1 = require("../src/JSONQuery");
 const Sandra_1 = require("../src/Sandra");
 const SystemConcepts_1 = require("../src/SystemConcepts");
 const TemporaryId_1 = require("../src/TemporaryId");
 const Triplet_1 = require("../src/Triplet");
 const Utils_1 = require("../src/Utils");
 const LogManager_1 = require("../src/loggers/LogManager");
-const JSONQuery_1 = require("../src/JSONQuery");
 /// This is planet test class, it implements various functions to load and push data
 /// It can be taken as reference to use this plug in. 
 class PlanetTest {
@@ -46,7 +46,7 @@ class PlanetTest {
         // Using Filters 
         //await this.filter("moon1");
         // Using JSON query 
-        // await this.select();
+        //await this.select();
     }
     async push() {
         console.log("\n### Push ####");
@@ -279,6 +279,35 @@ class PlanetTest {
             console.log("Moon entity not available to filter");
         }
     }
+    async select() {
+        let json = {
+            "is_a": "planet",
+            "contained_in_file": "planet_file",
+            "uniqueRef": "name",
+            "refs": {},
+            "brothers": {
+                "hasMoon": "true"
+            },
+            "joined": {
+                "moon": {
+                    "is_a": "moon",
+                    "contained_in_file": "moon_file",
+                    "uniqueRef": "name",
+                    "refs": {
+                        "name": "moon1"
+                    },
+                    "brothers": {},
+                    "joined": {}
+                }
+            },
+            "options": {
+                "limit": 1000,
+                "load_data": true
+            }
+        };
+        let r = await JSONQuery_1.JSONQuery.select(json);
+        console.log("Final out - " + (r === null || r === void 0 ? void 0 : r.length));
+    }
     getTabs(n = 0) {
         let s = "";
         while (n > 0) {
@@ -358,37 +387,6 @@ class PlanetTest {
         console.log(level + " count - " + ((_a = factory.getEntities()) === null || _a === void 0 ? void 0 : _a.length));
         await this.printFactory(factory);
         return Promise.resolve(factory.getEntities());
-    }
-    async select() {
-        let json = {
-            "is_a": "planet",
-            "contained_in_file": "planet_file",
-            "uniqueRef": "name",
-            "refs": {
-                "name": "planet1"
-            },
-            "brothers": {
-                "hasMoon": "true"
-            },
-            "joined": {
-                "moon": {
-                    "is_a": "moon",
-                    "contained_in_file": "moon_file",
-                    "uniqueRef": "name",
-                    "refs": {
-                        "name": "moon44"
-                    },
-                    "brothers": {},
-                    "joined": {}
-                }
-            },
-            "options": {
-                "limit": 10,
-                "load_data": false
-            }
-        };
-        let r = await JSONQuery_1.JSONQuery.select(json);
-        console.log("Final out - " + (r === null || r === void 0 ? void 0 : r.length));
     }
 }
 exports.PlanetTest = PlanetTest;

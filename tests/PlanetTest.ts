@@ -1,14 +1,13 @@
-import { join } from "path";
 import { Concept } from "../src/Concept";
 import { Entity } from "../src/Entity";
 import { EntityFactory } from "../src/EntityFactory";
+import { JSONQuery } from "../src/JSONQuery";
 import { Sandra } from "../src/Sandra";
 import { SystemConcepts } from "../src/SystemConcepts";
 import { TemporaryId } from "../src/TemporaryId";
 import { Triplet } from "../src/Triplet";
 import { Utils } from "../src/Utils";
 import { LogManager } from "../src/loggers/LogManager";
-import { JSONQuery } from "../src/JSONQuery";
 
 /// This is planet test class, it implements various functions to load and push data
 /// It can be taken as reference to use this plug in. 
@@ -40,7 +39,7 @@ export class PlanetTest {
     async run() {
 
         LogManager.log = false;
-
+        
         // Load and Push one by one 
         //await this.push();
         //await this.load("planet1");
@@ -58,7 +57,7 @@ export class PlanetTest {
         //await this.filter("moon1");
 
         // Using JSON query 
-        // await this.select();
+        //await this.select();
 
     }
 
@@ -393,6 +392,45 @@ export class PlanetTest {
 
     }
 
+
+    async select() {
+
+        let json = {
+            "is_a": "planet",
+            "contained_in_file": "planet_file",
+            "uniqueRef": "name",
+            "refs": {
+            },
+            "brothers": {
+                "hasMoon": "true"
+            },
+            "joined": {
+                "moon": {
+                    "is_a": "moon",
+                    "contained_in_file": "moon_file",
+                    "uniqueRef": "name",
+                    "refs": {
+                        "name": "moon1"
+                    },
+                    "brothers": {
+                    },
+                    "joined": {
+
+                    }
+                }
+            },
+            "options": {
+                "limit": 1000,
+                "load_data": true
+            }
+        };
+
+        let r = await JSONQuery.select(json);
+
+        console.log("Final out - " + r?.length);
+
+    }
+
     getTabs(n: number = 0) {
         let s = "";
         while (n > 0) {
@@ -497,43 +535,6 @@ export class PlanetTest {
 
     }
 
-    async select() {
-
-        let json = {
-            "is_a": "planet",
-            "contained_in_file": "planet_file",
-            "uniqueRef": "name",
-            "refs": {
-                "name": "planet1"
-            },
-            "brothers": {
-                "hasMoon": "true"
-            },
-            "joined": {
-                "moon": {
-                    "is_a": "moon",
-                    "contained_in_file": "moon_file",
-                    "uniqueRef": "name",
-                    "refs": {
-                        "name": "moon44"
-                    },
-                    "brothers": {
-                    },
-                    "joined": {
-                    }
-                }
-            },
-            "options": {
-                "limit": 10,
-                "load_data": false
-            }
-        };
-
-        let r = await JSONQuery.select(json);
-
-        console.log("Final out - " + r?.length);
-
-    }
 
 }
 

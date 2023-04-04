@@ -363,6 +363,14 @@ class EntityFactory {
         });
         await (await DBAdapter_1.DBAdapter.getInstance()).updateRefsBatchById(refs);
     }
+    /**
+        * Loads all the entities with given reference of the factory object.
+        * @param ref Referance object to search for.
+        * @param loadAllEntityData If true then all references and triplets are also loaded, if false only subject concept is loaded
+        * @param iterateDown If true then all the joined entities are also loaded.
+        * @param limit limits the number of result.
+        
+    */
     async load(ref, loadAllEntityData = true, iterateDown = false, limit = 1000) {
         let entityTriplets = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), ref, limit);
         for (let index = 0; index < (entityTriplets === null || entityTriplets === void 0 ? void 0 : entityTriplets.length); index++) {
