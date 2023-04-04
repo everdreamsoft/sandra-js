@@ -17,6 +17,9 @@ class JSONQuery {
     static async select(query) {
         return JSONQuery.QueryJSON(query);
     }
+    static async push(data) {
+        throw new Error("Function not implemented");
+    }
     static async QueryJSON(json, level = 0) {
         var _a;
         let limit = 1;

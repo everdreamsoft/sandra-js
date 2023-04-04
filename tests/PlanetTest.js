@@ -33,23 +33,6 @@ class PlanetTest {
     }
     async run() {
         LogManager_1.LogManager.log = false;
-        let json = {
-            "is_a": "planet",
-            "contained_in_file": "planet_file",
-            "uniqueRef": "name",
-            "refs": {
-                "diameter": "10000"
-            },
-            "brothers": {},
-            "joined": {},
-            "options": {
-                "limit": 100,
-                "load_data": true
-            }
-        };
-        let r = await JSONQuery_1.JSONQuery.select(json);
-        console.log("");
-        // await this.select();
         // Load and Push one by one 
         //await this.push();
         //await this.load("planet1");
@@ -62,6 +45,8 @@ class PlanetTest {
         //await this.loadTopPlanetsWithPaging(100);
         // Using Filters 
         //await this.filter("moon1");
+        // Using JSON query 
+        // await this.select();
     }
     async push() {
         console.log("\n### Push ####");
