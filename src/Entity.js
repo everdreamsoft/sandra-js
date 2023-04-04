@@ -57,6 +57,7 @@ class Entity {
     }
     asJSON() {
         let json = {};
+        json["subjectId"] = this.getSubject().getId();
         this.references.forEach(r => {
             json[r.getIdConcept().getShortname()] = r.getValue();
         });
@@ -69,7 +70,14 @@ class Entity {
                 json["brothers"][verb] = (_d = t.getTarget()) === null || _d === void 0 ? void 0 : _d.getShortname();
             }
             else {
-                json["joined"][verb] = (_e = t.getJoinedEntity()) === null || _e === void 0 ? void 0 : _e.asJSON();
+                if (t.getJoinedEntity()) {
+                    json["joined"][verb] = (_e = t.getJoinedEntity()) === null || _e === void 0 ? void 0 : _e.asJSON();
+                }
+                else {
+                    json["joined"][verb] = {
+                        "subjectId": t.getTarget().getId()
+                    };
+                }
             }
         });
         return json;

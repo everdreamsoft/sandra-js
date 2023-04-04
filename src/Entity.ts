@@ -77,6 +77,8 @@ export class Entity {
 
         let json: any = {};
 
+        json["subjectId"] = this.getSubject().getId();
+
         this.references.forEach(r => {
             json[r.getIdConcept().getShortname()] = r.getValue();
         });
@@ -92,7 +94,15 @@ export class Entity {
                 json["brothers"][verb] = t.getTarget()?.getShortname();
             }
             else {
-                json["joined"][verb] = t.getJoinedEntity()?.asJSON();
+                if (t.getJoinedEntity()) {
+                    json["joined"][verb] = t.getJoinedEntity()?.asJSON();
+                }
+                else {
+                    json["joined"][verb] = {
+                        "subjectId": t.getTarget().getId()
+                    }
+                }
+
             }
 
         });
