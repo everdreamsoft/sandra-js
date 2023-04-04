@@ -17,6 +17,14 @@ class JSONQuery {
     static async select(query) {
         return JSONQuery.QueryJSON(query);
     }
+    static async selectAsJson(query) {
+        let res = await JSONQuery.QueryJSON(query);
+        let jsonRes = [];
+        res.forEach(e => {
+            jsonRes.push(e.asJSON());
+        });
+        return Promise.resolve(jsonRes);
+    }
     static async push(data) {
         throw new Error("Function not implemented");
     }

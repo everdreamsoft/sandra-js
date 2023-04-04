@@ -73,6 +73,34 @@ export class Entity {
         return json;
     }
 
+    asJSON() {
+
+        let json: any = {};
+
+        this.references.forEach(r => {
+            json[r.getIdConcept().getShortname()] = r.getValue();
+        });
+
+        json["brothers"] = {};
+        json["joined"] = {};
+
+        this.triplets.forEach((t, i) => {
+
+            let verb = t.getVerb()?.getShortname() ? t.getVerb()?.getShortname() : "tripletVerb" + i;
+
+            if (t.getTarget().getShortname()?.length > 0) {
+                json["brothers"][verb] = t.getTarget()?.getShortname();
+            }
+            else {
+                json["joined"][verb] = t.getJoinedEntity()?.asJSON();
+            }
+
+        });
+
+        return json;
+
+    }
+
     getRefsKeyValuesByTiplet(tripletLinkConcept: Concept) {
 
         let m: Map<string, string> = new Map();

@@ -19,11 +19,11 @@ class PlanetTest {
         this.MOON_FILE = "moon_file";
         this.MOON_ISA = "moon";
         this.DB_CONFIG_LOCAL = {
-            database: "ccc8_batch",
-            host: "localhost",
+            database: "jetski",
+            host: "139.144.74.232",
             env: "fondue",
-            password: "",
-            user: "root",
+            password: "xH108MAdCn",
+            user: "admin",
         };
         this.APP_CONFIG_LOCAL = {
             IPFSServiceUrl: ""
@@ -46,7 +46,7 @@ class PlanetTest {
         // Using Filters 
         //await this.filter("moon1");
         // Using JSON query 
-        //await this.select();
+        await this.select();
     }
     async push() {
         console.log("\n### Push ####");
@@ -281,31 +281,20 @@ class PlanetTest {
     }
     async select() {
         let json = {
-            "is_a": "planet",
-            "contained_in_file": "planet_file",
-            "uniqueRef": "name",
+            "is_a": "blockchainEvent",
+            "contained_in_file": "blockchainEventFile",
+            "uniqueRef": "txHash",
             "refs": {},
             "brothers": {
-                "hasMoon": "true"
+                "assetStatus": "pending"
             },
-            "joined": {
-                "moon": {
-                    "is_a": "moon",
-                    "contained_in_file": "moon_file",
-                    "uniqueRef": "name",
-                    "refs": {
-                        "name": "moon1"
-                    },
-                    "brothers": {},
-                    "joined": {}
-                }
-            },
+            "joined": {},
             "options": {
-                "limit": 1000,
+                "limit": 10,
                 "load_data": true
             }
         };
-        let r = await JSONQuery_1.JSONQuery.select(json);
+        let r = await JSONQuery_1.JSONQuery.selectAsJson(json);
         console.log("Final out - " + (r === null || r === void 0 ? void 0 : r.length));
     }
     getTabs(n = 0) {

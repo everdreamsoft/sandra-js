@@ -55,6 +55,25 @@ class Entity {
         });
         return json;
     }
+    asJSON() {
+        let json = {};
+        this.references.forEach(r => {
+            json[r.getIdConcept().getShortname()] = r.getValue();
+        });
+        json["brothers"] = {};
+        json["joined"] = {};
+        this.triplets.forEach((t, i) => {
+            var _a, _b, _c, _d, _e;
+            let verb = ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) ? (_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getShortname() : "tripletVerb" + i;
+            if (((_c = t.getTarget().getShortname()) === null || _c === void 0 ? void 0 : _c.length) > 0) {
+                json["brothers"][verb] = (_d = t.getTarget()) === null || _d === void 0 ? void 0 : _d.getShortname();
+            }
+            else {
+                json["joined"][verb] = (_e = t.getJoinedEntity()) === null || _e === void 0 ? void 0 : _e.asJSON();
+            }
+        });
+        return json;
+    }
     getRefsKeyValuesByTiplet(tripletLinkConcept) {
         let m = new Map();
         this.references.forEach(r => {

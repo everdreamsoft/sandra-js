@@ -20,11 +20,11 @@ export class PlanetTest {
     readonly MOON_ISA = "moon";
 
     readonly DB_CONFIG_LOCAL = {
-        database: "ccc8_batch",
-        host: "localhost",
+        database: "jetski",
+        host: "139.144.74.232",
         env: "fondue",
-        password: "",
-        user: "root",
+        password: "xH108MAdCn",
+        user: "admin",
     };
 
     readonly APP_CONFIG_LOCAL = {
@@ -39,7 +39,7 @@ export class PlanetTest {
     async run() {
 
         LogManager.log = false;
-        
+
         // Load and Push one by one 
         //await this.push();
         //await this.load("planet1");
@@ -57,7 +57,7 @@ export class PlanetTest {
         //await this.filter("moon1");
 
         // Using JSON query 
-        //await this.select();
+        await this.select();
 
     }
 
@@ -396,36 +396,24 @@ export class PlanetTest {
     async select() {
 
         let json = {
-            "is_a": "planet",
-            "contained_in_file": "planet_file",
-            "uniqueRef": "name",
+            "is_a": "blockchainEvent",
+            "contained_in_file": "blockchainEventFile",
+            "uniqueRef": "txHash",
             "refs": {
             },
             "brothers": {
-                "hasMoon": "true"
+                "assetStatus": "pending"
             },
             "joined": {
-                "moon": {
-                    "is_a": "moon",
-                    "contained_in_file": "moon_file",
-                    "uniqueRef": "name",
-                    "refs": {
-                        "name": "moon1"
-                    },
-                    "brothers": {
-                    },
-                    "joined": {
-
-                    }
-                }
+                
             },
             "options": {
-                "limit": 1000,
+                "limit": 10,
                 "load_data": true
             }
         };
 
-        let r = await JSONQuery.select(json);
+        let r = await JSONQuery.selectAsJson(json);
 
         console.log("Final out - " + r?.length);
 

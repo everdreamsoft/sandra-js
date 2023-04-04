@@ -50,6 +50,19 @@ export class JSONQuery {
         return JSONQuery.QueryJSON(query);
     }
 
+    static async selectAsJson(query: any): Promise<any> {
+
+        let res = await JSONQuery.QueryJSON(query);
+        let jsonRes = [];
+
+        res.forEach(e => {
+            jsonRes.push(e.asJSON());
+        })
+
+        return Promise.resolve(jsonRes);
+    }
+
+
     static async push(data: any) {
         throw new Error("Function not implemented");
     }
