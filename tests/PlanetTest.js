@@ -33,9 +33,9 @@ class PlanetTest {
     }
     async run() {
         LogManager_1.LogManager.log = false;
-        // Load and Push one by one 
+        // Load and Push one by one
         //await this.push();
-        //await this.load("planet1");
+        //await this.load("planetE");
         //await this.updateRefAndTriplet();
         //await this.addNewRefAndTripet();
         // Load and push batch 
@@ -46,7 +46,8 @@ class PlanetTest {
         // Using Filters 
         //await this.filter("moon1");
         // Using JSON query 
-        await this.select();
+        //await this.selectAsJSON();
+        await this.pushAsJSON();
     }
     async push() {
         console.log("\n### Push ####");
@@ -279,13 +280,20 @@ class PlanetTest {
             console.log("Moon entity not available to filter");
         }
     }
-    async select() {
+    async selectAsJSON() {
         let json = {
             "is_a": "planet",
             "contained_in_file": "planet_file",
             "uniqueRef": "name",
             "refs": {},
-            "brothers": {},
+            "brothers": {
+                "hasMoon": {
+                    "target": "true",
+                    "refs": {
+                        "totalMoon": "1"
+                    }
+                }
+            },
             "joined": {
                 "moon": {
                     "is_a": "moon",
@@ -297,7 +305,6 @@ class PlanetTest {
                     "brothers": {},
                     "joined": {},
                     "options": {
-                        "limit": 1,
                         "load_data": true
                     }
                 }
@@ -308,7 +315,70 @@ class PlanetTest {
             }
         };
         let r = await JSONQuery_1.JSONQuery.selectAsJson(json);
-        console.log("Final out - " + (r === null || r === void 0 ? void 0 : r.length));
+        console.log(r);
+        console.log("");
+    }
+    async pushAsJSON() {
+        let json = {
+            "is_a": "planet",
+            "contained_in_file": "planet_file",
+            "uniqueRef": "name",
+            "refs": {
+                "name": "planetZZ",
+                "diameter": "10",
+                "atmosphere": "yes",
+                "atmosphere1": "yes",
+                "atmosphere2": "yes"
+            },
+            "brothers": {
+                "hasMoon": {
+                    "target": "false",
+                    "refs": {
+                        "totalMoon": "44"
+                    }
+                },
+                "hasAtmosphere": {
+                    "target": "true",
+                    "refs": {
+                        "breathable": "yes"
+                    }
+                }
+            },
+            "joined": {
+                "moon": {
+                    "is_a": "moon",
+                    "contained_in_file": "moon_file",
+                    "uniqueRef": "name",
+                    "refs": {
+                        "name": "moonZZ"
+                    },
+                    "brothers": {},
+                    "joined": {}
+                },
+                "satellite": {
+                    "is_a": "satellite",
+                    "contained_in_file": "satellite_file",
+                    "uniqueRef": "name",
+                    "refs": {
+                        "name": "satelliteZZZ"
+                    },
+                    "brothers": {},
+                    "joined": {}
+                },
+                "lifeForms": {
+                    "is_a": "humans",
+                    "contained_in_file": "humans_file",
+                    "uniqueRef": "name",
+                    "refs": {
+                        "name": "level1"
+                    },
+                    "brothers": {},
+                    "joined": {}
+                }
+            }
+        };
+        await JSONQuery_1.JSONQuery.push(json);
+        console.log("Done!!");
     }
     getTabs(n = 0) {
         let s = "";
