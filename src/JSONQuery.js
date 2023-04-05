@@ -24,9 +24,19 @@ class JSONQuery {
     static async getPushTemplate() {
         return JSONQuery.PUSH_TEMPLATE;
     }
+    /***
+     * Gets entities array object on bases of given json
+     * @param query JSON query
+     * @returns Promise<Entity[]>
+     */
     static async select(query) {
         return JSONQuery.filter(query);
     }
+    /***
+    * Gets entities as json on bases of given json
+    * @param query JSON query
+    * @returns Promise<any>
+    */
     static async selectAsJson(query) {
         let res = await JSONQuery.filter(query);
         let jsonRes = [];
@@ -35,6 +45,11 @@ class JSONQuery {
         });
         return Promise.resolve(jsonRes);
     }
+    /***
+    * Pushes entity data
+    * @param data entity data as json
+    * @returns Promise<void>
+    */
     static async push(data) {
         await JSONQuery.pushJson(data);
     }

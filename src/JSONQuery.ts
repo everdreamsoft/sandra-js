@@ -129,10 +129,20 @@ export class JSONQuery {
         return JSONQuery.PUSH_TEMPLATE;
     }
 
+    /***
+     * Gets entities array object on bases of given json
+     * @param query JSON query  
+     * @returns Promise<Entity[]> 
+     */
     static async select(query: any): Promise<Entity[]> {
         return JSONQuery.filter(query);
     }
 
+    /***
+    * Gets entities as json on bases of given json
+    * @param query JSON query  
+    * @returns Promise<any> 
+    */
     static async selectAsJson(query: any): Promise<any> {
         let res = await JSONQuery.filter(query);
         let jsonRes = [];
@@ -142,6 +152,11 @@ export class JSONQuery {
         return Promise.resolve(jsonRes);
     }
 
+    /***
+    * Pushes entity data 
+    * @param data entity data as json   
+    * @returns Promise<void> 
+    */
     static async push(data: any) {
         await JSONQuery.pushJson(data);
     }
