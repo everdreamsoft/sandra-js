@@ -217,16 +217,33 @@ export class JSONQuery {
         if (json.joined) {
             let joinedKeys = Object.keys(json.joined);
             for (let i = 0; i < joinedKeys?.length; i++) {
+
                 let verbConcept = await SystemConcepts.get(joinedKeys[i]);
-                let targets = await this.filter(json.joined[joinedKeys[i]], level + 1);
-                if (targets?.length > 0) {
-                    let triplet = new Triplet(TemporaryId.create(), subConcept, verbConcept, targets[0].getSubject());
-                    triplet.setJoinedEntity(targets[0]);
-                    tripletsArr.push(triplet);
+                let joinedTargetValues = json.joined[joinedKeys[i]];
+
+                if (joinedTargetValues.target) {
+
+                    let joinedTarget = joinedTargetValues.target;
+                    let targets = await this.filter(joinedTarget, level + 1);
+                    if (targets?.length > 0) {
+                        let triplet = new Triplet(TemporaryId.create(), subConcept, verbConcept, targets[0].getSubject());
+                        triplet.setJoinedEntity(targets[0]);
+                        if (joinedTargetValues.refs) {
+                            // References attached with this brother triplet 
+                            let refKeys = Object.keys(joinedTargetValues.refs);
+                            for (let i = 0; i < refKeys.length; i++) {
+                                let ref = await Utils.createDBReference(refKeys[i], joinedTargetValues.refs[refKeys[i]], triplet);
+                                refsArr.push(ref);
+                            }
+                        }
+                        tripletsArr.push(triplet);
+                    }
+                    else {
+                        return [];
+                    }
+
                 }
-                else {
-                    return [];
-                }
+
             }
         }
 
@@ -288,21 +305,39 @@ export class JSONQuery {
             let joinedKeys = Object.keys(json.joined);
             for (let i = 0; i < joinedKeys?.length; i++) {
                 let verbConcept = await SystemConcepts.get(joinedKeys[i]);
-                let targets = (await this.pushJson(json.joined[joinedKeys[i]], level + 1)).getEntities();
-                if (targets?.length > 0) {
-                    await entity.addTriplet(verbConcept, targets[0].getSubject(), [], true, true);
+                let joinedTargetValues = json.joined[joinedKeys[i]];
+
+                if (joinedTargetValues.target) {
+                    let joinedTarget = joinedTargetValues.target;
+                    let joinedRefs = [];
+                    let targets = (await this.pushJson(joinedTarget, level + 1)).getEntities();
+
+                    if (targets?.length > 0) {
+                        if (joinedTargetValues.refs) {
+                            // References attached with this joined triplet 
+                            let refKeys = Object.keys(joinedTargetValues.refs);
+                            for (let i = 0; i < refKeys.length; i++) {
+                                let ref = await Utils.createDBReference(refKeys[i], joinedTargetValues.refs[refKeys[i]]);
+                                joinedRefs.push(ref);
+                            }
+                        }
+                        await entity.addTriplet(verbConcept, targets[0].getSubject(), joinedRefs, true, true);
+                    }
+                    else {
+                        return null;
+                    }
                 }
-                else {
-                    return null;
-                }
+
             }
         }
 
         await factory.loadAllSubjects();
 
-        entity.setPushedStatus(false);
+        if (!("push" in json) || json.push) {
+            entity.setPushedStatus(false);
+            await factory.push();
+        }
 
-        await factory.push();
 
         return Promise.resolve(factory);
 

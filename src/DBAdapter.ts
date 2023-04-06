@@ -602,36 +602,34 @@ export class DBAdapter {
 
         let sql = "";
 
+        sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ? and idConceptTarget = ?";
+        let res = await this.getConnection().query(sql, t.getDBArrayFormat(false));
+
+        if (res && res?.length > 0) {
+            t.setId(res[0].id);
+            return t;
+        }
+
         if (withId)
-            sql = "insert ignore into " + this.tables.get("triplets") + " set id = ?, idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
+            sql = "insert into " + this.tables.get("triplets") + " set id = ?, idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
         else
-            sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
+            sql = "insert into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
 
-
-        let res = await this.getConnection().query(sql, t.getDBArrayFormat(withId));
+        res = await this.getConnection().query(sql, t.getDBArrayFormat(withId));
 
         if (res && res?.insertId) {
             t.setId(res.insertId);
             return t;
-        } else {
-            // Getting the triplet 
-            sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ?";
-            res = await this.getConnection().query(sql, [t.getSubject().getId(), t.getVerb().getId()]);
-
-            if (res && res?.length > 0) {
-                t.setId(res[0].id);
-                return t;
-            }
         }
 
-
         return undefined;
+
     }
 
     async upsertTriplet(t: Triplet): Promise<Triplet> {
 
-        let sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ?";
-        let res = await this.getConnection().query(sql, [t.getSubject().getId(), t.getVerb().getId()]);
+        let sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ? and  idConceptTarget = ?";
+        let res = await this.getConnection().query(sql, t.getDBArrayFormat(false));
 
         if (res && res?.length > 0) {
             // Update
@@ -642,7 +640,7 @@ export class DBAdapter {
         }
         else {
             // Insert
-            sql = "insert ignore into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
+            sql = "insert into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
             let resInsert = await this.getConnection().query(sql, t.getDBArrayFormat(false));
 
             if (resInsert && resInsert?.insertId) {
@@ -657,8 +655,16 @@ export class DBAdapter {
 
     async addRefs(ref: Reference): Promise<Reference> {
 
-        let sql = "insert ignore into " + this.tables.get("references") + " set idConcept = ?, linkReferenced = ?, value = ?";
-        let res = await this.getConnection().query(sql, ref.getDBArrayFormat(false));
+        let sql = "select id from " + this.tables.get("references") + " where idConcept = ? and linkReferenced = ?";
+        let res = await this.getConnection().query(sql, [ref.getIdConcept().getId(), ref.getTripletLink().getId()]);
+
+        if (res && res?.length > 0) {
+            ref.setId(res[0].id);
+            return ref;
+        }
+
+        sql = "insert into " + this.tables.get("references") + " set idConcept = ?, linkReferenced = ?, value = ?";
+        res = await this.getConnection().query(sql, ref.getDBArrayFormat(false));
 
         if (res && res?.insertId) {
             ref.setId(res.insertId);
@@ -671,41 +677,31 @@ export class DBAdapter {
 
     async upsertRefs(ref: Reference) {
 
-        // Upserting
-        let sql = "insert into " + this.tables.get("references") + " (idConcept, linkReferenced, value ) values (?,?,?) on duplicate key update value = ? ";
-        let values = [...ref.getDBArrayFormat(false), ref.getValue()];
-        let res = await this.getConnection().query(sql, values);
-
         // Selecting updated or inserted ref
-        sql = "select id from " + this.tables.get("references") + " where idConcept = ? and linkReferenced = ? and value = ?";
-        res = await this.getConnection().query(sql, ref.getDBArrayFormat(false));
+        let sql = "select id from " + this.tables.get("references") + " where idConcept = ? and linkReferenced = ? ";
+        let res = await this.getConnection().query(sql, [ref.getIdConcept().getId(), ref.getTripletLink().getId()]);
 
         if (res && res?.length > 0) {
             ref.setId(res[0].id);
+            sql = "update " + this.tables.get("references") + " set value = ? where idConcept = ? and linkReferenced = ? ";
+            res = await this.getConnection().query(sql, [ref.getValue(), ref.getIdConcept().getId(), ref.getTripletLink().getId()]);
+            return ref;
+        }
+
+        // Upserting
+        sql = "insert into " + this.tables.get("references") + " (idConcept, linkReferenced, value ) values (?,?,?)";
+        let values = [...ref.getDBArrayFormat(false), ref.getValue()];
+        res = await this.getConnection().query(sql, values);
+
+        if (res && res?.insertId) {
+            ref.setId(res.insertId);
             return ref;
         }
 
         return undefined;
-    }
-
-    async updateRefsBatch(refs: Reference[]) {
-
-        let caseStatemet = "";
-        let idCocept = [];
-        let linkReferenced = [];
-
-        idCocept = [...new Set(refs.map(item => (item.getIdConcept().getId())))];
-        linkReferenced = [...new Set(refs.map(item => (item.getTripletLink().getId())))];
-        refs.forEach(ref => {
-            caseStatemet = caseStatemet + " when idConcept = " + ref.getIdConcept().getId() + " and linkReferenced = " + ref.getTripletLink().getId() + " then value = " + ref.getValue()
-        });
-
-        let whereStatement = " where  idConcept in (?) and linkReferenced in (?)";
-
-        let sql = "update " + this.tables.get("references") + " set value = ( case " + caseStatemet + " end ) " + whereStatement;
-
 
     }
+
 
     async updateRefsBatchById(refs: Reference[]) {
 
@@ -994,6 +990,7 @@ export class DBAdapter {
         let sql = "set @TRIGGER_DISABLED = 1";
         return await this.getConnection().query(sql);
     }
+
     async enableTrigger() {
         let sql = "set @TRIGGER_DISABLED = 0";
         return await this.getConnection().query(sql);

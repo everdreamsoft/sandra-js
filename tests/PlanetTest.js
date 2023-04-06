@@ -282,30 +282,33 @@ class PlanetTest {
     }
     async selectAsJSON() {
         let json = {
-            "is_a": "planet",
-            "contained_in_file": "planet_file",
-            "uniqueRef": "name",
+            "is_a": "blockchainEvent",
+            "contained_in_file": "blockchainEventFile",
+            "uniqueRef": "txHash",
             "refs": {},
             "brothers": {
-                "hasMoon": {
-                    "target": "true",
-                    "refs": {
-                        "totalMoon": "1"
-                    }
+                "onBlockchain": {
+                    "target": "binance",
+                    "refs": {}
                 }
             },
             "joined": {
-                "moon": {
-                    "is_a": "moon",
-                    "contained_in_file": "moon_file",
-                    "uniqueRef": "name",
-                    "refs": {
-                        "name": "moon44"
+                "blockchainContract": {
+                    "target": {
+                        "is_a": "bscContract",
+                        "contained_in_file": "blockchainContractFile",
+                        "uniqueRef": "id",
+                        "refs": {
+                            "id": "0x198d33fb8f75ac6a7cb968962c743f09c486cca6"
+                        },
+                        "brothers": {},
+                        "joined": {},
+                        "options": {
+                            "load_data": true
+                        }
                     },
-                    "brothers": {},
-                    "joined": {},
-                    "options": {
-                        "load_data": true
+                    "refs": {
+                        "tokenId": "5008"
                     }
                 }
             },
@@ -324,11 +327,11 @@ class PlanetTest {
             "contained_in_file": "planet_file",
             "uniqueRef": "name",
             "refs": {
-                "name": "planetZZ",
-                "diameter": "10",
+                "name": "planetXXXXXXX",
+                "diameter": "100000",
                 "atmosphere": "yes",
                 "atmosphere1": "yes",
-                "atmosphere2": "yes"
+                "atmosphere2": "no"
             },
             "brothers": {
                 "hasMoon": {
@@ -340,40 +343,54 @@ class PlanetTest {
                 "hasAtmosphere": {
                     "target": "true",
                     "refs": {
-                        "breathable": "yes"
+                        "breathable": "no"
                     }
                 }
             },
             "joined": {
                 "moon": {
-                    "is_a": "moon",
-                    "contained_in_file": "moon_file",
-                    "uniqueRef": "name",
-                    "refs": {
-                        "name": "moonZZ"
+                    "target": {
+                        "is_a": "moon",
+                        "contained_in_file": "moon_file",
+                        "uniqueRef": "name",
+                        "refs": {
+                            "name": "moonZZZZ"
+                        },
+                        "brothers": {},
+                        "joined": {},
+                        "push": true
                     },
-                    "brothers": {},
-                    "joined": {}
+                    "refs": {
+                        "atmosphere": "no"
+                    }
                 },
                 "satellite": {
-                    "is_a": "satellite",
-                    "contained_in_file": "satellite_file",
-                    "uniqueRef": "name",
-                    "refs": {
-                        "name": "satelliteZZZ"
+                    "target": {
+                        "is_a": "satellite",
+                        "contained_in_file": "satellite_file",
+                        "uniqueRef": "name",
+                        "refs": {
+                            "name": "satelliteZZZ"
+                        },
+                        "brothers": {},
+                        "joined": {},
+                        "push": false
                     },
-                    "brothers": {},
-                    "joined": {}
+                    "refs": {}
                 },
                 "lifeForms": {
-                    "is_a": "humans",
-                    "contained_in_file": "humans_file",
-                    "uniqueRef": "name",
-                    "refs": {
-                        "name": "level1"
+                    "target": {
+                        "is_a": "humans",
+                        "contained_in_file": "humans_file",
+                        "uniqueRef": "name",
+                        "refs": {
+                            "name": "level1"
+                        },
+                        "brothers": {},
+                        "joined": {},
+                        "push": false
                     },
-                    "brothers": {},
-                    "joined": {}
+                    "refs": {},
                 }
             }
         };
