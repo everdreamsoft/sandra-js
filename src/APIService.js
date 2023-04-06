@@ -9,6 +9,13 @@ const LogManager_1 = require("./loggers/LogManager");
 const Utils_1 = require("./Utils");
 class APIService {
     constructor() { }
+    /**
+     * Calls the given url as GET and sends back the response
+     * @param url
+     * @param timeout
+     * @param waitTimeInMs
+     * @returns Returns the response of given url
+     */
     static async get(url, timeout = 60000, waitTimeInMs) {
         try {
             url = Utils_1.Utils.createIPFSUrlIfFound(url);
@@ -28,6 +35,12 @@ class APIService {
             return APIService.createApiResponse(e, null);
         }
     }
+    /**
+     * POST given url with given payload
+     * @param url
+     * @param payload
+     * @returns Returns promise of IAPIResponse
+     */
     static async post(url, payload) {
         try {
             const response = await axios_1.default.post(url, payload, {
@@ -41,6 +54,12 @@ class APIService {
             return APIService.createApiResponse(e, null);
         }
     }
+    /**
+     *
+     * @param error
+     * @param data
+     * @returns Creates IAPIResponse response object with give error and data
+     */
     static createApiResponse(error, data) {
         var _a;
         if (error) {

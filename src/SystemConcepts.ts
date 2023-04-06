@@ -2,12 +2,15 @@ import { Concept } from "./Concept";
 import { DBAdapter } from "./DBAdapter";
 import { TemporaryId } from "./TemporaryId";
 
+/**
+ * This class keeps all the system concpets in memory for efficency. Uses static object to keep the 
+ * list of system concepts. Always use this class to get system concepts.
+ */
 export class SystemConcepts {
 
     private static concepts: Map<string, Concept> = new Map();
 
     constructor() {
-
     }
 
     static async add(concept: Concept) {
@@ -19,7 +22,11 @@ export class SystemConcepts {
 
     }
 
-
+    /**
+     * Gets the concept with given shortname, it searches given shortname in concepts list 
+     * if its not found then it tries to get it from the database, if not present in the database
+     * it creates a new concept entry in the dabase and also in its list and returns the concpet object. 
+     */
     static async get(shortname: string) {
 
         // check if it exist in memory 
@@ -45,4 +52,5 @@ export class SystemConcepts {
         return c;
 
     }
+
 }

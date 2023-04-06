@@ -22,12 +22,19 @@ class EntityFactory {
     getFullName() { return this.is_a + "/" + this.contained_in_file; }
     getContainedInFileVerb() { return this.contained_in_file; }
     getUniqueRefConcept() { return this.uniqueRefConcept; }
-    reset() {
-        this.entityArray = [];
-    }
+    /**
+     *
+     * @param factory Factory class object to compare
+     * @returns Return true if given factory verb concept and contained in file concept are same
+     */
     isSame(factory) {
         return this.is_a == factory.getIsAVerb() && this.contained_in_file == factory.getContainedInFileVerb();
     }
+    /**
+     *
+     * @param ref Reference object
+     * @returns Returns the entity object of the factory containing given reference object
+     */
     getEntityByRef(ref) {
         let index = this.entityArray.findIndex(e => {
             let refs1 = e.getRefs();
@@ -41,6 +48,11 @@ class EntityFactory {
             return this.entityArray[index];
         return null;
     }
+    /**
+     *
+     * @param entity Entity object to look for
+     * @returns Return the entity object in current with same factory and subject id
+     */
     getEntity(entity) {
         if (this.uniqueRefConcept && this.uniqueRefConcept.getShortname().length > 0) {
             let index = this.entityArray.findIndex(e => e.isEqualTo(entity));
@@ -49,6 +61,13 @@ class EntityFactory {
             }
         }
     }
+    /**
+     *
+     * @param refs Reference array list
+     * @param upsert Set true if update is needed in DB for given references.
+     * @returns Return new entity object if it does not exist in factory entity list, otherwise will return
+     * new entity object and adds it to factory list.
+    */
     async create(refs, upsert = false) {
         // Check if it arelady exist
         let uniqueRef1 = null;
@@ -92,6 +111,15 @@ class EntityFactory {
         }
         return e;
     }
+    /**
+     * Resest factory by removing current entity array.
+     */
+    reset() {
+        this.entityArray = [];
+    }
+    /**
+     * Pushing all the entities of factory. Entities are inserted/updated one by one.
+     */
     async push() {
         var _a, _b, _c;
         LogManager_1.LogManager.getInstance().info("Pushing factory  - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
@@ -135,13 +163,9 @@ class EntityFactory {
         this.setPushedStatus(true);
         LogManager_1.LogManager.getInstance().info("Pushed factory  - " + this.getFullName());
     }
-    async pushRefsBatch() {
-        let refs = [];
-        for (let i = 0; i < this.entityArray.length; i++) {
-            refs.push(...this.entityArray[i].getRefs());
-        }
-        await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(refs);
-    }
+    /**
+     * Pushes only references of each entity in the factory class.
+     */
     async pushRefs() {
         var _a;
         for (let index = 0; index < ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length); index++) {
@@ -157,6 +181,9 @@ class EntityFactory {
             }
         }
     }
+    /**
+     * Puses all triplets of each entity in the factory class.
+     */
     async pushTriplets() {
         var _a;
         for (let index = 0; index < ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length); index++) {
@@ -173,17 +200,14 @@ class EntityFactory {
             }
         }
     }
-    async pushTripletsBatch() {
-        let triplets = [];
-        for (let i = 0; i < this.entityArray.length; i++) {
-            triplets.push(...this.entityArray[i].getTriplets());
-        }
-        await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets, false);
-    }
-    // Pushes all the triplets with given verb, if triplets is loaded before and ignoreIfVerbExist is 
-    // true then it will be ignored.
-    // Use case when you need to add a triplet with given verb only but also dont want 
-    // to add another triplet with same verb
+    /**
+     * Pushes all the triplets of each entity with given verb, if triplets are loaded before and
+     * ignoreIfVerbExisit is set to true then it the loaded triplets will be ignored.
+     * - Use case when you need to add a triplet with given verb only but also dont want
+     * to add another triplet with same verb
+     * @param verb
+     * @param ignoreIfVerbExist
+     */
     async pushTripletsBatchWithVerb(verb, ignoreIfVerbExist = false) {
         let triplets = [];
         for (let i = 0; i < this.entityArray.length; i++) {
@@ -202,13 +226,12 @@ class EntityFactory {
         if (triplets.length > 0)
             await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets, false);
     }
-    async upsertTripletsBatch() {
-        let triplets = [];
-        for (let i = 0; i < this.entityArray.length; i++) {
-            triplets.push(...this.entityArray[i].getTriplets().filter(t => { return t.isUpsert(); }));
-        }
-        await (await DBAdapter_1.DBAdapter.getInstance()).updateTripletsBatchById(triplets);
-    }
+    /**
+     * Pushes entity list of the facotry class object in batch.
+     * In case there are too many enities are to be added this can be used to minimize query insertion time.
+     * It also ignore all the entities that have pushed status set to true, pushed status is set after loading
+     * factory class entities. Its set to true if the entity is already present in db.
+     */
     async pushBatch() {
         var _a;
         LogManager_1.LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
@@ -282,86 +305,48 @@ class EntityFactory {
             LogManager_1.LogManager.getInstance().info("No new entity to push.. - " + this.getFullName());
         }
     }
-    //TODO - This function needs triggers setup on concept and triplets table with maxid table
-    async pushBatchWithTransaction() {
-        var _a;
-        LogManager_1.LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
-        let concepts = [];
-        let triplets = [];
-        let references = [];
-        let newEntities = this.entityArray.filter(e => {
-            if (TemporaryId_1.TemporaryId.isValid(e.getSubject().getId())) {
-                return e;
-            }
-        });
-        let newConcepts = newEntities.map(e => {
-            return e.getSubject();
-        });
-        if ((newConcepts === null || newConcepts === void 0 ? void 0 : newConcepts.length) > 0) {
-            let newTriplets = [];
-            newEntities.forEach(e => {
-                newTriplets = [...newTriplets, ...e.getTriplets()];
-            });
-            let newRef = [];
-            newEntities.forEach(e => {
-                newRef = [...newRef, ...e.getRefs()];
-            });
-            let totalNewConc = newConcepts === null || newConcepts === void 0 ? void 0 : newConcepts.length;
-            let totalNewTrips = newTriplets === null || newTriplets === void 0 ? void 0 : newTriplets.length;
-            let lastConceptToAdd = newConcepts[newConcepts.length - 1];
-            let lastTipletToAdd;
-            let maxTripletId = -1;
-            if (newTriplets.length > 0)
-                lastTipletToAdd = newTriplets[newTriplets.length - 1];
-            // Inserting and getting max ids 
-            //await (await DBAdapter.getInstance()).beginTransaction();
-            await (await DBAdapter_1.DBAdapter.getInstance()).beginTransaction();
-            await (await DBAdapter_1.DBAdapter.getInstance()).disbaleTrigger();
-            let maxConceptId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxConceptIdFromMaxTable();
-            let maxConId = String(Number(maxConceptId) + totalNewConc);
-            await (await DBAdapter_1.DBAdapter.getInstance()).updateMaxConceptIdFromMaxTable(maxConId);
-            lastConceptToAdd.setId(maxConId);
-            await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(lastConceptToAdd, true);
-            if (lastTipletToAdd) {
-                maxTripletId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxTripletIdFromMaxTable();
-                let maxTripId = String(Number(maxTripletId) + totalNewTrips);
-                await (await DBAdapter_1.DBAdapter.getInstance()).updateMaxTripletIdFromMaxTable(maxTripId);
-                lastTipletToAdd.setId(maxTripId);
-                await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(lastTipletToAdd, true);
-            }
-            await (await DBAdapter_1.DBAdapter.getInstance()).enableTrigger();
-            await (await DBAdapter_1.DBAdapter.getInstance()).commit();
-            // Add till second last because last id was already added
-            for (let i = 0; i <= newConcepts.length - 2; i++) {
-                maxConceptId = maxConceptId + 1;
-                let c = newConcepts[i];
-                c.setId(maxConceptId);
-                concepts.push(c);
-            }
-            for (let i = 0; i <= newTriplets.length - 2; i++) {
-                maxTripletId = maxTripletId + 1;
-                let t = newTriplets[i];
-                t.setId(maxTripletId);
-                triplets.push(t);
-            }
-            for (let i = 0; i <= newRef.length - 1; i++) {
-                references.push(newRef[i]);
-            }
-            await (await DBAdapter_1.DBAdapter.getInstance()).addBatchWithTransaction(concepts, triplets, references);
-            LogManager_1.LogManager.getInstance().info("Pushed factory batch - " + this.getFullName());
+    /**
+     * Pushes references of all the entities of given facotry in batch call.
+     */
+    async pushRefsBatch() {
+        let refs = [];
+        for (let i = 0; i < this.entityArray.length; i++) {
+            refs.push(...this.entityArray[i].getRefs());
         }
-        else {
-            LogManager_1.LogManager.getInstance().info("No new entity to push.. - " + this.getFullName());
-        }
+        await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(refs);
     }
-    async batchRefUpdate(conceptId) {
+    /**
+     * Pushes triplets of all the entities of given facotry in batch call.
+     */
+    async pushTripletsBatch() {
+        let triplets = [];
+        for (let i = 0; i < this.entityArray.length; i++) {
+            triplets.push(...this.entityArray[i].getTriplets());
+        }
+        await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets, false);
+    }
+    /**
+     * Updates reference in DB of all the entities of a factory with given concept
+     * @param conceptId
+     */
+    async batchRefUpdate(concept) {
         let refs = [];
         this.entityArray.forEach(e => {
-            let r = e.getRefs().filter(r => { return r.getIdConcept().isSame(conceptId); });
+            let r = e.getRefs().filter(r => { return r.getIdConcept().isSame(concept); });
             if (r)
                 refs.push(...r);
         });
         await (await DBAdapter_1.DBAdapter.getInstance()).updateRefsBatchById(refs);
+    }
+    /**
+     * Udpates all the triplet where triplet upsert is true of all the entities of the factory object.
+     */
+    async upsertTripletsBatch() {
+        let triplets = [];
+        for (let i = 0; i < this.entityArray.length; i++) {
+            triplets.push(...this.entityArray[i].getTriplets().filter(t => { return t.isUpsert(); }));
+        }
+        await (await DBAdapter_1.DBAdapter.getInstance()).updateTripletsBatchById(triplets);
     }
     /**
         * Loads all the entities with given reference of the factory object.
@@ -402,6 +387,13 @@ class EntityFactory {
             this.entityArray.push(e);
         }
     }
+    /**
+     *
+     * @param subject Subject concept object to load
+     * @param iterateDown If set true all the joined entities are also loaded
+     * @returns Return entity object from the DB with given subject concept. Checks the subject id to load data.
+     * It does not add loaded entity to current factory entity list.
+     */
     async loadBySubject(subject, iterateDown = false) {
         let entityConcept = await (await DBAdapter_1.DBAdapter.getInstance()).getConceptById(Number(subject.getId()));
         if (entityConcept) {
@@ -426,6 +418,11 @@ class EntityFactory {
         }
         return null;
     }
+    /**
+     * Loads all the entities with given triplets. Selection is on current factory class is_a and cointain_in_file verbs.
+     * @param triplets
+     * @param limit
+     */
     async loadByTriplet(triplets, limit) {
         let concepts = await (await DBAdapter_1.DBAdapter.getInstance()).getEntitiesByTriplet(triplets, limit);
         concepts.forEach((val, key) => {
@@ -437,40 +434,12 @@ class EntityFactory {
             this.entityArray.push(e);
         });
     }
-    // Note - Not thoroughly tested but works for the scenarios tested.
-    // Optimized funtion for filtering.
-    // Filter all the entities values with provided triplets and reference values 
-    // Filter by triplets and refernce, if a refrence is added then reference should have 
-    // tripletLink set and this triplet should be provided with triplets parameter.
-    // Code Example -         
-    // let blockchainEventFileConcpet = await SystemConcepts.get("blockchainEventFile");
-    // let cifConcpet = await SystemConcepts.get("contained_in_file");
-    // let contractFileConcept = await SystemConcepts.get("blockchainContract");
-    // let quantityConcept = await SystemConcepts.get("quantity");
-    // let tokenIdConcept = await SystemConcepts.get("tokenId");
-    // let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX +
-    // eventFactory.getIsAVerb(), null);
-    // let t1 = new Triplet(
-    //     TemporaryId.create(),
-    //     subConcept,
-    //     cifConcpet,
-    //     blockchainEventFileConcpet
-    // );
-    // let t2 = new Triplet(
-    //     TemporaryId.create(),
-    //     subConcept,
-    //     contractFileConcept,
-    //     contract.getSubject()
-    // );
-    // let t3 = new Triplet(
-    //     TemporaryId.create(),
-    //     subConcept,
-    //     await SystemConcepts.get("balanced"),
-    //     await SystemConcepts.get("true")
-    // );
-    // let r1 = new Reference("", quantityConcept, t1, "");
-    // let r2 = new Reference("", tokenIdConcept, t2, "1");
-    // await eventFactory.filter([t1, t2, t3], [r1, r2], 100);
+    /**
+     *
+     * @param triplets Triplets to serach
+     * @param refs References to search, these references should also have tripletlink set. And this triplet should be added to triplets array parameter
+     * @param limit Number of records to select.
+     */
     async filter(triplets, refs, limit) {
         let concepts = await (await DBAdapter_1.DBAdapter.getInstance()).filter(triplets, refs, limit);
         concepts.forEach((val, key) => {
@@ -482,6 +451,12 @@ class EntityFactory {
             this.entityArray.push(e);
         });
     }
+    /**
+     * Loads last entities into factory list from the database with is_a and contained_in_file verbs of current factory class object.
+     * @param lastId Subject id of the first entity, it will load all entities with subject ids less that given id.
+     * Used for pagingation.
+     * @param limit Limit the number of records
+     */
     async loadEntityConcepts(lastId, limit) {
         let entityConcepts = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConcepts(this.is_a, lastId, limit);
         for (let index = 0; index < (entityConcepts === null || entityConcepts === void 0 ? void 0 : entityConcepts.length); index++) {
@@ -492,6 +467,9 @@ class EntityFactory {
             this.entityArray.push(e);
         }
     }
+    /**
+     * Loads the references of all entites of given factory
+     */
     async loadEntityConceptsRefs() {
         await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConceptsRefs(this.entityArray, await SystemConcepts_1.SystemConcepts.get("contained_in_file"));
     }
@@ -521,6 +499,11 @@ class EntityFactory {
             });
         });
     }
+    /**
+     * Loads only the triplets with given verb for each entity of the factory from the database.
+     * @param verb Verb concept of triplets to load.
+     * @param loadVerbData - It will also loads verb concpet of the given verb.
+     */
     async loadTripletsWithVerb(verb, loadVerbData = false) {
         let s = [];
         this.entityArray.forEach(e => {
@@ -542,6 +525,12 @@ class EntityFactory {
             });
         });
     }
+    /**
+     *
+     * @returns Loads all the subject concept of each entity of current facotry object.
+     * Function will look for the entity in the database accroding the unique ref concpet/value and updates them
+     * in current entity list.
+     */
     async loadAllSubjects() {
         if (this.entityArray.length == 0)
             return;
@@ -570,6 +559,9 @@ class EntityFactory {
             }
         });
     }
+    /**
+     * Loads all the references of each triplets of all the entities of current factory class object.
+     */
     async loadAllTripletRefs(refConcept = null) {
         var _a, _b, _c;
         let ts = [];
@@ -599,6 +591,11 @@ class EntityFactory {
             });
         }
     }
+    /**
+     * Adds a new entity into factory list with given subject concept.
+     * @param subject
+     * @returns
+     */
     async addSubjectAsEntity(subject) {
         let i = this.entityArray.findIndex(e => { return e.getSubject().isSame(subject); });
         if (i >= 0)

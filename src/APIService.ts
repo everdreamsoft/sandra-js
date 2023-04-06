@@ -8,6 +8,13 @@ export class APIService {
 
     constructor() { }
 
+    /**
+     * Calls the given url as GET and sends back the response
+     * @param url 
+     * @param timeout 
+     * @param waitTimeInMs 
+     * @returns Returns the response of given url
+     */
     static async get(url: string, timeout: number = 60000, waitTimeInMs?: number): Promise<IAPIResponse> {
 
         try {
@@ -37,6 +44,12 @@ export class APIService {
 
     }
 
+    /**
+     * POST given url with given payload
+     * @param url 
+     * @param payload 
+     * @returns Returns promise of IAPIResponse 
+     */
     static async post(url: string, payload: any) {
 
         try {
@@ -56,7 +69,12 @@ export class APIService {
 
     }
 
-
+    /**
+     * 
+     * @param error 
+     * @param data 
+     * @returns Creates IAPIResponse response object with give error and data
+     */
     static createApiResponse(error: any, data: any): IAPIResponse {
 
         if (error) {

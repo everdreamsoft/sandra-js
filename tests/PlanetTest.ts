@@ -1,4 +1,3 @@
-import { APIService } from "../src/APIService";
 import { Concept } from "../src/Concept";
 import { Entity } from "../src/Entity";
 import { EntityFactory } from "../src/EntityFactory";
@@ -59,7 +58,7 @@ export class PlanetTest {
 
         // Using JSON query 
         //await this.selectAsJSON();
-        await this.pushAsJSON();
+        //await this.pushAsJSON();
 
     }
 

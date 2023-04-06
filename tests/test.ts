@@ -35,6 +35,7 @@ export class Test {
         await blockFactory.batchRefUpdate(await SystemConcepts.get("ethereum-timestamp"));
 
     }
+
     async testBlocktimeUpdate() {
 
         console.log("inserting...");
@@ -1087,7 +1088,7 @@ const DB_CONFIG = {
     database: "jetski",
     host: "139.144.74.232",
     env: "fondue",
-    password: "xH108MAdCn",
+    password: "",
     user: "admin"
 };
 

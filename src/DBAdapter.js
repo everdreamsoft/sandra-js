@@ -26,13 +26,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DBAdapter = void 0;
 const mariaDb = __importStar(require("mariadb"));
 const Concept_1 = require("./Concept");
-const lock_status_1 = require("./enums/lock-status");
-const transaction_status_1 = require("./enums/transaction-status");
-const LogManager_1 = require("./loggers/LogManager");
 const Reference_1 = require("./Reference");
 const Sandra_1 = require("./Sandra");
 const TemporaryId_1 = require("./TemporaryId");
 const Triplet_1 = require("./Triplet");
+const lock_status_1 = require("./enums/lock-status");
+const transaction_status_1 = require("./enums/transaction-status");
+const LogManager_1 = require("./loggers/LogManager");
 class DBAdapter {
     constructor(config) {
         this.tables = new Map();
@@ -42,8 +42,11 @@ class DBAdapter {
         this.tables.set("concepts", this.config.env + "_SandraConcept");
         this.tables.set("references", this.config.env + "_SandraReferences");
         this.tables.set("triplets", this.config.env + "_SandraTriplets");
-        this.tables.set("maxid", this.config.env + "_maxid");
     }
+    /**
+     *
+     * @returns Returns DBAdapter object, if null then new object is created.
+     */
     static async getInstance() {
         if (!DBAdapter.instance) {
             DBAdapter.instance = new DBAdapter(Sandra_1.Sandra.DB_CONFIG);
@@ -51,7 +54,14 @@ class DBAdapter {
         }
         return DBAdapter.instance;
     }
+    /**
+     *
+     * @returns Returns current DBAdapter instance object.
+     */
     static getInstanceObject() { return DBAdapter.instance; }
+    /**
+     * Connects to mySQL database with configuration set with Sandra.DB_CONFIG
+     */
     async connect() {
         try {
             LogManager_1.LogManager.getInstance().info("Creating DB connection..");
@@ -61,12 +71,19 @@ class DBAdapter {
             console.error(e);
         }
     }
+    /**
+     *
+     * @returns Returns DB connection class object
+     */
     getConnection() {
         if (this.connection)
             return this.connection;
         else
             throw Error("DB not connected");
     }
+    /**
+     * Closes the DB connection
+     */
     async close() {
         try {
             if (this.connection) {
@@ -78,23 +95,39 @@ class DBAdapter {
             console.error(e);
         }
     }
+    /**
+     * Begins DB transaction.
+     */
     async beginTransaction() {
         LogManager_1.LogManager.getInstance().info("Starting transaction..");
         let sql = "Start Transaction;";
         await this.getConnection().query(sql);
         this.transactionStatus = transaction_status_1.EnumTransactionStatus.Started;
     }
+    /**
+     * Commits DB transactions.
+     */
     async commit() {
         LogManager_1.LogManager.getInstance().info("Committing..");
         let sql = "Commit;";
         await this.getConnection().query(sql);
         this.transactionStatus = transaction_status_1.EnumTransactionStatus.Completed;
     }
+    /**
+     * Runs DB query to sleep for given durations.
+     * @param durationInSec
+     */
     async sleep(durationInSec) {
         LogManager_1.LogManager.getInstance().info("Sleep for " + durationInSec + "s");
         let sql = "select sleep(" + durationInSec + ")";
         await this.getConnection().query(sql);
     }
+    /**
+     * Runs lock queries on tables according to the parameter
+     * @param concept Set true to lock SandraConcept table
+     * @param triplet Set true to lock SandraTriplets table
+     * @param ref Set true to lock SandraReferences table
+     */
     async lockTables(concept = false, triplet = false, ref = false) {
         let tables = [];
         if (concept)
@@ -109,11 +142,21 @@ class DBAdapter {
             await this.getConnection().query(sql);
         }
     }
+    /**
+     * Runs unlock query to unlock tables
+     */
     async unlockTable() {
         LogManager_1.LogManager.getInstance().info("Unlocking tables..");
         let sql = "UNLOCK TABLES";
         await this.getConnection().query(sql);
     }
+    /**
+     * Queries database for references attached to given triplet and if reference concept is provided
+     * then only those reference concepts are selected
+     * @param t
+     * @param refConcept
+     * @returns Returns Reference class object of given triplet.
+     */
     async getReferenceByTriplet(t, refConcept = null) {
         let refCon = "";
         if (refConcept) {
@@ -133,6 +176,11 @@ class DBAdapter {
         }
         return refs;
     }
+    /**
+     * Query database for references attached to given triplets array
+     * @param triplets
+     * @returns Returns a promis of References array for given triplets
+     */
     async getReferenceByTriplets(triplets) {
         let sql = "select r.id,  r.linkReferenced as tripletId, c.id as cId, c.code, c.shortname, r.value from " + this.tables.get("references") + " as r " +
             " join " + this.tables.get("concepts") + " as c on r.idConcept = c.id and r.linkReferenced in (?)";
@@ -172,6 +220,14 @@ class DBAdapter {
         }
         return triplets;
     }
+    /**
+     * Queries database for triplets with given subjects and verb concepts. Loads verb concept data also if
+     * loadVerbData is set to true.
+     * @param subjects
+     * @param verbs
+     * @param loadVerbData
+     * @returns Returns array of triplets for given subject and verb
+     */
     async getTriplets(subjects, verbs = null, loadVerbData = false) {
         let subConcept = [];
         let verbConcept = [];
@@ -213,8 +269,15 @@ class DBAdapter {
         }
         return triplets;
     }
+    /**
+     * Queries database for give verb, target and refs values.
+     * @param verb
+     * @param target
+     * @param refsValuesToSearch
+     * @param refConcept
+     * @returns Returns map of reference value and corresponding Concept
+     */
     async getEntityConceptsByRefs(verb, target, refsValuesToSearch, refConcept) {
-        // let refs = refsValuesToSearch.map(function (id) { return "'" + id + "'"; }).join(",");
         let sql = "select  c.id, c.code, c.shortname, r.value from " +
             this.tables.get("references") + "  as r " +
             " join " + this.tables.get("triplets") + " as t on t.id = r.linkReferenced" +
@@ -232,7 +295,12 @@ class DBAdapter {
         }
         return map;
     }
-    // Load all subject concpets for given triplet 
+    /**
+     * Queries database to get all the triplets of given triplet subject.
+     * @param t
+     * @param limit
+     * @returns Map of subject concept and triplet array
+     */
     async getEntitiesByTriplet(t, limit = 1000) {
         let sql = "";
         let subject = t[0].getSubject();
@@ -272,8 +340,14 @@ class DBAdapter {
         }
         return data;
     }
-    // Filter by triplets and refernce, if a refrence is added then reference should have 
-    // tripletLink set and this triplet should be provided with triplets parameter.
+    /**
+     * Filter by triplets and refernce, if a refrence is added then reference should have
+     * tripletLink set and this triplet should be provided with triplets parameter.
+     * @param triplets
+     * @param refs
+     * @param limit
+     * @returns
+     */
     async filter(triplets, refs, limit = 1000) {
         let sql = "";
         let subject;
@@ -328,6 +402,11 @@ class DBAdapter {
         }
         return data;
     }
+    /**
+     * Queries database for  all the triplets with given subject id
+     * @param subject
+     * @returns Returns tripets array with given subject id
+     */
     async getTripletsBySubject(subject) {
         let sql = "SELECT t.id as id, " +
             "c.id as subId, c.code as subCode , c.shortname as subSn, " +
@@ -347,6 +426,11 @@ class DBAdapter {
         }
         return triplets;
     }
+    /**
+     * Queries database for give concept id from concepts table
+     * @param conceptId
+     * @returns Returns promise of Concept with given id
+     */
     async getConceptById(conceptId) {
         let sql = "select id, code, shortname from " + this.tables.get("concepts") + " where id = ?";
         let res = await this.getConnection().query(sql, [conceptId]);
@@ -354,6 +438,11 @@ class DBAdapter {
             return new Concept_1.Concept(res[0].id, res[0].code, res[0].shortname);
         return undefined;
     }
+    /**
+     * Queries database concepts table for given shortname
+     * @param shortname
+     * @returns Returns promise of concept with given shortname
+     */
     async getConcept(shortname) {
         let sql = "select * from " + this.tables.get("concepts") + " where shortname = ?";
         let res = await this.getConnection().query(sql, shortname);
@@ -361,7 +450,13 @@ class DBAdapter {
             return new Concept_1.Concept(res[0].id, res[0].code, res[0].shortname);
         return undefined;
     }
-    // Get all the entity concepts for this factory, on verb contained_in_file
+    /**
+     * Queries the database for concpets with given is_a and shortname null, entity concepts
+     * @param is_a - checks for code in concepts table
+     * @param lastId - Get data with id less than lastId
+     * @param limit - Limit records
+     * @returns Concepts array
+     */
     async getEntityConcepts(is_a, lastId, limit) {
         let limitQ = "";
         let lastIdQ = "";
@@ -383,6 +478,12 @@ class DBAdapter {
         }
         return concpets;
     }
+    /**
+     * Updates given entities references from the database
+     * @param entities
+     * @param containedInFileConcept
+     * @returns
+     */
     async getEntityConceptsRefs(entities, containedInFileConcept) {
         if ((entities === null || entities === void 0 ? void 0 : entities.length) == 0)
             return;
@@ -410,6 +511,12 @@ class DBAdapter {
             }
         });
     }
+    /**
+     * Adds given concept, if found then igores it.
+     * @param c
+     * @param withId
+     * @returns Returns added concept else null
+     */
     async addConcept(c, withId = false) {
         let sql = "insert ignore into " + this.tables.get("concepts") + " set code = ?, shortname = ?";
         if (withId)
@@ -421,6 +528,12 @@ class DBAdapter {
         }
         return undefined;
     }
+    /**
+     * Checks for given triplet in database, if not found then adds it.
+     * @param t
+     * @param withId
+     * @returns Returns added or selected triplet
+     */
     async addTriplet(t, withId = false) {
         let sql = "";
         sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ? and idConceptTarget = ?";
@@ -440,6 +553,11 @@ class DBAdapter {
         }
         return undefined;
     }
+    /**
+     * Checks for given triplet in database, if not found then adds it else updates it.
+     * @param t
+     * @returns Returns upserted or selected triplet
+     */
     async upsertTriplet(t) {
         let sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ? and  idConceptTarget = ?";
         let res = await this.getConnection().query(sql, t.getDBArrayFormat(false));
@@ -461,6 +579,11 @@ class DBAdapter {
         }
         return undefined;
     }
+    /**
+     * Checks for given reference in database if not found then adds it.
+     * @param ref
+     * @returns Returns added or selected Reference
+     */
     async addRefs(ref) {
         let sql = "select id from " + this.tables.get("references") + " where idConcept = ? and linkReferenced = ?";
         let res = await this.getConnection().query(sql, [ref.getIdConcept().getId(), ref.getTripletLink().getId()]);
@@ -476,6 +599,11 @@ class DBAdapter {
         }
         return undefined;
     }
+    /**
+     * Checks for given reference in database if not found then adds it and if found then updates it.
+     * @param ref
+     * @returns Returns upserted or selected Reference
+     */
     async upsertRefs(ref) {
         // Selecting updated or inserted ref
         let sql = "select id from " + this.tables.get("references") + " where idConcept = ? and linkReferenced = ? ";
@@ -496,6 +624,11 @@ class DBAdapter {
         }
         return undefined;
     }
+    /**
+     * Updates given references in database by check the references ids of given references array. Query by batch.
+     * @param refs
+     * @returns
+     */
     async updateRefsBatchById(refs) {
         let caseStatemet = "";
         let ids = [];
@@ -511,6 +644,12 @@ class DBAdapter {
         }
         return false;
     }
+    /**
+     * Updates given triplets in database by checking the triplet ids. Make sure that triplet objects
+     * in parameter are loaded with ids. Uses batch query.
+     * @param triplets
+     * @returns
+     */
     async updateTripletsBatchById(triplets) {
         if ((triplets === null || triplets === void 0 ? void 0 : triplets.length) == 0)
             return true;
@@ -528,6 +667,7 @@ class DBAdapter {
         }
         return false;
     }
+    //TODO - Unkown/Unused function 
     async addRefsBatch(refs) {
         let refData = [];
         refs === null || refs === void 0 ? void 0 : refs.forEach(ref => {
@@ -537,6 +677,100 @@ class DBAdapter {
         let res = await this.getConnection().batch(sql, [refData]);
         return res;
     }
+    /**
+     * Inserts given concepts in database as a batch.
+     * @param concepts
+     * @returns
+     */
+    async addConceptsBatch(concepts) {
+        let conceptsData = [];
+        concepts === null || concepts === void 0 ? void 0 : concepts.forEach(concept => {
+            conceptsData.push(concept.getDBArrayFormat(true));
+        });
+        let sql = "insert into " + this.tables.get("concepts") + " (id, code, shortname) values (?, ? ,?)";
+        let res = await this.getConnection().batch(sql, conceptsData);
+        return res;
+    }
+    /**
+     * Inserts given triplets into the database as a batch, includes triplet ids in batch if
+     * withId is set to true
+     * @param triplets
+     * @param withId
+     * @returns
+     */
+    async addTripletsBatch(triplets, withId = true) {
+        let tripletsData = [];
+        triplets === null || triplets === void 0 ? void 0 : triplets.forEach(t => {
+            let arr = t.getDBArrayFormat(withId);
+            arr.forEach(a => { if (TemporaryId_1.TemporaryId.isValid(a))
+                throw new Error("Invalid batch insert, unlinked concept found"); });
+            tripletsData.push(arr);
+        });
+        let sql = "";
+        if (withId)
+            sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget, flag) values (?, ?, ?, ?, ?) ";
+        else
+            sql = "insert ignore into " + this.tables.get("triplets") + " (idConceptStart, idConceptLink, idConceptTarget, flag) values (?, ?, ?, ?) ";
+        let res = await this.getConnection().batch(sql, tripletsData);
+        return res;
+    }
+    /**
+     * Inserts given refrences into database as a batch, creates auto ids if with withId is set to false otherwise
+     * it will run queries to include id also.
+     * @param refs
+     * @param withId
+     * @returns
+     */
+    async addReferencesBatch(refs, withId = false) {
+        let refsData = [];
+        refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
+            let arr = r.getDBArrayFormat(withId);
+            arr.forEach(a => { if (TemporaryId_1.TemporaryId.isValid(a))
+                throw new Error("Invalid batch insert, unlinked concept found"); });
+            refsData.push(arr);
+        });
+        let values = " (id, idConcept, linkReferenced, value) values (?, ?, ?, ?) ";
+        if (!withId) {
+            values = values = " (idConcept, linkReferenced, value) values (?, ?, ?) ";
+        }
+        let sql = "insert ignore into " + this.tables.get("references") + values;
+        let res = await this.getConnection().batch(sql, refsData);
+        return res;
+    }
+    /**
+     *
+     * @returns Returns max id of SandraConcept table
+     */
+    async getMaxConceptId() {
+        let sql = "select max(id) as id from " + this.tables.get("concepts");
+        let res = await this.getConnection().query(sql);
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
+            return res[0].id;
+        return 0;
+    }
+    /**
+     *
+     * @returns Returns max if of SandraTriplets table
+     */
+    async getMaxTripletId() {
+        let sql = "select max(id) as id from " + this.tables.get("triplets");
+        let res = await this.getConnection().query(sql);
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
+            return res[0].id;
+        return 0;
+    }
+    /**
+     *
+     * @returns Returns max id from SandraReferences table
+     */
+    async getMaxReferenceId() {
+        let sql = "select max(id) as id from " + this.tables.get("references");
+        let res = await this.getConnection().query(sql);
+        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
+            return res[0].id;
+        return 0;
+    }
+    //////////// BENCHMARK TEST FUNCTION - START /////////////////////
     async addBatchWithTransaction(concepts, triplets, refs, tripletWithId = false, refWithId = false) {
         let conceptsData = [];
         let tripletsData = [];
@@ -582,68 +816,8 @@ class DBAdapter {
         this.commit();
         return;
     }
-    async addConceptsBatch(concepts) {
-        let conceptsData = [];
-        concepts === null || concepts === void 0 ? void 0 : concepts.forEach(concept => {
-            conceptsData.push(concept.getDBArrayFormat(true));
-        });
-        let sql = "insert into " + this.tables.get("concepts") + " (id, code, shortname) values (?, ? ,?)";
-        let res = await this.getConnection().batch(sql, conceptsData);
-        return res;
-    }
-    async addTripletsBatch(triplets, withId = true) {
-        let tripletsData = [];
-        triplets === null || triplets === void 0 ? void 0 : triplets.forEach(t => {
-            let arr = t.getDBArrayFormat(withId);
-            arr.forEach(a => { if (TemporaryId_1.TemporaryId.isValid(a))
-                throw new Error("Invalid batch insert, unlinked concept found"); });
-            tripletsData.push(arr);
-        });
-        let sql = "";
-        if (withId)
-            sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget, flag) values (?, ?, ?, ?, ?) ";
-        else
-            sql = "insert ignore into " + this.tables.get("triplets") + " (idConceptStart, idConceptLink, idConceptTarget, flag) values (?, ?, ?, ?) ";
-        let res = await this.getConnection().batch(sql, tripletsData);
-        return res;
-    }
-    async addReferencesBatch(refs, withId = false) {
-        let refsData = [];
-        refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
-            let arr = r.getDBArrayFormat(withId);
-            arr.forEach(a => { if (TemporaryId_1.TemporaryId.isValid(a))
-                throw new Error("Invalid batch insert, unlinked concept found"); });
-            refsData.push(arr);
-        });
-        let values = " (id, idConcept, linkReferenced, value) values (?, ?, ?, ?) ";
-        if (!withId) {
-            values = values = " (idConcept, linkReferenced, value) values (?, ?, ?) ";
-        }
-        let sql = "insert ignore into " + this.tables.get("references") + values;
-        let res = await this.getConnection().batch(sql, refsData);
-        return res;
-    }
-    async getMaxConceptId() {
-        let sql = "select max(id) as id from " + this.tables.get("concepts");
-        let res = await this.getConnection().query(sql);
-        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
-            return res[0].id;
-        return 0;
-    }
-    async getMaxTripletId() {
-        let sql = "select max(id) as id from " + this.tables.get("triplets");
-        let res = await this.getConnection().query(sql);
-        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
-            return res[0].id;
-        return 0;
-    }
-    async getMaxReferenceId() {
-        let sql = "select max(id) as id from " + this.tables.get("references");
-        let res = await this.getConnection().query(sql);
-        if ((res === null || res === void 0 ? void 0 : res.length) > 0)
-            return res[0].id;
-        return 0;
-    }
+    //////////// BENCHMARK TEST FUNCTION - END /////////////////////
+    //////////// BENCHMARK TEST FUNCTION WITH MAXID TABLE - START /////////////////////
     async getMaxConceptIdFromMaxTable() {
         let sql = "select id from " + this.tables.get("maxid") + " as m where m.table = 'concept' for update ";
         let res = await this.getConnection().query(sql);
@@ -671,14 +845,6 @@ class DBAdapter {
         if ((res === null || res === void 0 ? void 0 : res.length) > 0)
             return res[0].id;
         return 0;
-    }
-    async disbaleTrigger() {
-        let sql = "set @TRIGGER_DISABLED = 1";
-        return await this.getConnection().query(sql);
-    }
-    async enableTrigger() {
-        let sql = "set @TRIGGER_DISABLED = 0";
-        return await this.getConnection().query(sql);
     }
 }
 exports.DBAdapter = DBAdapter;

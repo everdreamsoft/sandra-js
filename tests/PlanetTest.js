@@ -47,7 +47,7 @@ class PlanetTest {
         //await this.filter("moon1");
         // Using JSON query 
         //await this.selectAsJSON();
-        await this.pushAsJSON();
+        //await this.pushAsJSON();
     }
     async push() {
         console.log("\n### Push ####");

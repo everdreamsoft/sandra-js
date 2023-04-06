@@ -21,31 +21,59 @@ export class Triplet {
         this.upsert = upsert;
     }
 
+    /**
+     * 
+     * @returns Returns triplet id
+     */
     getId() {
         return this.id;
     }
 
+    /**
+     * 
+     * @returns Returns triplet subject concept
+     */
     getSubject() {
         return this.subject;
     }
 
+    /**
+     * 
+     * @returns Returns triplet verb concept
+     */
     getVerb() {
         return this.verb;
     }
 
+    /**
+     * 
+     * @returns Returns triplet target concpet
+     */
     getTarget() {
         return this.target;
     }
 
+    /**
+     * 
+     * @returns Returns joined entity object 
+     */
     getJoinedEntity() {
         return this.joinedEntity;
     }
 
-
+    /**
+     * 
+     * @returns Returns true if this triplet object is marked as updatable for push queries
+     */
     isUpsert() {
         return this.upsert;
     }
 
+    /**
+     * 
+     * @param withId 
+     * @returns Returns this triplet object as an array, with or wihout id
+     */
     getDBArrayFormat(withId: boolean = true) {
 
         if (withId)
@@ -57,20 +85,40 @@ export class Triplet {
 
     }
 
+    /**
+     * Sets the id of triplet
+     * @param id 
+     */
     setId(id: string) {
         this.id = id;
     }
 
+    /**
+    * Sets upsert to true for current triplet, it is used to mark it for update in push queries
+    */
     setUpsert(upsert: boolean) { this.upsert = upsert; }
 
+    /**
+     * Sets given entity as the joined entity of this triplet 
+     * @param entity 
+     */
     setJoinedEntity(entity: Entity) {
         this.joinedEntity = entity;
     }
 
+    /**
+     * Sets the target concept of this triplet with given target concept
+     * @param target 
+     */
     setTarget(target: Concept) {
         this.target = target;
     }
 
+    /**
+     *
+     * @param t 
+     * @returns Returns true if given triplet has same verb and triple with this triplet object. 
+     */
     isEqual(t: Triplet) {
         if (this.getVerb().isSame(t.getVerb()) && this.getTarget().isSame(t.getTarget())) {
             return true;
@@ -78,6 +126,12 @@ export class Triplet {
         return false;
     }
 
+    /**
+     * Checks if this triplet verb and target have same ids
+     * @param verb 
+     * @param target 
+     * @returns Returns true if this triplet verb and target concepts have same ids as given in the parameters
+     */
     isSame(verb: Concept, target: Concept) {
         if (this.getVerb().isSame(verb) && this.getTarget().isSame(target)) {
             return true;
