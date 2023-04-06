@@ -12,104 +12,121 @@ export class JSONQuery {
         "is_a": "planet",
         "contained_in_file": "planet_file",
         "uniqueRef": "name",
+        // List of references key value pair to search for.
         "refs": {
+            "name": "planet1"
         },
+        // Brother triplet list with verb as "hasMoon" and "yes" as the target string to search for. 
+        // refs is the list of key value pair of reference attached to that brother triplet.
         "brothers": {
             "hasMoon": {
-                "target": "true",
-                "refs": {
-                    "totalMoon": "1"
-                }
+                "target": "yes",
+                "refs": {}
             }
         },
         "joined": {
+            // Key value pair of the joined verb and its target
             "moon": {
-                "is_a": "moon",
-                "contained_in_file": "moon_file",
-                "uniqueRef": "name",
+                // Target is the entity attached as target of the given verb, here 
+                // moon enitity attached to "moon" verb on planet enitity to search for.
+                "target": {
+                    "is_a": "moon",
+                    "contained_in_file": "moon_file",
+                    "uniqueRef": "name",
+                    "refs": {
+                        "name": "moon1"
+                    },
+                    "brothers": {},
+                    "joined": {},
+                    "options": {
+                        // If set true then this target entity refs, brother triplets and joined entity subject ids 
+                        // are also loaded.
+                        "load_data": true
+                    }
+                },
+                // Key value pair of the references attached to the joined entity verb
                 "refs": {
-                    "name": "moon44"
-                },
-                "brothers": {
-                },
-                "joined": {
-                },
-                "options": {
-                    "load_data": true
+                    "hasAtmosphere": "yes"
                 }
             }
         },
+        // options to limit number of records to filter.
+        // if load_data is set to true then it will load entities with its references, brother triplets and 
+        // joined entites subject ids
         "options": {
             "limit": 10,
             "load_data": true
         }
-    };
+    }
 
     private static readonly PUSH_TEMPLATE = {
         "is_a": "planet",
         "contained_in_file": "planet_file",
         "uniqueRef": "name",
         "refs": {
-            "name": "planetZZ",
+            "name": "planet1",
             "diameter": "10",
             "atmosphere": "yes",
-            "atmosphere1": "yes",
-            "atmosphere2": "yes"
         },
         "brothers": {
+            // Triplet brother on verb "hasMoon" with value as "false"
+            // Refs attached to this triplet as "totalMoon" with value as "1"
             "hasMoon": {
                 "target": "false",
                 "refs": {
-                    "totalMoon": "44"
+                    "totalMoon": "1"
                 }
             },
             "hasAtmosphere": {
                 "target": "true",
                 "refs": {
-                    "breathable": "yes"
+                    "breathable": "no"
                 }
             }
         },
         "joined": {
             "moon": {
-                "is_a": "moon",
-                "contained_in_file": "moon_file",
-                "uniqueRef": "name",
+                "target": {
+                    "is_a": "moon",
+                    "contained_in_file": "moon_file",
+                    "uniqueRef": "name",
+                    "refs": {
+                        "name": "moon1"
+                    },
+                    "brothers": {
+                    },
+                    "joined": {
+                    },
+                    // If push is set to true or removed, it will also push the joined entity if it does not exist
+                    "push": true
+                },
+                // Ref attached to the joined triplet with verb "moon"
                 "refs": {
-                    "name": "moonZZ"
-                },
-                "brothers": {
-                },
-                "joined": {
+                    "atmosphere": "no"
                 }
             },
-            "satellite": {
-                "is_a": "satellite",
-                "contained_in_file": "satellite_file",
-                "uniqueRef": "name",
-                "refs": {
-                    "name": "satelliteZZZ"
-                },
-                "brothers": {
-                },
-                "joined": {
-                }
-            },
+            // Another joined triplet/entity on the planet1 with verb "lifeForms"
             "lifeForms": {
-                "is_a": "humans",
-                "contained_in_file": "humans_file",
-                "uniqueRef": "name",
-                "refs": {
-                    "name": "level1"
+                "target": {
+                    "is_a": "humans",
+                    "contained_in_file": "humans_file",
+                    "uniqueRef": "name",
+                    "refs": {
+                        "name": "level1"
+                    },
+                    "brothers": {
+                    },
+                    "joined": {
+                    },
+                    // This entity will not be pushed it does not exist. In case you are not sure then this 
+                    // should be removed or set to true to push this also.
+                    "push": false
                 },
-                "brothers": {
-                },
-                "joined": {
-                }
+                "refs": {},
             }
         }
     };
-
+    
     constructor() {
     }
 
