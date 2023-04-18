@@ -559,8 +559,8 @@ class DBAdapter {
      * @returns Returns upserted or selected triplet
      */
     async upsertTriplet(t) {
-        let sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ? and  idConceptTarget = ?";
-        let res = await this.getConnection().query(sql, t.getDBArrayFormat(false));
+        let sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ?";
+        let res = await this.getConnection().query(sql, [t.getSubject().getId(), t.getVerb().getId()]);
         if (res && (res === null || res === void 0 ? void 0 : res.length) > 0) {
             // Update
             sql = "update " + this.tables.get("triplets") + " set idConceptTarget = ? where id = ?";

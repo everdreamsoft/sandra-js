@@ -4,6 +4,7 @@ import { DBAdapter } from "../src/DBAdapter";
 import { Entity } from "../src/Entity";
 import { EntityFactory } from "../src/EntityFactory";
 import { IAPIResponse } from "../src/interfaces/IAPIResponse";
+import { JSONQuery } from "../src/JSONQuery";
 import { Reference } from "../src/Reference";
 import { Sandra } from "../src/Sandra";
 import { SystemConcepts } from "../src/SystemConcepts";
@@ -1080,16 +1081,80 @@ export class Test {
 
     }
 
+    async getBalanceForAddress1(address: string) {
+
+        let eventFactory: EntityFactory = new EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts.get("txHash"));
+        let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            eventFactory.getIsAVerb(), null);
+        let sysCiFConcept = await SystemConcepts.get("contained_in_file");
+        let cifConcept = await SystemConcepts.get("blockchainEventFile");
+        let sysSourceConcept = await SystemConcepts.get("source");
+        let sysDestConcept = await SystemConcepts.get("hasSingleDestination");
+        let sysEthereumConcept = await SystemConcepts.get("ethereum");
+        let sysOnBlockchainConcept = await SystemConcepts.get("onBlockchain");
+
+
+        let addressFactory: EntityFactory = new EntityFactory("ethAddress", "blockchainAddressFile", await SystemConcepts.get("address"));
+        await addressFactory.load(await Utils.createDBReference("address", address));
+
+        let t1 = new Triplet(TemporaryId.create(), subConcept, sysCiFConcept, cifConcept);
+        let t2 = new Triplet(TemporaryId.create(), subConcept, sysSourceConcept, addressFactory.getEntities()[0].getSubject());
+        let t3 = new Triplet(TemporaryId.create(), subConcept, sysOnBlockchainConcept, sysEthereumConcept);
+
+        await eventFactory.filter([t1, t2, t3], [], 1000000);
+
+        console.log("");
+
+
+    }
+
+
+    async getBalanceForAddress(address: string) {
+        let json = {
+            "is_a": "blockchainEvent",
+            "contained_in_file": "blockchainEventFile",
+            "uniqueRef": "txHash",
+            "refs": {},
+            "brothers": {
+                "onBlockchain": {
+                    "target": "ethereum"
+                }
+            },
+            "joined": {
+                "source": {
+                    "target": {
+                        "is_a": "ethAddress",
+                        "contained_in_file": "blockchainAddressFile",
+                        "uniqueRef": "address",
+                        "refs": {
+                            "address": "0x8da2bebe1be9384afabeba0fb4e394163c43ad7f"
+                        }
+                    }
+                }
+
+            },
+            "options": {
+                "limit": 10000,
+                "load_data": false
+            }
+        };
+
+        let sourceData = await JSONQuery.selectAsJson(json);
+
+
+
+    }
+
 }
 
 const LOCAL = false;
 
 const DB_CONFIG = {
     database: "jetski",
-    host: "139.144.74.232",
+    host: "139.162.176.241",
     env: "fondue",
-    password: "",
-    user: "admin"
+    password: "4TyijLEBEZHJ1hsabPto",
+    user: "remote1"
 };
 
 const DB_CONFIG_LOCAL = {
@@ -1104,4 +1169,4 @@ Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 
 let test = new Test();
 
-test.testFilter("0x1ec94be5c72cf0e0524d6ecb6e7bd0ba1700bf70");
+test.getBalanceForAddress("0x8da2bebe1be9384afabeba0fb4e394163c43ad7f");

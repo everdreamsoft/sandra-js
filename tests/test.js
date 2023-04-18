@@ -5,6 +5,7 @@ const APIService_1 = require("../src/APIService");
 const Concept_1 = require("../src/Concept");
 const DBAdapter_1 = require("../src/DBAdapter");
 const EntityFactory_1 = require("../src/EntityFactory");
+const JSONQuery_1 = require("../src/JSONQuery");
 const Reference_1 = require("../src/Reference");
 const Sandra_1 = require("../src/Sandra");
 const SystemConcepts_1 = require("../src/SystemConcepts");
@@ -703,15 +704,63 @@ class Test {
         console.log("Total tokens found" + tokenPathFactory.getEntities().length);
         console.log("done.. ");
     }
+    async getBalanceForAddress1(address) {
+        let eventFactory = new EntityFactory_1.EntityFactory("blockchainEvent", "blockchainEventFile", await SystemConcepts_1.SystemConcepts.get("txHash"));
+        let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            eventFactory.getIsAVerb(), null);
+        let sysCiFConcept = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+        let cifConcept = await SystemConcepts_1.SystemConcepts.get("blockchainEventFile");
+        let sysSourceConcept = await SystemConcepts_1.SystemConcepts.get("source");
+        let sysDestConcept = await SystemConcepts_1.SystemConcepts.get("hasSingleDestination");
+        let sysEthereumConcept = await SystemConcepts_1.SystemConcepts.get("ethereum");
+        let sysOnBlockchainConcept = await SystemConcepts_1.SystemConcepts.get("onBlockchain");
+        let addressFactory = new EntityFactory_1.EntityFactory("ethAddress", "blockchainAddressFile", await SystemConcepts_1.SystemConcepts.get("address"));
+        await addressFactory.load(await Utils_1.Utils.createDBReference("address", address));
+        let t1 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysCiFConcept, cifConcept);
+        let t2 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysSourceConcept, addressFactory.getEntities()[0].getSubject());
+        let t3 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysOnBlockchainConcept, sysEthereumConcept);
+        await eventFactory.filter([t1, t2, t3], [], 1000000);
+        console.log("");
+    }
+    async getBalanceForAddress(address) {
+        let json = {
+            "is_a": "blockchainEvent",
+            "contained_in_file": "blockchainEventFile",
+            "uniqueRef": "txHash",
+            "refs": {},
+            "brothers": {
+                "onBlockchain": {
+                    "target": "ethereum"
+                }
+            },
+            "joined": {
+                "source": {
+                    "target": {
+                        "is_a": "ethAddress",
+                        "contained_in_file": "blockchainAddressFile",
+                        "uniqueRef": "address",
+                        "refs": {
+                            "address": "0x8da2bebe1be9384afabeba0fb4e394163c43ad7f"
+                        }
+                    }
+                }
+            },
+            "options": {
+                "limit": 10000,
+                "load_data": false
+            }
+        };
+        let sourceData = await JSONQuery_1.JSONQuery.selectAsJson(json);
+    }
 }
 exports.Test = Test;
 const LOCAL = false;
 const DB_CONFIG = {
     database: "jetski",
-    host: "139.144.74.232",
+    host: "139.162.176.241",
     env: "fondue",
-    password: "",
-    user: "admin"
+    password: "4TyijLEBEZHJ1hsabPto",
+    user: "remote1"
 };
 const DB_CONFIG_LOCAL = {
     database: "ccc8_batch",
@@ -722,5 +771,5 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.testFilter("0x1ec94be5c72cf0e0524d6ecb6e7bd0ba1700bf70");
+test.getBalanceForAddress("0x8da2bebe1be9384afabeba0fb4e394163c43ad7f");
 //# sourceMappingURL=test.js.map

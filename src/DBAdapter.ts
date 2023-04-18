@@ -739,8 +739,8 @@ export class DBAdapter {
      */
     async upsertTriplet(t: Triplet): Promise<Triplet> {
 
-        let sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ? and  idConceptTarget = ?";
-        let res = await this.getConnection().query(sql, t.getDBArrayFormat(false));
+        let sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ?";
+        let res = await this.getConnection().query(sql, [t.getSubject().getId(), t.getVerb().getId()]);
 
         if (res && res?.length > 0) {
             // Update
