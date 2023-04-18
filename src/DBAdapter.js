@@ -616,8 +616,7 @@ class DBAdapter {
         }
         // Upserting
         sql = "insert into " + this.tables.get("references") + " (idConcept, linkReferenced, value ) values (?,?,?)";
-        let values = [...ref.getDBArrayFormat(false), ref.getValue()];
-        res = await this.getConnection().query(sql, values);
+        res = await this.getConnection().query(sql, ref.getDBArrayFormat(false));
         if (res && (res === null || res === void 0 ? void 0 : res.insertId)) {
             ref.setId(res.insertId);
             return ref;
