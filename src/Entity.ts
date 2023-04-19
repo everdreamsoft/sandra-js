@@ -108,17 +108,24 @@ export class Entity {
         return m;
     }
 
+
     /**
      * 
-     * @returns Return refs as json
+     * @param tripletVerbShotname Shortname of triplet verb to get reference for
+     * @returns Refs as json 
      */
-    getEntityRefsAsJson() {
+    getEntityRefsAsJson(triplet?: Triplet) {
 
         let json = {};
 
         this.references.forEach(r => {
-            if (r.getTripletLink().getVerb().getShortname() == "contained_in_file")
-                json[r.getIdConcept().getShortname()] = r.getValue();
+            if (triplet) {
+                if (r.getTripletLink().getId() == triplet.getId())
+                    json[r.getIdConcept().getShortname()] = r.getValue();
+            }
+            else
+                if (r.getTripletLink().getVerb().getShortname() == "contained_in_file")
+                    json[r.getIdConcept().getShortname()] = r.getValue();
         });
 
         return json;
