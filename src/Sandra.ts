@@ -15,4 +15,11 @@ export class Sandra {
         return Promise.resolve(0);
     }
 
+    static getDBConfig(): any {
+        let conf: any = { ...Sandra.DB_CONFIG };
+        delete conf.password;
+        delete conf.user;
+        return conf;
+    }
+
 }

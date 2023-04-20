@@ -1169,4 +1169,7 @@ Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 
 let test = new Test();
 
-test.getBalanceForAddress("0x8da2bebe1be9384afabeba0fb4e394163c43ad7f");
+console.log(Sandra.getDBConfig());
+console.log(Sandra.DB_CONFIG);
+
+//test.getBalanceForAddress("0x8da2bebe1be9384afabeba0fb4e394163c43ad7f");

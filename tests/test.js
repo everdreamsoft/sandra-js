@@ -771,5 +771,7 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 let test = new Test();
-test.getBalanceForAddress("0x8da2bebe1be9384afabeba0fb4e394163c43ad7f");
+console.log(Sandra_1.Sandra.getDBConfig());
+console.log(Sandra_1.Sandra.DB_CONFIG);
+//test.getBalanceForAddress("0x8da2bebe1be9384afabeba0fb4e394163c43ad7f");
 //# sourceMappingURL=test.js.map

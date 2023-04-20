@@ -11,6 +11,12 @@ class Sandra {
         console.log("closing sandra connection / instance not found");
         return Promise.resolve(0);
     }
+    static getDBConfig() {
+        let conf = Object.assign({}, Sandra.DB_CONFIG);
+        delete conf.password;
+        delete conf.user;
+        return conf;
+    }
 }
 exports.Sandra = Sandra;
 //# sourceMappingURL=Sandra.js.map
