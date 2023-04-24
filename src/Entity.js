@@ -82,8 +82,12 @@ class Entity {
     getEntityRefsAsKeyValue() {
         let m = new Map();
         this.references.forEach(r => {
-            if (r.getTripletLink().getVerb().getShortname() == "contained_in_file")
-                m.set(r.getIdConcept().getShortname(), r.getValue());
+            var _a, _b, _c;
+            if (((_b = (_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getVerb()) === null || _b === void 0 ? void 0 : _b.getShortname()) == "contained_in_file") {
+                let key = (_c = r.getIdConcept()) === null || _c === void 0 ? void 0 : _c.getShortname();
+                if (key)
+                    m.set(key, r.getValue());
+            }
         });
         return m;
     }
@@ -95,12 +99,19 @@ class Entity {
     getEntityRefsAsJson(triplet) {
         let json = {};
         this.references.forEach(r => {
+            var _a, _b, _c, _d, _e;
             if (triplet) {
-                if (r.getTripletLink().getId() == triplet.getId())
-                    json[r.getIdConcept().getShortname()] = r.getValue();
+                if (((_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getId()) == triplet.getId()) {
+                    let key = (_b = r.getIdConcept()) === null || _b === void 0 ? void 0 : _b.getShortname();
+                    if (key)
+                        json[key] = r.getValue();
+                }
             }
-            else if (r.getTripletLink().getVerb().getShortname() == "contained_in_file")
-                json[r.getIdConcept().getShortname()] = r.getValue();
+            else if (((_d = (_c = r.getTripletLink()) === null || _c === void 0 ? void 0 : _c.getVerb()) === null || _d === void 0 ? void 0 : _d.getShortname()) == "contained_in_file") {
+                let key = (_e = r.getIdConcept()) === null || _e === void 0 ? void 0 : _e.getShortname();
+                if (key)
+                    json[key] = r.getValue();
+            }
         });
         return json;
     }
@@ -114,25 +125,30 @@ class Entity {
         let json = {};
         json["subjectId"] = (_a = this.getSubject()) === null || _a === void 0 ? void 0 : _a.getId();
         this.references.forEach(r => {
-            json[r.getIdConcept().getShortname()] = r.getValue();
+            var _a;
+            let key = (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname();
+            if (key)
+                json[key] = r.getValue();
         });
         json["brothers"] = {};
         json["joined"] = {};
         this.triplets.forEach((t, i) => {
             var _a, _b, _c, _d, _e, _f;
             let verb = ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) ? (_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getShortname() : "tripletVerb" + i;
-            if (((_c = t.getTarget().getShortname()) === null || _c === void 0 ? void 0 : _c.length) > 0) {
-                json["brothers"][verb] = (_d = t.getTarget()) === null || _d === void 0 ? void 0 : _d.getShortname();
+            let sn = (_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getShortname();
+            if (sn && sn.length > 0) {
+                json["brothers"][sn] = (_d = t.getTarget()) === null || _d === void 0 ? void 0 : _d.getShortname();
             }
             else {
-                if (t.getJoinedEntity()) {
-                    json["joined"][verb] = (_e = t.getJoinedEntity()) === null || _e === void 0 ? void 0 : _e.asJSON();
-                }
-                else {
-                    json["joined"][verb] = {
-                        "subjectId": (_f = t.getTarget()) === null || _f === void 0 ? void 0 : _f.getId()
-                    };
-                }
+                if (verb)
+                    if (t.getJoinedEntity()) {
+                        json["joined"][verb] = (_e = t.getJoinedEntity()) === null || _e === void 0 ? void 0 : _e.asJSON();
+                    }
+                    else {
+                        json["joined"][verb] = {
+                            "subjectId": (_f = t.getTarget()) === null || _f === void 0 ? void 0 : _f.getId()
+                        };
+                    }
             }
         });
         return json;
@@ -145,8 +161,12 @@ class Entity {
     getRefsKeyValuesByTiplet(tripletLinkConcept) {
         let m = new Map();
         this.references.forEach(r => {
-            if (r.getTripletLink().getVerb().isSame(tripletLinkConcept))
-                m.set(r.getIdConcept().getShortname(), r.getValue());
+            var _a, _b, _c;
+            if ((_b = (_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getVerb()) === null || _b === void 0 ? void 0 : _b.isEqual(tripletLinkConcept)) {
+                let sn = (_c = r.getIdConcept()) === null || _c === void 0 ? void 0 : _c.getShortname();
+                if (sn)
+                    m.set(sn, r.getValue());
+            }
         });
         return m;
     }
@@ -156,7 +176,10 @@ class Entity {
      * @returns Returns the value of reference with given shortname
      */
     getRefValByShortname(shortname) {
-        let i = this.references.findIndex(ref => { return ref.getIdConcept().getShortname() == shortname; });
+        let i = this.references.findIndex(ref => {
+            var _a;
+            return ((_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname()) == shortname;
+        });
         if (i >= 0)
             return this.references[i].getValue();
     }
@@ -167,9 +190,11 @@ class Entity {
     getTripletBrothersAsJson() {
         let json = {};
         this.triplets.forEach(t => {
-            var _a, _b, _c, _d, _e, _f;
-            if (((_b = (_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) === null || _b === void 0 ? void 0 : _b.length) > 0 && ((_d = (_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getShortname()) === null || _d === void 0 ? void 0 : _d.length) > 0) {
-                json[(_e = t.getVerb()) === null || _e === void 0 ? void 0 : _e.getShortname()] = (_f = t.getTarget()) === null || _f === void 0 ? void 0 : _f.getShortname();
+            var _a, _b, _c;
+            let sn1 = (_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname();
+            let sn2 = (_b = t.getTarget()) === null || _b === void 0 ? void 0 : _b.getShortname();
+            if (sn1 && sn2 && sn1.length > 0 && sn2.length > 0) {
+                json[sn1] = (_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getShortname();
             }
         });
         return json;
@@ -181,11 +206,11 @@ class Entity {
      */
     getRef(concept) {
         if (concept) {
-            let i = this.references.findIndex(ref => { return ref.getIdConcept().isSame(concept); });
+            let i = this.references.findIndex(ref => { var _a; return (_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.isEqual(concept); });
             if (i >= 0)
                 return this.references[i];
         }
-        return null;
+        return undefined;
     }
     /**
      *
@@ -198,7 +223,7 @@ class Entity {
         }
         else {
             let c = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
-            let i = this.triplets.findIndex(t => { return t.getVerb().isSame(c); });
+            let i = this.triplets.findIndex(t => { var _a; return (_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.isEqual(c); });
             if (i >= 0) {
                 ref.setTripletLink(this.triplets[i]);
                 this.references.push(ref);
@@ -215,7 +240,7 @@ class Entity {
      * @param upsert If true triplet will be updated if exist or added if does not exist. Else it will ignored or added.
      * @returns Return triplet object created for added brother triplet
      */
-    async brother(verb, target, refs = null, upsert = false) {
+    async brother(verb, target, refs = undefined, upsert = false) {
         return await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), await SystemConcepts_1.SystemConcepts.get(target), refs, true, upsert);
     }
     /**
@@ -225,13 +250,15 @@ class Entity {
      * @param refs Referance array to attach with given triplet verb.
      * @returns Triplet object of the triplet created for joined entity.
      */
-    async join(verb, entity, refs = null) {
+    async join(verb, entity, refs = undefined) {
+        var _a, _b;
         let verbConcept = await SystemConcepts_1.SystemConcepts.get(verb);
         let i = this.triplets.findIndex(t => {
-            return t.getVerb().isSame(verbConcept) && t.getJoinedEntity().getSubject().getId() == entity.getSubject().getId();
+            var _a, _b, _c, _d;
+            return ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.isEqual(verbConcept)) && ((_c = (_b = t.getJoinedEntity()) === null || _b === void 0 ? void 0 : _b.getSubject()) === null || _c === void 0 ? void 0 : _c.getId()) == ((_d = entity.getSubject()) === null || _d === void 0 ? void 0 : _d.getId());
         });
         if (i >= 0) {
-            LogManager_1.LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName());
+            LogManager_1.LogManager.getInstance().info("adding same triplets again for entity subject - " + ((_a = this.getSubject()) === null || _a === void 0 ? void 0 : _a.getId()) + " " + ((_b = this.getFactory()) === null || _b === void 0 ? void 0 : _b.getFullName()));
             return this.triplets[i];
         }
         let t = await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), entity.getSubject(), refs, false);
@@ -247,10 +274,11 @@ class Entity {
      * @param upsert If set to true then triplet entry will be updated/inserted else it will be ignored/added.
      * @returns Added triplet will be returned back.
      */
-    async addTriplet(verb, target, refs = null, checkExisting = true, upsert = false) {
+    async addTriplet(verb, target, refs = undefined, checkExisting = true, upsert = false) {
         if (checkExisting) {
             let i = this.triplets.findIndex(t => {
-                return t.isSame(verb, target);
+                var _a, _b;
+                return ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.isEqual(verb)) && ((_b = t.getTarget()) === null || _b === void 0 ? void 0 : _b.isEqual(target));
             });
             if (i >= 0) {
                 // LogManager.getInstance().info("adding same triplets again for entity subject - " + this.getSubject().getId() + " " + this.getFactory().getFullName())
@@ -258,7 +286,7 @@ class Entity {
                 let existingRefs = this.getRefs();
                 // Add non existing refs with current entity or replace the value for same verb
                 refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
-                    let rIndex = existingRefs.findIndex(rI => { return rI.getIdConcept().isSame(r.getIdConcept()); });
+                    let rIndex = existingRefs.findIndex(rI => { var _a; return (_a = rI.getIdConcept()) === null || _a === void 0 ? void 0 : _a.isEqual(r.getIdConcept()); });
                     if (rIndex >= 0) {
                         existingRefs[rIndex].setValue(r.getValue());
                     }
@@ -285,24 +313,25 @@ class Entity {
      * @returns Return true if given entity has same factory class with same subject ids.
      */
     isEqualTo(entity) {
+        var _a, _b, _c, _d;
         // Check the entity triplets is_a and contained_in_file 
         let tripets1 = entity.getTriplets();
         let tripets2 = this.getTriplets();
         // Compare if they are same
-        let is_a_triplet1 = tripets1.find(t => t.getVerb().getShortname() === "is_a");
-        let is_a_triplet2 = tripets2.find(t => t.getVerb().getShortname() === "is_a");
-        if (is_a_triplet1.getTarget().getShortname() != is_a_triplet2.getTarget().getShortname())
+        let is_a_triplet1 = tripets1.find(t => { var _a; return ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) === "is_a"; });
+        let is_a_triplet2 = tripets2.find(t => { var _a; return ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) === "is_a"; });
+        if (((_a = is_a_triplet1 === null || is_a_triplet1 === void 0 ? void 0 : is_a_triplet1.getTarget()) === null || _a === void 0 ? void 0 : _a.getShortname()) != ((_b = is_a_triplet2 === null || is_a_triplet2 === void 0 ? void 0 : is_a_triplet2.getTarget()) === null || _b === void 0 ? void 0 : _b.getShortname()))
             return false;
-        let contained_in_file1 = tripets1.find(t => t.getVerb().getShortname() === "contained_in_file");
-        let contained_in_file2 = tripets2.find(t => t.getVerb().getShortname() === "contained_in_file");
-        if (contained_in_file1.getTarget().getShortname() != contained_in_file2.getTarget().getShortname())
+        let contained_in_file1 = tripets1.find(t => { var _a; return ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) === "contained_in_file"; });
+        let contained_in_file2 = tripets2.find(t => { var _a; return ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) === "contained_in_file"; });
+        if (((_c = contained_in_file1 === null || contained_in_file1 === void 0 ? void 0 : contained_in_file1.getTarget()) === null || _c === void 0 ? void 0 : _c.getShortname()) != ((_d = contained_in_file2 === null || contained_in_file2 === void 0 ? void 0 : contained_in_file2.getTarget()) === null || _d === void 0 ? void 0 : _d.getShortname()))
             return false;
         let refs1 = entity.getRefs();
         let refs2 = this.references;
-        let uniqueRef1 = refs1.find(ref => ref.getIdConcept().isSame(this.uniqueRefConcept));
-        let uniqueRef2 = refs2.find(ref => ref.getIdConcept().isSame(this.uniqueRefConcept));
+        let uniqueRef1 = refs1.find(ref => { var _a; return (_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.isEqual(this.uniqueRefConcept); });
+        let uniqueRef2 = refs2.find(ref => { var _a; return (_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.isEqual(this.uniqueRefConcept); });
         if (uniqueRef1 && uniqueRef2)
-            return uniqueRef1.isEqualTo(uniqueRef2);
+            return uniqueRef1.isEqual(uniqueRef2);
         return false;
     }
 }

@@ -15,6 +15,59 @@ class EntityFactory {
         this.contained_in_file = contained_in_file;
         this.uniqueRefConcept = uniqueRefConcept;
     }
+    /**
+     *
+     * @param refs Reference array list
+     * @param upsert Set true if update is needed in DB for given references.
+     * @returns Return new entity object if it does not exist in factory entity list, otherwise will return
+     * new entity object and adds it to factory list.
+    */
+    async create(refs, upsert) {
+        upsert = upsert || false;
+        // Check if it arelady exist
+        let uniqueRef1 = undefined;
+        // Finding reference in array for unique concept
+        if (this.uniqueRefConcept)
+            uniqueRef1 = refs.find(ref => { var _a; return (_a = this.uniqueRefConcept) === null || _a === void 0 ? void 0 : _a.isEqual(ref.getIdConcept()); });
+        let e = undefined;
+        if (uniqueRef1)
+            e = this.getEntityByRef(uniqueRef1);
+        if (e) {
+            e.setUpsert(upsert);
+            let existingRefs = e.getRefs();
+            let ts = e.getTriplets();
+            let tIndex = ts.findIndex(t => { var _a; return ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) == "contained_in_file"; });
+            // Add non existing refs with current entity or replace the value for same verb
+            refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
+                let rIndex = existingRefs.findIndex(rI => { var _a; return (_a = rI.getIdConcept()) === null || _a === void 0 ? void 0 : _a.isEqual(r.getIdConcept()); });
+                if (rIndex >= 0) {
+                    existingRefs[rIndex].setValue(r.getValue());
+                }
+                else {
+                    if (tIndex >= 0) {
+                        r.setTripletLink(ts[tIndex]);
+                        existingRefs.push(r);
+                    }
+                }
+            });
+        }
+        else {
+            e = new Entity_1.Entity();
+            e.setUpsert(upsert);
+            let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), undefined);
+            e.setFactory(this);
+            e.setSubject(subConcept);
+            // Set unique ref concept
+            e.setUniqueRefConcept(this.uniqueRefConcept);
+            // Adding is_a verb triplet
+            await e.brother("is_a", this.is_a);
+            // Adding contained_in_file triplet
+            await e.brother("contained_in_file", this.contained_in_file, refs);
+            // Adding it to the factory list
+            this.entityArray.push(e);
+        }
+        return e;
+    }
     setPushedStatus(status) { this.pushedStatus = status; }
     getEntities() { return this.entityArray; }
     getPushedStatus() { return this.pushedStatus; }
@@ -39,14 +92,14 @@ class EntityFactory {
         let index = this.entityArray.findIndex(e => {
             let refs1 = e.getRefs();
             if (refs1 && ref) {
-                let uniqueRef1 = refs1.find(r => { var _a; return (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.isSame(ref.getIdConcept()); });
-                return uniqueRef1.isEqualTo(ref);
+                let uniqueRef1 = refs1.find(r => { var _a; return (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.isEqual(ref.getIdConcept()); });
+                return uniqueRef1 === null || uniqueRef1 === void 0 ? void 0 : uniqueRef1.isEqual(ref);
             }
             return false;
         });
         if (index >= 0)
             return this.entityArray[index];
-        return null;
+        return undefined;
     }
     /**
      *
@@ -54,62 +107,12 @@ class EntityFactory {
      * @returns Return the entity object in current with same factory and subject id
      */
     getEntity(entity) {
-        if (this.uniqueRefConcept && this.uniqueRefConcept.getShortname().length > 0) {
+        if (this.uniqueRefConcept && (this.uniqueRefConcept.getShortname() || "").length > 0) {
             let index = this.entityArray.findIndex(e => e.isEqualTo(entity));
             if (index >= 0) {
                 return this.entityArray[index];
             }
         }
-    }
-    /**
-     *
-     * @param refs Reference array list
-     * @param upsert Set true if update is needed in DB for given references.
-     * @returns Return new entity object if it does not exist in factory entity list, otherwise will return
-     * new entity object and adds it to factory list.
-    */
-    async create(refs, upsert = false) {
-        // Check if it arelady exist
-        let uniqueRef1 = null;
-        // Finding reference in array for unique concept
-        if (this.uniqueRefConcept)
-            uniqueRef1 = refs.find(ref => { var _a; return (_a = this.uniqueRefConcept) === null || _a === void 0 ? void 0 : _a.isSame(ref.getIdConcept()); });
-        let e = this.getEntityByRef(uniqueRef1);
-        if (e) {
-            e.setUpsert(upsert);
-            let existingRefs = e.getRefs();
-            let ts = e.getTriplets();
-            let tIndex = ts.findIndex(t => { return t.getVerb().getShortname() == "contained_in_file"; });
-            // Add non existing refs with current entity or replace the value for same verb
-            refs === null || refs === void 0 ? void 0 : refs.forEach(r => {
-                let rIndex = existingRefs.findIndex(rI => { return rI.getIdConcept().isSame(r.getIdConcept()); });
-                if (rIndex >= 0) {
-                    existingRefs[rIndex].setValue(r.getValue());
-                }
-                else {
-                    if (tIndex >= 0) {
-                        r.setTripletLink(ts[tIndex]);
-                        existingRefs.push(r);
-                    }
-                }
-            });
-        }
-        else {
-            e = new Entity_1.Entity();
-            e.setUpsert(upsert);
-            let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), null);
-            e.setFactory(this);
-            e.setSubject(subConcept);
-            // Set unique ref concept
-            e.setUniqueRefConcept(this.uniqueRefConcept);
-            // Adding is_a verb triplet
-            await e.brother("is_a", this.is_a);
-            // Adding contained_in_file triplet
-            await e.brother("contained_in_file", this.contained_in_file, refs);
-            // Adding it to the factory list
-            this.entityArray.push(e);
-        }
-        return e;
     }
     /**
      * Resest factory by removing current entity array.
@@ -121,25 +124,26 @@ class EntityFactory {
      * Pushing all the entities of factory. Entities are inserted/updated one by one.
      */
     async push() {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
         LogManager_1.LogManager.getInstance().info("Pushing factory  - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
         for (let index = 0; index < ((_b = this.entityArray) === null || _b === void 0 ? void 0 : _b.length); index++) {
             let entity = this.entityArray[index];
             if (entity.getPushedStatus()) {
                 continue;
             }
-            if (TemporaryId_1.TemporaryId.isValid(entity.getSubject().getId())) {
+            let sub = entity.getSubject();
+            if (sub && TemporaryId_1.TemporaryId.isValid(sub.getId())) {
                 // Create subject 
-                await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(entity.getSubject());
+                await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(sub);
             }
             // Create triplets
             for (let indexTriplet = 0; indexTriplet < entity.getTriplets().length; indexTriplet++) {
                 let t = entity.getTriplets()[indexTriplet];
                 // Check if this is joined entity othewise push it also
                 if (t.getJoinedEntity()) {
-                    let factory = t.getJoinedEntity().getFactory();
+                    let factory = (_c = t.getJoinedEntity()) === null || _c === void 0 ? void 0 : _c.getFactory();
                     if (factory && !factory.getPushedStatus()) {
-                        await ((_c = t.getJoinedEntity().getFactory()) === null || _c === void 0 ? void 0 : _c.push());
+                        await ((_e = (_d = t.getJoinedEntity()) === null || _d === void 0 ? void 0 : _d.getFactory()) === null || _e === void 0 ? void 0 : _e.push());
                     }
                 }
                 if (t.isUpsert()) {
@@ -211,7 +215,7 @@ class EntityFactory {
     async pushTripletsBatchWithVerb(verb, ignoreIfVerbExist = false) {
         let triplets = [];
         for (let i = 0; i < this.entityArray.length; i++) {
-            let filtered = this.entityArray[i].getTriplets().filter(t => t.getVerb().isSame(verb));
+            let filtered = this.entityArray[i].getTriplets().filter(t => { var _a; return (_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.isEqual(verb); });
             if ((filtered === null || filtered === void 0 ? void 0 : filtered.length) > 0) {
                 if (ignoreIfVerbExist) {
                     let index = filtered.findIndex(f => { return !TemporaryId_1.TemporaryId.isValid(f.getId()); });
@@ -235,69 +239,36 @@ class EntityFactory {
     async pushBatch() {
         var _a;
         LogManager_1.LogManager.getInstance().info("Pushing factory  batch - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
-        let concepts = [];
-        let triplets = [];
-        let references = [];
         let newEntities = this.entityArray.filter(e => {
-            if (TemporaryId_1.TemporaryId.isValid(e.getSubject().getId())) {
+            let sub = e.getSubject();
+            if (sub && TemporaryId_1.TemporaryId.isValid(sub.getId())) {
                 return e;
             }
         });
         let newConcepts = newEntities.map(e => {
-            return e.getSubject();
+            let sub = e.getSubject();
+            if (sub) {
+                return sub;
+            }
+            else
+                throw new Error("Undefined subject object in push batch");
         });
         if ((newConcepts === null || newConcepts === void 0 ? void 0 : newConcepts.length) > 0) {
             let newTriplets = [];
             newEntities.forEach(e => {
                 newTriplets = [...newTriplets, ...e.getTriplets()];
             });
-            let newRef = [];
+            let newRefs = [];
             newEntities.forEach(e => {
-                newRef = [...newRef, ...e.getRefs()];
+                newRefs = [...newRefs, ...e.getRefs()];
             });
-            let totalNewConc = newConcepts === null || newConcepts === void 0 ? void 0 : newConcepts.length;
-            let totalNewTrips = newTriplets === null || newTriplets === void 0 ? void 0 : newTriplets.length;
-            let lastConceptToAdd = newConcepts[newConcepts.length - 1];
-            let lastTipletToAdd;
-            let maxTripletId = -1;
-            if (newTriplets.length > 0)
-                lastTipletToAdd = newTriplets[newTriplets.length - 1];
-            // Inserting and getting max ids 
-            await (await DBAdapter_1.DBAdapter.getInstance()).lockTables(true, false, false);
-            let maxConceptId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxConceptId();
-            lastConceptToAdd.setId(String(Number(maxConceptId) + totalNewConc));
-            await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(lastConceptToAdd, true);
-            await (await DBAdapter_1.DBAdapter.getInstance()).unlockTable();
-            if (lastTipletToAdd) {
-                await (await DBAdapter_1.DBAdapter.getInstance()).lockTables(false, true, false);
-                maxTripletId = await (await DBAdapter_1.DBAdapter.getInstance()).getMaxTripletId();
-                lastTipletToAdd.setId(String(Number(maxTripletId) + totalNewTrips));
-                await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(lastTipletToAdd, true);
-                await (await DBAdapter_1.DBAdapter.getInstance()).unlockTable();
-            }
-            // Add till second last because last id was already added
-            for (let i = 0; i <= newConcepts.length - 2; i++) {
-                maxConceptId = maxConceptId + 1;
-                let c = newConcepts[i];
-                c.setId(maxConceptId);
-                concepts.push(c);
-            }
-            for (let i = 0; i <= newTriplets.length - 2; i++) {
-                maxTripletId = maxTripletId + 1;
-                let t = newTriplets[i];
-                t.setId(maxTripletId);
-                triplets.push(t);
-            }
-            for (let i = 0; i <= newRef.length - 1; i++) {
-                references.push(newRef[i]);
-            }
             await (await DBAdapter_1.DBAdapter.getInstance()).beginTransaction();
-            if (concepts.length > 0)
-                await (await DBAdapter_1.DBAdapter.getInstance()).addConceptsBatch(concepts);
-            if (triplets.length > 0)
-                await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(triplets);
-            if (references.length > 0)
-                await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(references, false);
+            if (newConcepts.length > 0)
+                await (await DBAdapter_1.DBAdapter.getInstance()).addConceptsBatch(newConcepts);
+            if (newTriplets.length > 0)
+                await (await DBAdapter_1.DBAdapter.getInstance()).addTripletsBatch(newTriplets, false, false);
+            if (newRefs.length > 0)
+                await (await DBAdapter_1.DBAdapter.getInstance()).addReferencesBatch(newRefs, false);
             await (await DBAdapter_1.DBAdapter.getInstance()).commit();
             LogManager_1.LogManager.getInstance().info("Pushed factory batch - " + this.getFullName());
         }
@@ -332,7 +303,7 @@ class EntityFactory {
     async batchRefUpdate(concept) {
         let refs = [];
         this.entityArray.forEach(e => {
-            let r = e.getRefs().filter(r => { return r.getIdConcept().isSame(concept); });
+            let r = e.getRefs().filter(r => { var _a; return (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.isEqual(concept); });
             if (r)
                 refs.push(...r);
         });
@@ -376,7 +347,9 @@ class EntityFactory {
                 }
             }
             let e = new Entity_1.Entity();
-            e.setSubject(entityTriplet.getSubject());
+            let subject = entityTriplet.getSubject();
+            if (subject)
+                e.setSubject(subject);
             e.setPushedStatus(true);
             if (loadAllEntityData)
                 e.getTriplets().push(...triplets);
@@ -395,7 +368,7 @@ class EntityFactory {
      * It does not add loaded entity to current factory entity list.
      */
     async loadBySubject(subject, iterateDown = false) {
-        let entityConcept = await (await DBAdapter_1.DBAdapter.getInstance()).getConceptById(Number(subject.getId()));
+        let entityConcept = await (await DBAdapter_1.DBAdapter.getInstance()).getConceptById(Number(subject === null || subject === void 0 ? void 0 : subject.getId()));
         if (entityConcept) {
             // Get all the triplets for this entity 
             let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTripletsBySubject(entityConcept);
@@ -411,28 +384,13 @@ class EntityFactory {
                 refs.push(...r);
             }
             let e = new Entity_1.Entity();
-            e.setSubject(subject);
+            if (subject)
+                e.setSubject(subject);
             e.getTriplets().push(...triplets);
             e.getRefs().push(...refs);
             return e;
         }
         return null;
-    }
-    /**
-     * Loads all the entities with given triplets. Selection is on current factory class is_a and cointain_in_file verbs.
-     * @param triplets
-     * @param limit
-     */
-    async loadByTriplet(triplets, limit) {
-        let concepts = await (await DBAdapter_1.DBAdapter.getInstance()).getEntitiesByTriplet(triplets, limit);
-        concepts.forEach((val, key) => {
-            let e = new Entity_1.Entity();
-            e.setSubject(key);
-            e.getTriplets().push(...val);
-            e.setPushedStatus(true);
-            e.setUniqueRefConcept(this.uniqueRefConcept);
-            this.entityArray.push(e);
-        });
     }
     /**
      *
@@ -480,16 +438,22 @@ class EntityFactory {
             return;
         let s = [];
         this.entityArray.forEach(e => {
-            s.push(e.getSubject());
+            let sub = e.getSubject();
+            if (sub)
+                s.push(sub);
         });
-        let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTriplets(s, null, loadVerbData);
+        let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTriplets(s, undefined, loadVerbData);
         this.entityArray.forEach(e => {
-            let subId = e.getSubject().getId();
-            let trps = triplets.filter(t => t.getSubject().getId() == subId);
+            var _a;
+            let subId = (_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.getId();
+            let trps = triplets.filter(t => { var _a; return ((_a = t.getSubject()) === null || _a === void 0 ? void 0 : _a.getId()) == subId; });
             trps.forEach(t => {
                 var _a;
-                let triplet = (_a = e.getTriplets()) === null || _a === void 0 ? void 0 : _a.find(tr => tr.getVerb().getId() == t.getVerb().getId() &&
-                    tr.getTarget().getId() == t.getTarget().getId());
+                let triplet = (_a = e.getTriplets()) === null || _a === void 0 ? void 0 : _a.find(tr => {
+                    var _a, _b, _c, _d;
+                    return ((_a = tr.getVerb()) === null || _a === void 0 ? void 0 : _a.getId()) == ((_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getId()) &&
+                        ((_c = tr.getTarget()) === null || _c === void 0 ? void 0 : _c.getId()) == ((_d = t.getTarget()) === null || _d === void 0 ? void 0 : _d.getId());
+                });
                 if (triplet) {
                     triplet.setId(t.getId());
                 }
@@ -507,16 +471,22 @@ class EntityFactory {
     async loadTripletsWithVerb(verb, loadVerbData = false) {
         let s = [];
         this.entityArray.forEach(e => {
-            s.push(e.getSubject());
+            let sub = e.getSubject();
+            if (sub)
+                s.push(sub);
         });
         let triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTriplets(s, [verb], loadVerbData);
         this.entityArray.forEach(e => {
-            let subId = e.getSubject().getId();
-            let trps = triplets.filter(t => t.getSubject().getId() == subId);
+            var _a;
+            let subId = (_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.getId();
+            let trps = triplets.filter(t => { var _a; return ((_a = t.getSubject()) === null || _a === void 0 ? void 0 : _a.getId()) == subId; });
             trps.forEach(t => {
                 var _a;
-                let triplet = (_a = e.getTriplets()) === null || _a === void 0 ? void 0 : _a.find(tr => tr.getVerb().getId() == t.getVerb().getId() &&
-                    tr.getTarget().getId() == t.getTarget().getId());
+                let triplet = (_a = e.getTriplets()) === null || _a === void 0 ? void 0 : _a.find(tr => {
+                    var _a, _b, _c, _d;
+                    return ((_a = tr.getVerb()) === null || _a === void 0 ? void 0 : _a.getId()) == ((_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getId()) &&
+                        ((_c = tr.getTarget()) === null || _c === void 0 ? void 0 : _c.getId()) == ((_d = t.getTarget()) === null || _d === void 0 ? void 0 : _d.getId());
+                });
                 if (triplet)
                     triplet.setId(t.getId());
                 else {
@@ -534,10 +504,11 @@ class EntityFactory {
     async loadAllSubjects() {
         if (this.entityArray.length == 0)
             return;
-        let refs = this.entityArray.map(entity => {
+        let refs = [];
+        this.entityArray.forEach(entity => {
             let r = entity.getRef(this.uniqueRefConcept);
             if (r)
-                return r.getValue();
+                refs.push(r.getValue());
         });
         let entityConceptsMap = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConceptsByRefs(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), refs, this.uniqueRefConcept);
         this.entityArray.forEach(entity => {
@@ -553,8 +524,11 @@ class EntityFactory {
                         s.setCode(loadedS.getCode());
                         s.setShortname(loadedS.getShortname());
                     }
-                    else
-                        entity.setSubject(entityConceptsMap.get(r.getValue()));
+                    else {
+                        let s = entityConceptsMap.get(r.getValue());
+                        if (s)
+                            entity.setSubject(s);
+                    }
                 }
             }
         });
@@ -562,7 +536,7 @@ class EntityFactory {
     /**
      * Loads all the references of each triplets of all the entities of current factory class object.
      */
-    async loadAllTripletRefs(refConcept = null) {
+    async loadAllTripletRefs(refConcept) {
         var _a, _b, _c;
         let ts = [];
         if (((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length) == 0)
@@ -573,11 +547,11 @@ class EntityFactory {
             let e = this.entityArray[i];
             let triplets = e.getTriplets();
             triplets.forEach(t => {
-                let refBatch = refs.filter(r => { return r.getTripletLink().getId() == t.getId(); });
+                let refBatch = refs.filter(r => { var _a; return ((_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getId()) == t.getId(); });
                 if (refBatch && refBatch.length > 0) {
                     let existingRefs = e.getRefs();
                     refBatch === null || refBatch === void 0 ? void 0 : refBatch.forEach(r => {
-                        let a = existingRefs.find(rf => rf.getIdConcept().getId() == r.getIdConcept().getId() && rf.getTripletLink().getId() == r.getTripletLink().getId());
+                        let a = existingRefs.find(rf => { var _a, _b, _c, _d; return ((_a = rf.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getId()) == ((_b = r.getIdConcept()) === null || _b === void 0 ? void 0 : _b.getId()) && ((_c = rf.getTripletLink()) === null || _c === void 0 ? void 0 : _c.getId()) == ((_d = r.getTripletLink()) === null || _d === void 0 ? void 0 : _d.getId()); });
                         if (a) {
                             a.setId(r.getId());
                         }
@@ -586,7 +560,6 @@ class EntityFactory {
                             e.getRefs().push(r);
                         }
                     });
-                    //e.getRefs().push(...refBatch);
                 }
             });
         }
@@ -597,7 +570,7 @@ class EntityFactory {
      * @returns
      */
     async addSubjectAsEntity(subject) {
-        let i = this.entityArray.findIndex(e => { return e.getSubject().isSame(subject); });
+        let i = this.entityArray.findIndex(e => { var _a; return (_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.isEqual(subject); });
         if (i >= 0)
             return;
         let e = new Entity_1.Entity();

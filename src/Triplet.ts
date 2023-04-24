@@ -4,15 +4,17 @@ import { Entity } from "./Entity";
 export class Triplet {
 
     private id: string;
-    private subject: Concept;
-    private verb: Concept;
-    private target: Concept;
-    private upsert: boolean;
+
+    private subject?: Concept;
+    private verb?: Concept;
+    private target?: Concept;
 
     private flag: boolean;
-    private joinedEntity: Entity;
+    private upsert: boolean;
 
-    constructor(id: string, subject: Concept, verb: Concept, target: Concept, flag: boolean = false, upsert: boolean = false) {
+    private joinedEntity?: Entity;
+
+    constructor(id: string, subject?: Concept, verb?: Concept, target?: Concept, flag: boolean = false, upsert: boolean = false) {
         this.id = id;
         this.subject = subject;
         this.verb = verb;
@@ -77,11 +79,11 @@ export class Triplet {
     getDBArrayFormat(withId: boolean = true) {
 
         if (withId)
-            return [this.id.toString(), this.subject.getId().toString(), this.verb.getId().toString(),
-            this.target.getId().toString(), (this.flag ? "1" : "0")];
+            return [this.id.toString(), this.subject?.getId().toString(), this.verb?.getId().toString(),
+            this.target?.getId().toString(), (this.flag ? "1" : "0")];
         else
-            return [this.subject.getId().toString(), this.verb.getId().toString(),
-            this.target.getId().toString(), (this.flag ? "1" : "0")];
+            return [this.subject?.getId().toString(), this.verb?.getId().toString(),
+            this.target?.getId().toString(), (this.flag ? "1" : "0")];
 
     }
 
@@ -102,7 +104,7 @@ export class Triplet {
      * Sets given entity as the joined entity of this triplet 
      * @param entity 
      */
-    setJoinedEntity(entity: Entity) {
+    setJoinedEntity(entity: Entity | undefined) {
         this.joinedEntity = entity;
     }
 
@@ -115,25 +117,11 @@ export class Triplet {
     }
 
     /**
-     *
      * @param t 
      * @returns Returns true if given triplet has same verb and triple with this triplet object. 
      */
     isEqual(t: Triplet) {
-        if (this.getVerb().isSame(t.getVerb()) && this.getTarget().isSame(t.getTarget())) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Checks if this triplet verb and target have same ids
-     * @param verb 
-     * @param target 
-     * @returns Returns true if this triplet verb and target concepts have same ids as given in the parameters
-     */
-    isSame(verb: Concept, target: Concept) {
-        if (this.getVerb().isSame(verb) && this.getTarget().isSame(target)) {
+        if (this.getVerb()?.isEqual(t.getVerb()) && this.getTarget()?.isEqual(t.getTarget())) {
             return true;
         }
         return false;

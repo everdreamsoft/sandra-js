@@ -13,7 +13,7 @@ class SystemConcepts {
     }
     static async add(concept) {
         if (concept.getShortname()) {
-            return await SystemConcepts.get(concept.getShortname());
+            return SystemConcepts.get(concept.getShortname());
         }
         throw new Error("Not a system concpet, trying to push shortname with null value");
     }
@@ -23,23 +23,34 @@ class SystemConcepts {
      * it creates a new concept entry in the dabase and also in its list and returns the concpet object.
      */
     static async get(shortname) {
-        // check if it exist in memory 
-        let c = SystemConcepts.concepts.get(shortname);
-        if (c) {
-            return c;
-        }
-        // check if exist in DB
-        c = await (await DBAdapter_1.DBAdapter.getInstance()).getConcept(shortname);
-        if (c) {
-            SystemConcepts.concepts.set(shortname, c);
-            return c;
-        }
-        // add in DB and return 
-        c = await (await DBAdapter_1.DBAdapter.getInstance()).addConcept(new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.SYSTEM_CONCEPT_CODE_PREFIX + shortname, shortname));
-        SystemConcepts.concepts.set(shortname, c);
-        return c;
+        if (shortname)
+            return new Promise((resolve, reject) => {
+                // check if it exist in memory 
+                let c = SystemConcepts.concepts.get(shortname);
+                if (c) {
+                    return resolve(c);
+                }
+                DBAdapter_1.DBAdapter.getInstance().then(db => {
+                    db.getConcept(shortname).then(c => {
+                        if (c) {
+                            SystemConcepts.concepts.set(shortname, c);
+                            return resolve(c);
+                        }
+                        let newConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.SYSTEM_CONCEPT_CODE_PREFIX + shortname, shortname);
+                        db.addConcept(newConcept).then(c => {
+                            if (c) {
+                                SystemConcepts.concepts.set(shortname, c);
+                                return resolve(c);
+                            }
+                            return reject(new Error("Unable to get or create system concept with sn - " + shortname));
+                        });
+                    });
+                });
+            });
+        else
+            return Promise.reject(new Error("Shortname can not be undefined for system concepts"));
     }
 }
-exports.SystemConcepts = SystemConcepts;
 SystemConcepts.concepts = new Map();
+exports.SystemConcepts = SystemConcepts;
 //# sourceMappingURL=SystemConcepts.js.map

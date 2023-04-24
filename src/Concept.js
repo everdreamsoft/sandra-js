@@ -54,8 +54,8 @@ class Concept {
      * @param concept
      * @returns Returns true if given concept id is same as this concept object id.
      */
-    isSame(concept) {
-        return this.getId() === concept.getId();
+    isEqual(concept) {
+        return this.getId() === (concept === null || concept === void 0 ? void 0 : concept.getId());
     }
     /**
      * Copies the content of given concept to this concept object.
@@ -94,7 +94,7 @@ class Concept {
         };
     }
 }
-exports.Concept = Concept;
 Concept.SYSTEM_CONCEPT_CODE_PREFIX = "system concept ";
 Concept.ENTITY_CONCEPT_CODE_PREFIX = "A ";
+exports.Concept = Concept;
 //# sourceMappingURL=Concept.js.map

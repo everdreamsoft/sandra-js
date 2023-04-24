@@ -61,8 +61,13 @@ class Reference {
      * @returns Returns this ref object as json value with kay as shortname and value as value
      */
     asJson() {
+        var _a;
         let json = {};
-        json[this.getIdConcept().getShortname()] = this.getValue();
+        if (this.getIdConcept()) {
+            let key = (_a = this.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname();
+            if (key)
+                json[key] = this.getValue();
+        }
         return json;
     }
     /**
@@ -70,8 +75,9 @@ class Reference {
      * @param ref
      * @returns Returns true if given ref object are same, compares idConcept and value
      */
-    isEqualTo(ref) {
-        return this.getIdConcept().isSame(ref.getIdConcept()) && this.getValue() == ref.getValue();
+    isEqual(ref) {
+        var _a;
+        return ((_a = this.getIdConcept()) === null || _a === void 0 ? void 0 : _a.isEqual(ref.getIdConcept())) && this.getValue() == ref.getValue();
     }
     /**
      *
@@ -79,12 +85,11 @@ class Reference {
      * @returns Returns this ref object as an array with values [id, idConcept, TargetLinkId, value]
      */
     getDBArrayFormat(withId = true) {
+        var _a, _b, _c, _d;
         if (withId)
-            return [this.id.toString(), this.concept.getId().toString(), this.tripletLink.getId().toString(),
-                this.value];
+            return [this.id.toString(), (_a = this.concept) === null || _a === void 0 ? void 0 : _a.getId().toString(), (_b = this.tripletLink) === null || _b === void 0 ? void 0 : _b.getId().toString(), this.value];
         else
-            return [this.concept.getId().toString(), this.tripletLink.getId().toString(),
-                this.value];
+            return [(_c = this.concept) === null || _c === void 0 ? void 0 : _c.getId().toString(), (_d = this.tripletLink) === null || _d === void 0 ? void 0 : _d.getId().toString(), this.value];
     }
 }
 exports.Reference = Reference;

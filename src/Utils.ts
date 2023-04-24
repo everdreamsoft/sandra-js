@@ -14,7 +14,7 @@ export class Utils {
      * @param tripletLink 
      * @returns Returns a new Reference object with given shortname, value and triplet link  
      */
-    static async createDBReference(shortname: string, value: string, tripletLink: Triplet = null): Promise<Reference> {
+    static async createDBReference(shortname: string, value: string, tripletLink: Triplet | undefined = undefined): Promise<Reference> {
         return new Reference(TemporaryId.create(), await SystemConcepts.get(shortname), tripletLink, value);
     }
 

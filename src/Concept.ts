@@ -3,12 +3,11 @@ export class Concept {
     static readonly SYSTEM_CONCEPT_CODE_PREFIX = "system concept ";
     static readonly ENTITY_CONCEPT_CODE_PREFIX = "A ";
 
-
     private id: string;
     private code: string;
-    private shortname: string;
+    private shortname: string | undefined;
 
-    constructor(id: string, code: string, shortname: string) {
+    constructor(id: string, code: string, shortname: string | undefined) {
         this.id = id;
         this.code = code;
         this.shortname = shortname;
@@ -59,7 +58,7 @@ export class Concept {
      * Sets concept shortname.
      * @param sn 
      */
-    setShortname(sn: string) {
+    setShortname(sn: string | undefined) {
         this.shortname = sn;
     }
 
@@ -68,8 +67,8 @@ export class Concept {
      * @param concept 
      * @returns Returns true if given concept id is same as this concept object id.
      */
-    isSame(concept: Concept): boolean {
-        return this.getId() === concept.getId();
+    isEqual(concept?: Concept): boolean {
+        return this.getId() === concept?.getId();
     }
 
     /**

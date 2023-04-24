@@ -4,12 +4,13 @@ import { Triplet } from "./Triplet";
 export class Reference {
 
     private id: string;
-    private concept: Concept;
+    private concept?: Concept;
+    private tripletLink?: Triplet;
     private value: string;
-    private tripletLink: Triplet;
+
     private upsert: boolean;
 
-    constructor(id: string, concpet: Concept, tripletLink: Triplet, value: string, upsert: boolean = false) {
+    constructor(id: string, concpet: Concept | undefined, tripletLink: Triplet | undefined, value: string, upsert: boolean = false) {
         this.id = id;
         this.concept = concpet;
         this.value = value;
@@ -79,7 +80,11 @@ export class Reference {
      */
     asJson(): any {
         let json: any = {};
-        json[this.getIdConcept().getShortname()] = this.getValue();
+        if (this.getIdConcept()) {
+            let key = this.getIdConcept()?.getShortname();
+            if (key)
+                json[key] = this.getValue();
+        }
         return json;
     }
 
@@ -88,8 +93,8 @@ export class Reference {
      * @param ref 
      * @returns Returns true if given ref object are same, compares idConcept and value 
      */
-    isEqualTo(ref: Reference) {
-        return this.getIdConcept().isSame(ref.getIdConcept()) && this.getValue() == ref.getValue();
+    isEqual(ref: Reference) {
+        return this.getIdConcept()?.isEqual(ref.getIdConcept()) && this.getValue() == ref.getValue();
     }
 
     /**
@@ -100,11 +105,11 @@ export class Reference {
     getDBArrayFormat(withId: boolean = true) {
 
         if (withId)
-            return [this.id.toString(), this.concept.getId().toString(), this.tripletLink.getId().toString(),
+            return [this.id.toString(), this.concept?.getId().toString(), this.tripletLink?.getId().toString(),
             this.value];
 
         else
-            return [this.concept.getId().toString(), this.tripletLink.getId().toString(),
+            return [this.concept?.getId().toString(), this.tripletLink?.getId().toString(),
             this.value];
 
     }

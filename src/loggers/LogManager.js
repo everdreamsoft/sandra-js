@@ -13,6 +13,6 @@ class LogManager {
         LogManager.instance = logger;
     }
 }
-exports.LogManager = LogManager;
 LogManager.log = true;
+exports.LogManager = LogManager;
 //# sourceMappingURL=LogManager.js.map

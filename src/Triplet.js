@@ -58,12 +58,11 @@ class Triplet {
      * @returns Returns this triplet object as an array, with or wihout id
      */
     getDBArrayFormat(withId = true) {
+        var _a, _b, _c, _d, _e, _f;
         if (withId)
-            return [this.id.toString(), this.subject.getId().toString(), this.verb.getId().toString(),
-                this.target.getId().toString(), (this.flag ? "1" : "0")];
+            return [this.id.toString(), (_a = this.subject) === null || _a === void 0 ? void 0 : _a.getId().toString(), (_b = this.verb) === null || _b === void 0 ? void 0 : _b.getId().toString(), (_c = this.target) === null || _c === void 0 ? void 0 : _c.getId().toString(), (this.flag ? "1" : "0")];
         else
-            return [this.subject.getId().toString(), this.verb.getId().toString(),
-                this.target.getId().toString(), (this.flag ? "1" : "0")];
+            return [(_d = this.subject) === null || _d === void 0 ? void 0 : _d.getId().toString(), (_e = this.verb) === null || _e === void 0 ? void 0 : _e.getId().toString(), (_f = this.target) === null || _f === void 0 ? void 0 : _f.getId().toString(), (this.flag ? "1" : "0")];
     }
     /**
      * Sets the id of triplet
@@ -91,24 +90,12 @@ class Triplet {
         this.target = target;
     }
     /**
-     *
      * @param t
      * @returns Returns true if given triplet has same verb and triple with this triplet object.
      */
     isEqual(t) {
-        if (this.getVerb().isSame(t.getVerb()) && this.getTarget().isSame(t.getTarget())) {
-            return true;
-        }
-        return false;
-    }
-    /**
-     * Checks if this triplet verb and target have same ids
-     * @param verb
-     * @param target
-     * @returns Returns true if this triplet verb and target concepts have same ids as given in the parameters
-     */
-    isSame(verb, target) {
-        if (this.getVerb().isSame(verb) && this.getTarget().isSame(target)) {
+        var _a, _b;
+        if (((_a = this.getVerb()) === null || _a === void 0 ? void 0 : _a.isEqual(t.getVerb())) && ((_b = this.getTarget()) === null || _b === void 0 ? void 0 : _b.isEqual(t.getTarget()))) {
             return true;
         }
         return false;

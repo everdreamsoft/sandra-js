@@ -13,9 +13,12 @@ export class Logger implements ILogger {
             console.warn(message);
     }
 
-    error(message: string) {
-        if (LogManager.log)
-            console.error(message);
+    error(error: any) {
+        if (LogManager.log) {
+            console.error(error.code);
+            console.error(error.message);
+            //console.error(error.stack);
+        }
     }
 
 }

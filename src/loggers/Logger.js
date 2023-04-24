@@ -11,9 +11,12 @@ class Logger {
         if (LogManager_1.LogManager.log)
             console.warn(message);
     }
-    error(message) {
-        if (LogManager_1.LogManager.log)
-            console.error(message);
+    error(error) {
+        if (LogManager_1.LogManager.log) {
+            console.error(error.code);
+            console.error(error.message);
+            //console.error(error.stack);
+        }
     }
 }
 exports.Logger = Logger;
