@@ -19,7 +19,8 @@ class Test {
             await Utils_1.Utils.createDBReference("name", "PlanetABC2")
         ]);
         await facotry.loadAllSubjects();
-        await facotry.pushBatch();
+        await facotry.pushTripletsBatch();
+        await facotry.pushRefsBatch();
         console.log("a");
     }
 }

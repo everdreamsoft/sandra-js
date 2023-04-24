@@ -33,10 +33,13 @@ export class Test {
         ]);
 
         await facotry.loadAllSubjects();
-        await facotry.pushBatch();
+        
+        await facotry.pushTripletsBatch();
+        await facotry.pushRefsBatch();
+
 
         console.log("a");
-        
+
     }
 
 }

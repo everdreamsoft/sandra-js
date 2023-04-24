@@ -849,7 +849,7 @@ export class DBAdapter {
 
         let [result]: any = await this.getConnection().query(this.getDBQueryOption(sql, options), [tripletsData]);
 
-        if (result) {
+        if (result && !withIgnore && !withId) {
             let insertId: number = result.insertId;
             const affectedRows: number = result.affectedRows;
             for (let i = 0; i < affectedRows; i++) {
