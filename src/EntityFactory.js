@@ -416,7 +416,9 @@ class EntityFactory {
      * @param limit Limit the number of records
      */
     async loadEntityConcepts(lastId, limit) {
-        let entityConcepts = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConcepts(this.is_a, lastId, limit);
+        let cifFileTargetSub = await SystemConcepts_1.SystemConcepts.get(this.getContainedInFileVerb());
+        let cifFileVerbSub = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+        let entityConcepts = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConcepts(cifFileVerbSub, cifFileTargetSub, lastId, limit);
         for (let index = 0; index < (entityConcepts === null || entityConcepts === void 0 ? void 0 : entityConcepts.length); index++) {
             let entityConcept = entityConcepts[index];
             let e = new Entity_1.Entity();
@@ -429,9 +431,13 @@ class EntityFactory {
      * Loads the references of all entites of given factory
      */
     async loadEntityConceptsRefs() {
-        await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConceptsRefs(this.entityArray, await SystemConcepts_1.SystemConcepts.get("contained_in_file"));
+        let cifSystem = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+        await (await DBAdapter_1.DBAdapter.getInstance()).getEntityConceptsRefs(this.entityArray, cifSystem);
     }
-    // Loading all the triplets of given factrory entities 
+    /***
+     * Loading all the triplets of given factrory entities
+     *
+    */
     async loadTriplets(loadVerbData = false) {
         var _a;
         if (((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length) == 0)

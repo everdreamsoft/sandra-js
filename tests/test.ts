@@ -12,34 +12,15 @@ import { Utils } from "../src/Utils";
 export class Test {
 
     async run() {
-
         this.testDB();
-
-
     }
 
     async testDB() {
-
-        let controller = new AbortController();
-
+        //let controller = new AbortController();
         let facotry = new EntityFactory("planet", "planet_file", await SystemConcepts.get("name"))
-
-        await facotry.create([
-            await Utils.createDBReference("name", "planetABC1")
-        ]);
-
-        await facotry.create([
-            await Utils.createDBReference("name", "PlanetABC2")
-        ]);
-
-        await facotry.loadAllSubjects();
-        
-        await facotry.pushTripletsBatch();
-        await facotry.pushRefsBatch();
-
-
+        await facotry.loadEntityConcepts();
+        await facotry.loadEntityConceptsRefs();
         console.log("a");
-
     }
 
 }

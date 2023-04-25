@@ -4,23 +4,15 @@ exports.Test = void 0;
 const Sandra_1 = require("../src/Sandra");
 const SystemConcepts_1 = require("../src/SystemConcepts");
 const EntityFactory_1 = require("../src/EntityFactory");
-const Utils_1 = require("../src/Utils");
 class Test {
     async run() {
         this.testDB();
     }
     async testDB() {
-        let controller = new AbortController();
+        //let controller = new AbortController();
         let facotry = new EntityFactory_1.EntityFactory("planet", "planet_file", await SystemConcepts_1.SystemConcepts.get("name"));
-        await facotry.create([
-            await Utils_1.Utils.createDBReference("name", "planetABC1")
-        ]);
-        await facotry.create([
-            await Utils_1.Utils.createDBReference("name", "PlanetABC2")
-        ]);
-        await facotry.loadAllSubjects();
-        await facotry.pushTripletsBatch();
-        await facotry.pushRefsBatch();
+        await facotry.loadEntityConcepts();
+        await facotry.loadEntityConceptsRefs();
         console.log("a");
     }
 }

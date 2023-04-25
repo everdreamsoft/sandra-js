@@ -5,12 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DBAdapter = void 0;
 const promise_1 = __importDefault(require("mysql2/promise"));
-const Sandra_1 = require("./Sandra");
-const LogManager_1 = require("./loggers/LogManager");
 const Concept_1 = require("./Concept");
 const Reference_1 = require("./Reference");
-const Triplet_1 = require("./Triplet");
+const Sandra_1 = require("./Sandra");
 const TemporaryId_1 = require("./TemporaryId");
+const Triplet_1 = require("./Triplet");
+const LogManager_1 = require("./loggers/LogManager");
 class DBAdapter {
     constructor(config) {
         this.TABLE_CONCEPTS = "concepts";
@@ -59,22 +59,22 @@ class DBAdapter {
                 queueLimit: this.config.queueLimit ? this.config.queueLimit : 0
             }).getConnection();
             this.connection.on('connect', () => {
-                console.log('Connection established.');
+                LogManager_1.LogManager.getInstance().info('Connection established.');
             });
             this.connection.on('enqueue', () => {
-                console.log('Query added to queue.');
+                LogManager_1.LogManager.getInstance().info('Query added to queue.');
             });
             this.connection.on('release', () => {
-                console.log('Connection released.');
+                LogManager_1.LogManager.getInstance().info('Connection released.');
             });
             this.connection.on('error', (error) => {
-                console.log(`Error occurred: ${error}`);
+                LogManager_1.LogManager.getInstance().info(`Error occurred: ${error}`);
             });
             this.connection.on('end', () => {
-                console.log('Connection closed.');
+                LogManager_1.LogManager.getInstance().info('Connection closed.');
             });
             this.connection.on('close', () => {
-                console.log('Socket closed.');
+                LogManager_1.LogManager.getInstance().info('Socket closed.');
             });
         }
         catch (e) {
@@ -152,6 +152,12 @@ class DBAdapter {
         LogManager_1.LogManager.getInstance().info("Aborting connection..");
         this.destroy();
     }
+    /**
+     * Set abort controller signal event handler
+     * @param sql SQL query
+     * @param option options with timeout and abort controller
+     * @returns IDBQuery
+     */
     getDBQueryOption(sql, option) {
         if (option === null || option === void 0 ? void 0 : option.abortController) {
             option.abortController.signal.addEventListener("abort", (() => {
@@ -184,9 +190,9 @@ class DBAdapter {
      * @returns Returns added concept else null
      */
     async addConcept(c, withId = false, options) {
-        let sql = "insert ignore into " + this.tables.get("concepts") + " set code = ?, shortname = ?";
+        let sql = "insert ignore into " + this.tables.get(this.TABLE_CONCEPTS) + " set code = ?, shortname = ?";
         if (withId)
-            sql = "insert ignore into " + this.tables.get("concepts") + " set id = ?, code = ?, shortname = ?";
+            sql = "insert ignore into " + this.tables.get(this.TABLE_CONCEPTS) + " set id = ?, code = ?, shortname = ?";
         const [result] = await this.getConnection().query(this.getDBQueryOption(sql, options), c.getDBArrayFormat(withId));
         return new Promise((resolve, reject) => {
             if (result && result.insertId) {
@@ -212,7 +218,7 @@ class DBAdapter {
         }
         let sql = "select r.id, c.id as cId, c.code, c.shortname, r.value from "
             + this.tables.get(this.TABLE_REFERENCES) + " as r " + " join "
-            + this.tables.get("concepts") + " as c on r.idConcept = c.id and r.linkReferenced = ?" + refCon;
+            + this.tables.get(this.TABLE_CONCEPTS) + " as c on r.idConcept = c.id and r.linkReferenced = ?" + refCon;
         let [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), v);
         return new Promise((resolve, reject) => {
             let refs = [];
@@ -234,7 +240,7 @@ class DBAdapter {
     async getReferenceByTriplets(triplets, options) {
         let sql = "select r.id,  r.linkReferenced as tripletId, c.id as cId, c.code, c.shortname, r.value from " +
             this.tables.get(this.TABLE_REFERENCES) + " as r join " +
-            this.tables.get("concepts") + " as c " +
+            this.tables.get(this.TABLE_CONCEPTS) + " as c " +
             " on r.idConcept = c.id and r.linkReferenced in (?)";
         let v = triplets.map(t => t.getId());
         let [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), [v]);
@@ -294,8 +300,8 @@ class DBAdapter {
         let subConcept = subjects.map(s => s.getId());
         let verbConcept = verbs === null || verbs === void 0 ? void 0 : verbs.map(v => v.getId());
         let sql = "select c.id as cId, c.shortname as cSN, c.code as cCode , t.id as id, t.idConceptStart as subId, t.idConceptLink as verbId, t.idConceptTarget as targetId #VERB_SELECT# from " +
-            this.tables.get("triplets") + " as t join " +
-            this.tables.get("concepts") + " as c on c.id = t.idConceptTarget and t.idConceptStart in (?)";
+            this.tables.get(this.TABLE_TRIPLETS) + " as t join " +
+            this.tables.get(this.TABLE_CONCEPTS) + " as c on c.id = t.idConceptTarget and t.idConceptStart in (?)";
         if (loadVerbData) {
             sql = sql.replace("#VERB_SELECT#", " , c1.code as verbCode, c1.shortname as verbSn ");
         }
@@ -305,13 +311,13 @@ class DBAdapter {
         if (verbConcept && (verbConcept === null || verbConcept === void 0 ? void 0 : verbConcept.length) > 0) {
             sql = sql + " and t.idConceptLink in (?)";
             if (loadVerbData) {
-                sql = sql + " join " + this.tables.get("concepts") + " as c1 on c1.id = t.idConceptLink ";
+                sql = sql + " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink ";
             }
             [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), [subConcept, verbConcept]);
         }
         else {
             if (loadVerbData) {
-                sql = sql + " join " + this.tables.get("concepts") + " as c1 on c1.id = t.idConceptLink ";
+                sql = sql + " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink ";
             }
             [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), [subConcept]);
         }
@@ -338,9 +344,9 @@ class DBAdapter {
   */
     async getEntityConceptsByRefs(verb, target, refsValuesToSearch, refConcept, options) {
         let sql = "select  c.id, c.code, c.shortname, r.value from " +
-            this.tables.get("references") + "  as r " +
-            " join " + this.tables.get("triplets") + " as t on t.id = r.linkReferenced" +
-            " join " + this.tables.get("concepts") + " as c on t.idConceptStart = c.id" +
+            this.tables.get(this.TABLE_REFERENCES) + "  as r " +
+            " join " + this.tables.get(this.TABLE_TRIPLETS) + " as t on t.id = r.linkReferenced" +
+            " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t.idConceptStart = c.id" +
             " and r.value in ( ? ) " +
             " and r.idConcept = ? " +
             " and t.idConceptLink =  ? " +
@@ -352,10 +358,98 @@ class DBAdapter {
             let map = new Map();
             if ((rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
                 rows.forEach((row) => {
+                    if (options === null || options === void 0 ? void 0 : options.abort)
+                        return reject(new Error("Operation aborted"));
                     map.set(row.value.toString(), new Concept_1.Concept(row.id, row.code, row.shortname));
                 });
             }
             return resolve(map);
+        });
+    }
+    /**
+   * Queries the database for concpets with given is_a and shortname null, entity concepts
+   * @param is_a - checks for code in concepts table
+   * @param lastId - Get data with id less than lastId
+   * @param limit - Limit records
+   * @returns Concepts array
+   */
+    async getEntityConcepts(cifFileVerb, cifFileTargetSub, lastId, limit, options) {
+        let limitQ = "";
+        let lastIdQ = "";
+        if (lastId)
+            lastIdQ = " and c.id < " + lastId + " order by c.id desc";
+        else {
+            lastIdQ = " order by c.id desc";
+        }
+        if (limit)
+            limitQ = " limit " + limit;
+        let sql = "select c.id, c.code, c.shortname from " + this.tables.get(this.TABLE_TRIPLETS) +
+            " as t join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t.idConceptStart = c.id " +
+            " and t.idConceptLink = ?  and t.idConceptTarget =  ? " + lastIdQ + limitQ;
+        const [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), [cifFileVerb.getId(), cifFileTargetSub.getId()]);
+        return new Promise((resolve, reject) => {
+            if (options === null || options === void 0 ? void 0 : options.abort)
+                return reject(new Error("Operation aborted"));
+            let concpets = [];
+            if ((rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
+                rows.forEach((row) => {
+                    if (options === null || options === void 0 ? void 0 : options.abort)
+                        return reject(new Error("Operation aborted"));
+                    concpets.push(new Concept_1.Concept(row.id, row.code, row.shortname));
+                });
+            }
+            return resolve(concpets);
+        });
+    }
+    /**
+     * Updates given entities references from the database
+     * @param entities
+     * @param containedInFileConcept
+     * @returns
+     */
+    async getEntityConceptsRefs(entities, containedInFileConcept, options) {
+        if ((entities === null || entities === void 0 ? void 0 : entities.length) == 0)
+            return;
+        let subjs = [];
+        subjs = entities.map(e => {
+            let sub = e.getSubject();
+            if (sub)
+                return sub.getId();
+            else
+                throw new Error("Entity subject undefined");
+        });
+        let sql = "select t.id as tId, t.idConceptStart as subjectId , c.id, c.code," +
+            " c.shortname, r.id as refId, r.idConcept as refCon, r.linkReferenced as refLink, " +
+            " r.value as refVal from  " +
+            this.tables.get(this.TABLE_REFERENCES) + "  as r " +
+            " join " + this.tables.get(this.TABLE_TRIPLETS) + " as t on t.id = r.linkReferenced" +
+            " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on r.idConcept = c.id" +
+            " and t.idConceptStart in ? " +
+            " and t.idConceptLink =  ? ";
+        let [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), [[subjs], containedInFileConcept.getId()]);
+        return new Promise((resolve, reject) => {
+            if (options === null || options === void 0 ? void 0 : options.abort)
+                return reject(new Error("Operation aborted"));
+            entities.forEach(e => {
+                if (options === null || options === void 0 ? void 0 : options.abort)
+                    return reject(new Error("Operation aborted"));
+                let refsRows = rows.filter((r) => {
+                    var _a;
+                    if (options === null || options === void 0 ? void 0 : options.abort)
+                        return reject(new Error("Operation aborted"));
+                    return r.subjectId == ((_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.getId());
+                });
+                if ((refsRows === null || refsRows === void 0 ? void 0 : refsRows.length) > 0) {
+                    let t = new Triplet_1.Triplet(refsRows[0].tId, e.getSubject(), containedInFileConcept, undefined);
+                    let refs = refsRows.map((row) => {
+                        let refConcept = new Concept_1.Concept(row.id, row.code, row.shortname);
+                        return new Reference_1.Reference(row.refId, refConcept, t, row.refVal);
+                    });
+                    e.setRefs(refs);
+                    e.getTriplets().push(t);
+                }
+            });
+            resolve();
         });
     }
     /**
@@ -374,11 +468,11 @@ class DBAdapter {
         // Add triplet filter
         if ((triplets === null || triplets === void 0 ? void 0 : triplets.length) > 0) {
             subject = triplets[0].getSubject();
-            sql = "select t0.id as t0id, t0.idConceptStart t0idConceptStart ,#SELECT# from " + this.tables.get("triplets") + " as t0 ";
+            sql = "select t0.id as t0id, t0.idConceptStart t0idConceptStart ,#SELECT# from " + this.tables.get(this.TABLE_TRIPLETS) + " as t0 ";
             for (let index = 1; index < triplets.length; index++) {
                 let t = triplets[index];
                 sql = sql.replace("#SELECT#", "t" + index + ".id as t" + index + "id ,#SELECT#");
-                sql = sql + " join " + this.tables.get("triplets") + " as t" + index + " on t0.idConceptStart = " + "t" + index + ".idConceptStart";
+                sql = sql + " join " + this.tables.get(this.TABLE_TRIPLETS) + " as t" + index + " on t0.idConceptStart = " + "t" + index + ".idConceptStart";
                 sql = sql + " and t" + index + ".idConceptTarget = " + ((_a = t.getTarget()) === null || _a === void 0 ? void 0 : _a.getId());
                 sql = sql + " and t" + index + ".idConceptLink = " + ((_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getId());
             }
@@ -395,7 +489,7 @@ class DBAdapter {
                 let i = triplets.findIndex(tp => { return (t === null || t === void 0 ? void 0 : t.getId()) == tp.getId(); });
                 if (i >= 0 && t) {
                     sql = sql.replace("#SELECT#", "r" + index + ".id as r" + index + "id ,#SELECT#");
-                    sql = sql + " join " + this.tables.get("references") + " as r" + index + " on t" + i + ".id = r" + index + ".linkReferenced";
+                    sql = sql + " join " + this.tables.get(this.TABLE_REFERENCES) + " as r" + index + " on t" + i + ".id = r" + index + ".linkReferenced";
                     sql = sql + " and r" + index + ".idConcept = " + ((_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getId());
                     if (((_b = r.getValue()) === null || _b === void 0 ? void 0 : _b.length) > 0)
                         sql = sql + " and r" + index + ".value = '" + r.getValue() + "' ";
@@ -437,11 +531,11 @@ class DBAdapter {
                 "c.id as subId, c.code as subCode , c.shortname as subSn, " +
                 "c1.id as verbId, c1.code as verbCode , c1.shortname as verbSn, " +
                 "c2.id as targetId, c2.code as targetCode , c2.shortname as targetSn from " +
-                this.tables.get("triplets") + " as t join " +
-                this.tables.get("concepts") + " as c on " +
+                this.tables.get(this.TABLE_TRIPLETS) + " as t join " +
+                this.tables.get(this.TABLE_CONCEPTS) + " as c on " +
                 "c.id = t.idConceptStart and  t.idConceptStart = ? " +
-                "join " + this.tables.get("concepts") + " as c1 on c1.id = t.idConceptLink " +
-                "join " + this.tables.get("concepts") + " as c2 on c2.id = t.idConceptTarget";
+                "join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink " +
+                "join " + this.tables.get(this.TABLE_CONCEPTS) + " as c2 on c2.id = t.idConceptTarget";
             let [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), [subject.getId()]);
             return new Promise((resolve, reject) => {
                 if (options === null || options === void 0 ? void 0 : options.abort)
@@ -464,7 +558,7 @@ class DBAdapter {
      * @returns Returns promise of Concept with given id
      */
     async getConceptById(conceptId, options) {
-        let sql = "select id, code, shortname from " + this.tables.get("concepts") + " where id = ?";
+        let sql = "select id, code, shortname from " + this.tables.get(this.TABLE_CONCEPTS) + " where id = ?";
         let [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), [conceptId]);
         return new Promise((resolve, reject) => {
             if (options === null || options === void 0 ? void 0 : options.abort)
@@ -482,16 +576,16 @@ class DBAdapter {
      */
     async addTriplet(t, withId = false, options) {
         let sql = "";
-        sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ? and idConceptTarget = ?";
+        sql = "select id from " + this.tables.get(this.TABLE_TRIPLETS) + " where idConceptStart = ? and idConceptLink = ? and idConceptTarget = ?";
         let [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), t.getDBArrayFormat(false));
         if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
             t.setId(rows[0].id);
             return Promise.resolve();
         }
         if (withId)
-            sql = "insert into " + this.tables.get("triplets") + " set id = ?, idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
+            sql = "insert into " + this.tables.get(this.TABLE_TRIPLETS) + " set id = ?, idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
         else
-            sql = "insert into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
+            sql = "insert into " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
         const [result] = await this.getConnection().query(this.getDBQueryOption(sql, options), t.getDBArrayFormat(withId));
         if (result && (result === null || result === void 0 ? void 0 : result.insertId)) {
             t.setId(result.insertId);
@@ -507,18 +601,18 @@ class DBAdapter {
    */
     async upsertTriplet(t, options) {
         var _a, _b, _c;
-        let sql = "select id from " + this.tables.get("triplets") + " where idConceptStart = ? and idConceptLink = ?";
+        let sql = "select id from " + this.tables.get(this.TABLE_TRIPLETS) + " where idConceptStart = ? and idConceptLink = ?";
         const [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), [(_a = t.getSubject()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getId()]);
         if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
             // Update
-            sql = "update " + this.tables.get("triplets") + " set idConceptTarget = ? where id = ?";
+            sql = "update " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptTarget = ? where id = ?";
             await this.getConnection().query(this.getDBQueryOption(sql, options), [(_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getId(), rows[0].id]);
             t.setId(rows[0].id);
             return Promise.resolve();
         }
         else {
             // Insert
-            sql = "insert into " + this.tables.get("triplets") + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
+            sql = "insert into " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
             const [result] = await this.getConnection().query(this.getDBQueryOption(sql, options), t.getDBArrayFormat(false));
             if (result && (result === null || result === void 0 ? void 0 : result.insertId)) {
                 t.setId(result.insertId);
@@ -534,13 +628,13 @@ class DBAdapter {
    */
     async addRefs(ref, options) {
         var _a, _b;
-        let sql = "select id from " + this.tables.get("references") + " where idConcept = ? and linkReferenced = ?";
+        let sql = "select id from " + this.tables.get(this.TABLE_REFERENCES) + " where idConcept = ? and linkReferenced = ?";
         const [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), [(_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = ref.getTripletLink()) === null || _b === void 0 ? void 0 : _b.getId()]);
         if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
             ref.setId(rows[0].id);
             return Promise.resolve();
         }
-        sql = "insert into " + this.tables.get("references") + " set idConcept = ?, linkReferenced = ?, value = ?";
+        sql = "insert into " + this.tables.get(this.TABLE_REFERENCES) + " set idConcept = ?, linkReferenced = ?, value = ?";
         const [result] = await this.getConnection().query(this.getDBQueryOption(sql, options), ref.getDBArrayFormat(false));
         if (result && (result === null || result === void 0 ? void 0 : result.insertId)) {
             ref.setId(result.insertId);
@@ -556,16 +650,16 @@ class DBAdapter {
     async upsertRefs(ref, options) {
         var _a, _b, _c, _d;
         // Selecting updated or inserted ref
-        let sql = "select id from " + this.tables.get("references") + " where idConcept = ? and linkReferenced = ? ";
+        let sql = "select id from " + this.tables.get(this.TABLE_REFERENCES) + " where idConcept = ? and linkReferenced = ? ";
         const [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options), [(_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = ref.getTripletLink()) === null || _b === void 0 ? void 0 : _b.getId()]);
         if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
             ref.setId(rows[0].id);
-            sql = "update " + this.tables.get("references") + " set value = ? where idConcept = ? and linkReferenced = ? ";
+            sql = "update " + this.tables.get(this.TABLE_REFERENCES) + " set value = ? where idConcept = ? and linkReferenced = ? ";
             await this.getConnection().query(this.getDBQueryOption(sql, options), [ref.getValue(), (_c = ref.getIdConcept()) === null || _c === void 0 ? void 0 : _c.getId(), (_d = ref.getTripletLink()) === null || _d === void 0 ? void 0 : _d.getId()]);
             return Promise.resolve();
         }
         // Upserting
-        sql = "insert into " + this.tables.get("references") + " (idConcept, linkReferenced, value ) values (?,?,?)";
+        sql = "insert into " + this.tables.get(this.TABLE_REFERENCES) + " (idConcept, linkReferenced, value ) values (?,?,?)";
         const [res] = await this.getConnection().query(this.getDBQueryOption(sql, options), ref.getDBArrayFormat(false));
         if (res && (res === null || res === void 0 ? void 0 : res.insertId)) {
             ref.setId(res.insertId);
@@ -586,7 +680,7 @@ class DBAdapter {
             caseStatemet = caseStatemet + " when id = " + ref.getId() + " then " + ref.getValue();
         });
         let whereStatement = " where id in (" + ids.toString() + ")";
-        let sql = "update " + this.tables.get("references") + " set value = ( case " + caseStatemet + " end ) " + whereStatement;
+        let sql = "update " + this.tables.get(this.TABLE_REFERENCES) + " set value = ( case " + caseStatemet + " end ) " + whereStatement;
         await this.getConnection().query(this.getDBQueryOption(sql, options));
         return Promise.resolve();
     }
@@ -607,7 +701,7 @@ class DBAdapter {
             caseStatemet = caseStatemet + " when id = " + t.getId() + " then " + ((_a = t.getTarget()) === null || _a === void 0 ? void 0 : _a.getId());
         });
         let whereStatement = " where id in (" + ids.toString() + ")";
-        let sql = "update " + this.tables.get("triplets") + " set idConceptTarget = ( case " + caseStatemet + " end ) " + whereStatement;
+        let sql = "update " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptTarget = ( case " + caseStatemet + " end ) " + whereStatement;
         await this.getConnection().query(this.getDBQueryOption(sql, options));
         return Promise.resolve();
     }
@@ -621,7 +715,7 @@ class DBAdapter {
         concepts === null || concepts === void 0 ? void 0 : concepts.forEach(concept => {
             conceptsData.push(concept.getDBArrayFormat(false));
         });
-        let sql = "insert into " + this.tables.get("concepts") + " (code, shortname) values ?";
+        let sql = "insert into " + this.tables.get(this.TABLE_CONCEPTS) + " (code, shortname) values ?";
         let [result] = await this.getConnection().query(this.getDBQueryOption(sql, options), [conceptsData]);
         if (result) {
             let insertId = result.insertId;
@@ -650,11 +744,11 @@ class DBAdapter {
         });
         let sql = "";
         if (withId)
-            sql = "insert into " + this.tables.get("triplets") + " (id, idConceptStart, idConceptLink, idConceptTarget, flag) values ?";
+            sql = "insert into " + this.tables.get(this.TABLE_TRIPLETS) + " (id, idConceptStart, idConceptLink, idConceptTarget, flag) values ?";
         else
-            sql = "insert " + (withIgnore ? " ignore " : "") + " into " + this.tables.get("triplets") + " (idConceptStart, idConceptLink, idConceptTarget, flag) values ? ";
+            sql = "insert " + (withIgnore ? " ignore " : "") + " into " + this.tables.get(this.TABLE_TRIPLETS) + " (idConceptStart, idConceptLink, idConceptTarget, flag) values ? ";
         let [result] = await this.getConnection().query(this.getDBQueryOption(sql, options), [tripletsData]);
-        if (result) {
+        if (result && !withIgnore && !withId) {
             let insertId = result.insertId;
             const affectedRows = result.affectedRows;
             for (let i = 0; i < affectedRows; i++) {
@@ -683,58 +777,9 @@ class DBAdapter {
         if (!withId) {
             values = values = " (idConcept, linkReferenced, value) values ? ";
         }
-        let sql = "insert ignore into " + this.tables.get("references") + values;
+        let sql = "insert ignore into " + this.tables.get(this.TABLE_REFERENCES) + values;
         await this.getConnection().query(this.getDBQueryOption(sql, options), [refsData]);
         return Promise.resolve();
-    }
-    /**
-  *
-  * @returns Returns max id of SandraConcept table
-  */
-    async getMaxConceptId(options) {
-        let sql = "select max(id) as id from " + this.tables.get("concepts");
-        let [rows] = await this.getConnection().query(this.getDBQueryOption(sql, options));
-        if ((rows === null || rows === void 0 ? void 0 : rows.length) > 0)
-            return Promise.resolve(rows[0].id);
-        return Promise.reject();
-    }
-    /**
-     *
-     * @returns Returns max if of SandraTriplets table
-     */
-    async getMaxTripletId() {
-        let sql = "select max(id) as id from " + this.tables.get("triplets");
-        let [rows] = await this.getConnection().query(sql);
-        if ((rows === null || rows === void 0 ? void 0 : rows.length) > 0)
-            return Promise.resolve(rows[0].id);
-        return Promise.reject();
-    }
-    /**
-     *
-     * @returns Returns max id from SandraReferences table
-     */
-    async getMaxReferenceId() {
-        let sql = "select max(id) as id from " + this.tables.get("references");
-        let [rows] = await this.getConnection().query(sql);
-        if ((rows === null || rows === void 0 ? void 0 : rows.length) > 0)
-            return Promise.resolve(rows[0].id);
-        return Promise.reject();
-    }
-    /**
-     * Test function for DB connection and query
-     */
-    async testDB(option) {
-        try {
-            let sql = "select * from " + this.tables.get(this.TABLE_CONCEPTS) + " order by id desc;";
-            let query = this.getDBQueryOption(sql, option);
-            this.sleep(1);
-            this.getConnection().query(query).then(r => {
-                console.log(r);
-            });
-        }
-        catch (e) {
-            LogManager_1.LogManager.getInstance().error(e);
-        }
     }
 }
 exports.DBAdapter = DBAdapter;

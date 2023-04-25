@@ -586,8 +586,11 @@ export class EntityFactory {
      */
     async loadEntityConcepts(lastId?: string, limit?: string) {
 
+        let cifFileTargetSub = await SystemConcepts.get(this.getContainedInFileVerb());
+        let cifFileVerbSub = await SystemConcepts.get("contained_in_file");
+
         let entityConcepts: Concept[] = await (await DBAdapter.getInstance()).getEntityConcepts(
-            this.is_a, lastId, limit
+            cifFileVerbSub, cifFileTargetSub, lastId, limit
         );
 
         for (let index = 0; index < entityConcepts?.length; index++) {
@@ -604,12 +607,16 @@ export class EntityFactory {
      * Loads the references of all entites of given factory 
      */
     async loadEntityConceptsRefs() {
+        let cifSystem = await SystemConcepts.get("contained_in_file");
         await (await DBAdapter.getInstance()).getEntityConceptsRefs(
-            this.entityArray, await SystemConcepts.get("contained_in_file")
+            this.entityArray, cifSystem
         );
     }
 
-    // Loading all the triplets of given factrory entities 
+    /***
+     * Loading all the triplets of given factrory entities
+     *  
+    */ 
     async loadTriplets(loadVerbData: boolean = false) {
 
         if (this.entityArray?.length == 0) return;

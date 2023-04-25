@@ -1,6 +1,6 @@
 import { IAPIError } from "./IAPIError";
 
 export interface IAPIResponse {
-   error: IAPIError,
-   data: any
+   data: any | undefined
+   error: IAPIError | undefined,
 }
