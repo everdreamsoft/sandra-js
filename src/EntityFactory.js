@@ -148,6 +148,9 @@ class EntityFactory {
                 else {
                     await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(t);
                 }
+                if (t.getStorage()) {
+                    await (await DBAdapter_1.DBAdapter.getInstance()).addDataStorage(t);
+                }
             }
             // Create refs
             for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {

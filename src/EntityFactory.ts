@@ -193,6 +193,10 @@ export class EntityFactory {
                     await (await DBAdapter.getInstance()).addTriplet(t);
                 }
 
+                if (t.getStorage()) {
+                    await (await DBAdapter.getInstance()).addDataStorage(t);
+                }
+
             }
 
             // Create refs
