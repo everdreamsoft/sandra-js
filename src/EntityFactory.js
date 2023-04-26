@@ -197,6 +197,9 @@ class EntityFactory {
                 else {
                     await (await DBAdapter_1.DBAdapter.getInstance()).addTriplet(t);
                 }
+                if (t.getStorage()) {
+                    await (await DBAdapter_1.DBAdapter.getInstance()).addDataStorage(t);
+                }
             }
         }
     }

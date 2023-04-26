@@ -42,6 +42,7 @@ class DBAdapter {
         this.tables.set("concepts", this.config.env + "_SandraConcept");
         this.tables.set("references", this.config.env + "_SandraReferences");
         this.tables.set("triplets", this.config.env + "_SandraTriplets");
+        this.tables.set("datastorage", this.config.env + "_SandraDatastorage");
     }
     /**
      *
@@ -768,6 +769,23 @@ class DBAdapter {
         if ((res === null || res === void 0 ? void 0 : res.length) > 0)
             return res[0].id;
         return 0;
+    }
+    async addDataStorage(triplet) {
+        let dataStorage = triplet.getStorage();
+        let sql = "select linkReferenced from " + this.tables.get("datastorage") + " where linkReferenced = ?";
+        let res = await this.getConnection().query(sql, triplet.getId());
+        if (res && (res === null || res === void 0 ? void 0 : res.length) > 0) {
+            // Aleady exist, check if need to be updated 
+            if (dataStorage === null || dataStorage === void 0 ? void 0 : dataStorage.isUpsert()) {
+                // Update 
+                sql = "update " + this.tables.get("datastorage") + " set value = ?  where linkReferenced = ?";
+                await this.getConnection().query(sql, [dataStorage.getValue(), triplet.getId()]);
+            }
+            return;
+        }
+        sql = "insert into " + this.tables.get("datastorage") + " set linkReferenced = ?, value = ?";
+        await this.getConnection().query(sql, [triplet.getId(), dataStorage.getValue()]);
+        return;
     }
     //////////// BENCHMARK TEST FUNCTION - START /////////////////////
     async addBatchWithTransaction(concepts, triplets, refs, tripletWithId = false, refWithId = false) {

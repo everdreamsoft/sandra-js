@@ -40,6 +40,6 @@ class SystemConcepts {
         return c;
     }
 }
-exports.SystemConcepts = SystemConcepts;
 SystemConcepts.concepts = new Map();
+exports.SystemConcepts = SystemConcepts;
 //# sourceMappingURL=SystemConcepts.js.map

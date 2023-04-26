@@ -10,6 +10,7 @@ import { EnumLockStatus } from "./enums/lock-status";
 import { EnumTransactionStatus } from "./enums/transaction-status";
 import { IDBConfig } from "./interfaces/IDBconfig";
 import { LogManager } from "./loggers/LogManager";
+import { DataStorage } from "./DataStorage";
 
 export class DBAdapter {
 
@@ -30,6 +31,8 @@ export class DBAdapter {
         this.tables.set("concepts", this.config.env + "_SandraConcept");
         this.tables.set("references", this.config.env + "_SandraReferences");
         this.tables.set("triplets", this.config.env + "_SandraTriplets");
+        this.tables.set("datastorage", this.config.env + "_SandraDatastorage");
+
     }
 
     /**
@@ -1038,6 +1041,28 @@ export class DBAdapter {
 
     }
 
+    async addDataStorage(triplet: Triplet) {
+
+        let dataStorage = triplet.getStorage();
+
+        let sql = "select linkReferenced from " + this.tables.get("datastorage") + " where linkReferenced = ?";
+        let res = await this.getConnection().query(sql, triplet.getId());
+
+        if (res && res?.length > 0) {
+            // Aleady exist, check if need to be updated 
+            if (dataStorage?.isUpsert()) {
+                // Update 
+                sql = "update " + this.tables.get("datastorage") + " set value = ?  where linkReferenced = ?";
+                await this.getConnection().query(sql, [dataStorage.getValue(), triplet.getId()]);
+            }
+            return;
+        }
+
+        sql = "insert into " + this.tables.get("datastorage") + " set linkReferenced = ?, value = ?";
+        await this.getConnection().query(sql, [triplet.getId(), dataStorage.getValue()]);
+        return;
+
+    }
 
 
     //////////// BENCHMARK TEST FUNCTION - START /////////////////////

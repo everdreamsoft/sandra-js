@@ -11,6 +11,7 @@ export class Entity {
     private subject: Concept;
     private triplets: Triplet[] = [];
     private references: Reference[] = [];
+    
     private uniqueRefConcept: Concept;
 
     private upsert: boolean = false;

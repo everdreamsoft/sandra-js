@@ -200,7 +200,6 @@ class JSONQuery {
         return Promise.resolve(factory);
     }
 }
-exports.JSONQuery = JSONQuery;
 JSONQuery.SELECT_TEMPLATE = {
     "is_a": "planet",
     "contained_in_file": "planet_file",
@@ -314,4 +313,5 @@ JSONQuery.PUSH_TEMPLATE = {
         }
     }
 };
+exports.JSONQuery = JSONQuery;
 //# sourceMappingURL=JSONQuery.js.map

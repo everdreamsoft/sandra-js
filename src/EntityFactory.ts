@@ -258,11 +258,16 @@ export class EntityFactory {
                     await (await DBAdapter.getInstance()).addTriplet(t);
                 }
 
+                if (t.getStorage()) {
+                    await (await DBAdapter.getInstance()).addDataStorage(t);
+                }
+
             }
         }
 
 
     }
+
 
     /**
      * Pushes all the triplets of each entity with given verb, if triplets are loaded before and 

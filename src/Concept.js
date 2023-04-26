@@ -94,7 +94,7 @@ class Concept {
         };
     }
 }
-exports.Concept = Concept;
 Concept.SYSTEM_CONCEPT_CODE_PREFIX = "system concept ";
 Concept.ENTITY_CONCEPT_CODE_PREFIX = "A ";
+exports.Concept = Concept;
 //# sourceMappingURL=Concept.js.map

@@ -38,6 +38,6 @@ class TemporaryId {
         return String(id).includes("temp-");
     }
 }
-exports.TemporaryId = TemporaryId;
 TemporaryId.counter = 0;
+exports.TemporaryId = TemporaryId;
 //# sourceMappingURL=TemporaryId.js.map

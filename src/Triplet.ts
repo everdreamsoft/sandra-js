@@ -1,4 +1,5 @@
 import { Concept } from "./Concept";
+import { DataStorage } from "./DataStorage";
 import { Entity } from "./Entity";
 
 export class Triplet {
@@ -7,6 +8,8 @@ export class Triplet {
     private subject: Concept;
     private verb: Concept;
     private target: Concept;
+    private storage: DataStorage | undefined;
+
     private upsert: boolean;
 
     private flag: boolean;
@@ -53,6 +56,14 @@ export class Triplet {
         return this.target;
     }
 
+    /**
+     * 
+     * @returns Returns triplet storage
+     */
+    getStorage() {
+        return this.storage;
+    }
+    
     /**
      * 
      * @returns Returns joined entity object 
@@ -114,6 +125,15 @@ export class Triplet {
         this.target = target;
     }
 
+    setStorage(value: string, upsert: boolean = false) {
+        if (this.storage) {
+            this.storage.setValue(value);
+            this.storage.setUpsert(upsert);
+        }
+        else {
+            this.storage = new DataStorage(value, upsert);
+        }
+    }
     /**
      *
      * @param t 
