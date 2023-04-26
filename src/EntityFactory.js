@@ -378,6 +378,8 @@ class EntityFactory {
                         }
                     }
                     let r = await (await DBAdapter_1.DBAdapter.getInstance()).getReferenceByTriplet(triplets[i]);
+                    // Load storage data for triplet
+                    await (await DBAdapter_1.DBAdapter.getInstance()).getDataStorageByTriplet(triplets[i]);
                     refs.push(...r);
                 }
             }

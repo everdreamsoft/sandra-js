@@ -1064,6 +1064,18 @@ export class DBAdapter {
 
     }
 
+    async getDataStorageByTriplet(triplet: Triplet): Promise<void> {
+
+        let sql = "select linkReferenced, value  from " + this.tables.get("datastorage") + " where linkReferenced = ?";
+        let res = await this.getConnection().query(sql, triplet.getId());
+
+        if (res && res?.length > 0) {
+            triplet.setStorage(res[0].value);
+        }
+
+        return Promise.resolve();
+
+    }
 
     //////////// BENCHMARK TEST FUNCTION - START /////////////////////
 

@@ -787,6 +787,14 @@ class DBAdapter {
         await this.getConnection().query(sql, [triplet.getId(), dataStorage.getValue()]);
         return;
     }
+    async getDataStorageByTriplet(triplet) {
+        let sql = "select linkReferenced, value  from " + this.tables.get("datastorage") + " where linkReferenced = ?";
+        let res = await this.getConnection().query(sql, triplet.getId());
+        if (res && (res === null || res === void 0 ? void 0 : res.length) > 0) {
+            triplet.setStorage(res[0].value);
+        }
+        return Promise.resolve();
+    }
     //////////// BENCHMARK TEST FUNCTION - START /////////////////////
     async addBatchWithTransaction(concepts, triplets, refs, tripletWithId = false, refWithId = false) {
         let conceptsData = [];
