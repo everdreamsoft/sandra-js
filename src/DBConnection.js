@@ -27,10 +27,9 @@ exports.DBConnection = void 0;
 const mariaDb = __importStar(require("mariadb"));
 const LogManager_1 = require("./loggers/LogManager");
 const Sandra_1 = require("./Sandra");
+const perf_hooks_1 = require("perf_hooks");
 class DBConnection {
     constructor() {
-        var _a;
-        this.enableQueryLogs = (_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.query;
     }
     /**
      * Creates maridb connection instance
@@ -69,11 +68,24 @@ class DBConnection {
      * @returns
      */
     async query(sql, values) {
-        if (this.enableQueryLogs) {
+        var _a, _b, _c, _d, _e;
+        let start;
+        if ((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.query) {
             LogManager_1.LogManager.getInstance().logQuery(sql);
+            // if (values instanceof Array) {
+            //     LogManager.getInstance().logQuery(values.toString());
+            // }
+            // else LogManager.getInstance().logQuery(values);
         }
-        if (this.connection)
-            return await this.connection.query(sql, values);
+        if (this.connection) {
+            if (((_b = Sandra_1.Sandra.LOG_CONFIG) === null || _b === void 0 ? void 0 : _b.query) && ((_c = Sandra_1.Sandra.LOG_CONFIG) === null || _c === void 0 ? void 0 : _c.queryTime))
+                start = perf_hooks_1.performance.now();
+            let res = await this.connection.query(sql, values);
+            if (((_d = Sandra_1.Sandra.LOG_CONFIG) === null || _d === void 0 ? void 0 : _d.query) && ((_e = Sandra_1.Sandra.LOG_CONFIG) === null || _e === void 0 ? void 0 : _e.queryTime)) {
+                LogManager_1.LogManager.getInstance().logQuery(`Time: ${(perf_hooks_1.performance.now() - start)} milliseconds`);
+            }
+            return res;
+        }
         throw (new Error("DB not connected"));
     }
     /**
@@ -83,11 +95,20 @@ class DBConnection {
      * @returns
      */
     async batch(sql, values) {
-        if (this.enableQueryLogs) {
+        var _a, _b, _c, _d, _e;
+        let start;
+        if ((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.query) {
             LogManager_1.LogManager.getInstance().logQuery(sql);
         }
-        if (this.connection)
-            return await this.connection.batch(sql, values);
+        if (this.connection) {
+            if (((_b = Sandra_1.Sandra.LOG_CONFIG) === null || _b === void 0 ? void 0 : _b.query) && ((_c = Sandra_1.Sandra.LOG_CONFIG) === null || _c === void 0 ? void 0 : _c.queryTime))
+                start = perf_hooks_1.performance.now();
+            let res = await this.connection.batch(sql, values);
+            if (((_d = Sandra_1.Sandra.LOG_CONFIG) === null || _d === void 0 ? void 0 : _d.query) && ((_e = Sandra_1.Sandra.LOG_CONFIG) === null || _e === void 0 ? void 0 : _e.queryTime)) {
+                LogManager_1.LogManager.getInstance().logQuery(`Time: ${(perf_hooks_1.performance.now() - start)} milliseconds`);
+            }
+            return res;
+        }
         throw (new Error("DB not connected"));
     }
 }

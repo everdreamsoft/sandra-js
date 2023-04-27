@@ -3,10 +3,10 @@ import { IDBConfig } from "./interfaces/IDBconfig";
 import { LogManager } from "./loggers/LogManager";
 import { QueryOptions } from "mariadb";
 import { Sandra } from "./Sandra";
+import { performance } from "perf_hooks"
 
 export class DBConnection {
 
-    private enableQueryLogs = Sandra.LOG_CONFIG?.query;
     private connection: mariaDb.Connection | undefined;
 
     constructor() {
@@ -50,14 +50,31 @@ export class DBConnection {
      */
     async query(sql: string | QueryOptions, values?: any): Promise<any> {
 
-        if (this.enableQueryLogs) {
+        let start: any | undefined;
+
+        if (Sandra.LOG_CONFIG?.query) {
             LogManager.getInstance().logQuery(sql);
+            // if (values instanceof Array) {
+            //     LogManager.getInstance().logQuery(values.toString());
+            // }
+            // else LogManager.getInstance().logQuery(values);
         }
 
-        if (this.connection)
-            return await this.connection.query(sql, values);
+        if (this.connection) {
+
+            if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) start = performance.now();
+
+            let res = await this.connection.query(sql, values);
+
+            if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) {
+                LogManager.getInstance().logQuery(`Time: ${(performance.now() - start)} milliseconds`);
+            }
+
+            return res;
+        }
 
         throw (new Error("DB not connected"));
+
     }
 
     /**
@@ -68,14 +85,27 @@ export class DBConnection {
      */
     async batch(sql: string | QueryOptions, values?: any): Promise<any> {
 
-        if (this.enableQueryLogs) {
+        let start: any | undefined;
+
+        if (Sandra.LOG_CONFIG?.query) {
             LogManager.getInstance().logQuery(sql);
         }
 
-        if (this.connection)
-            return await this.connection.batch(sql, values);
+        if (this.connection) {
+            if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) start = performance.now();
+
+            let res = await this.connection.batch(sql, values);
+
+            if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) {
+                LogManager.getInstance().logQuery(`Time: ${(performance.now() - start)} milliseconds`);
+            }
+
+            return res;
+
+        }
 
         throw (new Error("DB not connected"));
+
     }
 
 }

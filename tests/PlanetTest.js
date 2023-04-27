@@ -30,8 +30,9 @@ class PlanetTest {
         Sandra_1.Sandra.DB_CONFIG = this.DB_CONFIG_LOCAL;
         Sandra_1.Sandra.APP_CONFIG = this.APP_CONFIG_LOCAL;
         Sandra_1.Sandra.LOG_CONFIG = {
-            main: false,
-            query: false
+            main: true,
+            query: true,
+            queryTime: true
         };
     }
     async run() {
