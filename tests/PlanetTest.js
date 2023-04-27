@@ -9,7 +9,6 @@ const SystemConcepts_1 = require("../src/SystemConcepts");
 const TemporaryId_1 = require("../src/TemporaryId");
 const Triplet_1 = require("../src/Triplet");
 const Utils_1 = require("../src/Utils");
-const LogManager_1 = require("../src/loggers/LogManager");
 /// This is planet test class, it implements various functions to load and push data
 /// It can be taken as reference to use this plug in. 
 class PlanetTest {
@@ -30,9 +29,12 @@ class PlanetTest {
         };
         Sandra_1.Sandra.DB_CONFIG = this.DB_CONFIG_LOCAL;
         Sandra_1.Sandra.APP_CONFIG = this.APP_CONFIG_LOCAL;
+        Sandra_1.Sandra.LOG_CONFIG = {
+            main: false,
+            query: false
+        };
     }
     async run() {
-        LogManager_1.LogManager.log = false;
         // Load and Push one by one
         //await this.push();
         //await this.load("planetE");
@@ -46,7 +48,7 @@ class PlanetTest {
         // Using Filters 
         //await this.filter("moon1");
         // Using JSON query 
-        //await this.selectAsJSON();
+        await this.selectAsJSON();
         //await this.pushAsJSON();
     }
     async push() {

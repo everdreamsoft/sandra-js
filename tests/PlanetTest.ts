@@ -34,11 +34,13 @@ export class PlanetTest {
     constructor() {
         Sandra.DB_CONFIG = this.DB_CONFIG_LOCAL;
         Sandra.APP_CONFIG = this.APP_CONFIG_LOCAL;
+        Sandra.LOG_CONFIG = {
+            main: false,
+            query: false
+        };
     }
 
     async run() {
-
-        LogManager.log = false;
 
         // Load and Push one by one
         //await this.push();
@@ -57,7 +59,7 @@ export class PlanetTest {
         //await this.filter("moon1");
 
         // Using JSON query 
-        //await this.selectAsJSON();
+        await this.selectAsJSON();
         //await this.pushAsJSON();
 
     }

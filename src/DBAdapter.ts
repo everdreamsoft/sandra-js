@@ -1,33 +1,25 @@
-import * as mariaDb from "mariadb";
-import { Connection } from "mariadb";
+
 import { Concept } from "./Concept";
+import { DBConnection } from "./DBConnection";
 import { Entity } from "./Entity";
 import { Reference } from "./Reference";
 import { Sandra } from "./Sandra";
 import { TemporaryId } from "./TemporaryId";
 import { Triplet } from "./Triplet";
-import { EnumLockStatus } from "./enums/lock-status";
-import { EnumTransactionStatus } from "./enums/transaction-status";
 import { IDBConfig } from "./interfaces/IDBconfig";
 import { LogManager } from "./loggers/LogManager";
-import { DataStorage } from "./DataStorage";
 
 export class DBAdapter {
 
     private readonly config: IDBConfig;
     private static instance: DBAdapter;
 
-    private connection: Connection | undefined;
+    private connection: DBConnection | undefined;
     private tables: Map<string, string> = new Map<string, string>();
-
-    private transactionStatus: EnumTransactionStatus;
-    private tableLockStatus: EnumLockStatus;
 
 
     private constructor(config: IDBConfig) {
         this.config = config;
-        this.transactionStatus = EnumTransactionStatus.Completed;
-        this.tableLockStatus = EnumLockStatus.Off;
         this.tables.set("concepts", this.config.env + "_SandraConcept");
         this.tables.set("references", this.config.env + "_SandraReferences");
         this.tables.set("triplets", this.config.env + "_SandraTriplets");
@@ -59,8 +51,12 @@ export class DBAdapter {
      */
     async connect() {
         try {
-            LogManager.getInstance().info("Creating DB connection..");
-            this.connection = await mariaDb.createConnection(this.config);
+            if (this.connection)
+                await this.connection.connect(this.config);
+            else {
+                this.connection = new DBConnection()
+                await this.connection.connect(this.config);
+            }
         } catch (e) {
             console.error(e);
         }
@@ -81,9 +77,9 @@ export class DBAdapter {
     async close() {
         try {
             if (this.connection) {
-                await this.connection.end();
-                DBAdapter.instance = null;
+                await this.connection.close();
             }
+            DBAdapter.instance = null;
         } catch (e) {
             console.error(e);
         }
@@ -94,9 +90,7 @@ export class DBAdapter {
      */
     async beginTransaction() {
         LogManager.getInstance().info("Starting transaction..")
-        let sql = "Start Transaction;";
-        await this.getConnection().query(sql);
-        this.transactionStatus = EnumTransactionStatus.Started;
+        await this.getConnection().query("start transaction;");
     }
 
     /**
@@ -104,9 +98,7 @@ export class DBAdapter {
      */
     async commit() {
         LogManager.getInstance().info("Committing..")
-        let sql = "Commit;";
-        await this.getConnection().query(sql);
-        this.transactionStatus = EnumTransactionStatus.Completed;
+        await this.getConnection().query("commit;");
     }
 
     /**
@@ -115,8 +107,7 @@ export class DBAdapter {
      */
     async sleep(durationInSec: number) {
         LogManager.getInstance().info("Sleep for " + durationInSec + "s");
-        let sql = "select sleep(" + durationInSec + ")";
-        await this.getConnection().query(sql);
+        await this.getConnection().query("select sleep(" + durationInSec + ");");
     }
 
     /**

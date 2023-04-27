@@ -1,10 +1,13 @@
 import { DBAdapter } from "./DBAdapter";
 import { IAppConfig } from "./interfaces/IAppConfig";
 import { IDBConfig } from "./interfaces/IDBconfig";
+import { ILogConfig } from "./interfaces/ILogConfig";
 
 export class Sandra {
+
     public static DB_CONFIG: IDBConfig;
     public static APP_CONFIG: IAppConfig;
+    public static LOG_CONFIG: ILogConfig;
 
     static async closeConncetion() {
         if (DBAdapter.getInstanceObject()) {

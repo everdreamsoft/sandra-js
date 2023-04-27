@@ -4,7 +4,6 @@ import { Logger } from "./Logger";
 export class LogManager {
 
     private static instance: ILogger;
-    static log: boolean = true;
 
     public static getInstance(): ILogger {
         if (!LogManager.instance) {

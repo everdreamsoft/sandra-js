@@ -1,44 +1,17 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DBAdapter = void 0;
-const mariaDb = __importStar(require("mariadb"));
 const Concept_1 = require("./Concept");
+const DBConnection_1 = require("./DBConnection");
 const Reference_1 = require("./Reference");
 const Sandra_1 = require("./Sandra");
 const TemporaryId_1 = require("./TemporaryId");
 const Triplet_1 = require("./Triplet");
-const lock_status_1 = require("./enums/lock-status");
-const transaction_status_1 = require("./enums/transaction-status");
 const LogManager_1 = require("./loggers/LogManager");
 class DBAdapter {
     constructor(config) {
         this.tables = new Map();
         this.config = config;
-        this.transactionStatus = transaction_status_1.EnumTransactionStatus.Completed;
-        this.tableLockStatus = lock_status_1.EnumLockStatus.Off;
         this.tables.set("concepts", this.config.env + "_SandraConcept");
         this.tables.set("references", this.config.env + "_SandraReferences");
         this.tables.set("triplets", this.config.env + "_SandraTriplets");
@@ -65,8 +38,12 @@ class DBAdapter {
      */
     async connect() {
         try {
-            LogManager_1.LogManager.getInstance().info("Creating DB connection..");
-            this.connection = await mariaDb.createConnection(this.config);
+            if (this.connection)
+                await this.connection.connect(this.config);
+            else {
+                this.connection = new DBConnection_1.DBConnection();
+                await this.connection.connect(this.config);
+            }
         }
         catch (e) {
             console.error(e);
@@ -88,9 +65,9 @@ class DBAdapter {
     async close() {
         try {
             if (this.connection) {
-                await this.connection.end();
-                DBAdapter.instance = null;
+                await this.connection.close();
             }
+            DBAdapter.instance = null;
         }
         catch (e) {
             console.error(e);
@@ -101,18 +78,14 @@ class DBAdapter {
      */
     async beginTransaction() {
         LogManager_1.LogManager.getInstance().info("Starting transaction..");
-        let sql = "Start Transaction;";
-        await this.getConnection().query(sql);
-        this.transactionStatus = transaction_status_1.EnumTransactionStatus.Started;
+        await this.getConnection().query("start transaction;");
     }
     /**
      * Commits DB transactions.
      */
     async commit() {
         LogManager_1.LogManager.getInstance().info("Committing..");
-        let sql = "Commit;";
-        await this.getConnection().query(sql);
-        this.transactionStatus = transaction_status_1.EnumTransactionStatus.Completed;
+        await this.getConnection().query("commit;");
     }
     /**
      * Runs DB query to sleep for given durations.
@@ -120,8 +93,7 @@ class DBAdapter {
      */
     async sleep(durationInSec) {
         LogManager_1.LogManager.getInstance().info("Sleep for " + durationInSec + "s");
-        let sql = "select sleep(" + durationInSec + ")";
-        await this.getConnection().query(sql);
+        await this.getConnection().query("select sleep(" + durationInSec + ");");
     }
     /**
      * Runs lock queries on tables according to the parameter
