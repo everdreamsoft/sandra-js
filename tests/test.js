@@ -2,11 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Test = void 0;
 const Sandra_1 = require("../src/Sandra");
-const SystemConcepts_1 = require("../src/SystemConcepts");
-const EntityFactory_1 = require("../src/EntityFactory");
+const SystemConcepts_1 = require("../src/models/SystemConcepts");
+const EntityFactory_1 = require("../src/wrappers/EntityFactory");
+const DB_1 = require("../src/connections/DB");
 class Test {
     async run() {
-        this.testDB();
+        this.testDBClass();
+    }
+    async testDBClass() {
+        DB_1.DB.getInstance().add(DB_CONFIG);
+        let server = DB_1.DB.getInstance().server("sandra_linode_ranjit");
+        let con = server === null || server === void 0 ? void 0 : server.getConnectionPool();
+        let res = await (con === null || con === void 0 ? void 0 : con.query("select * from fondue_SandraConcept limit 10;"));
+        res = await (con === null || con === void 0 ? void 0 : con.query("select * from fondue_SandraConcept limit 100;"));
+        res = await (con === null || con === void 0 ? void 0 : con.query("select * from fondue_SandraConcept limit 1000;"));
+        console.log(con);
     }
     async testDB() {
         //let controller = new AbortController();
@@ -19,6 +29,7 @@ class Test {
 exports.Test = Test;
 const LOCAL = true;
 const DB_CONFIG = {
+    name: "sandra_linode_ranjit",
     database: "jetski",
     host: "139.162.176.241",
     env: "fondue",
@@ -29,6 +40,7 @@ const DB_CONFIG = {
     waitForConnections: true
 };
 const DB_CONFIG_LOCAL = {
+    name: "sandra_local",
     database: "ccc8_batch",
     host: "localhost",
     env: "fondue",
@@ -39,8 +51,11 @@ const DB_CONFIG_LOCAL = {
     waitForConnections: true
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
+Sandra_1.Sandra.LOG_CONFIG = {
+    main: true,
+    query: false,
+    queryTime: false
+};
 let test = new Test();
-console.log(Sandra_1.Sandra.getDBConfig());
-console.log(Sandra_1.Sandra.DB_CONFIG);
 test.run();
 //# sourceMappingURL=test.js.map

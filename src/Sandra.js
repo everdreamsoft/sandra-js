@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sandra = void 0;
-const DBAdapter_1 = require("./DBAdapter");
+const DB_1 = require("./connections/DB");
 class Sandra {
-    static async closeConncetion() {
-        if (DBAdapter_1.DBAdapter.getInstanceObject()) {
-            console.log("closing sandra connection ");
-            return (await DBAdapter_1.DBAdapter.getInstance()).close();
+    static async close(server = "sandra") {
+        var _a, _b, _c;
+        if ((_a = DB_1.DB.getInstance()) === null || _a === void 0 ? void 0 : _a.server()) {
+            return (_c = (_b = DB_1.DB.getInstance()) === null || _b === void 0 ? void 0 : _b.server(server)) === null || _c === void 0 ? void 0 : _c.end();
         }
         console.log("closing sandra connection / instance not found");
         return Promise.resolve(0);

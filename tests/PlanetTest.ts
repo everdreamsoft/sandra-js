@@ -1,16 +1,17 @@
-import { Concept } from "../src/Concept";
-import { Entity } from "../src/Entity";
-import { EntityFactory } from "../src/EntityFactory";
-import { JSONQuery } from "../src/JSONQuery";
+/// This is planet test class, it implements various functions to load and push data
+
 import { Sandra } from "../src/Sandra";
-import { SystemConcepts } from "../src/SystemConcepts";
-import { TemporaryId } from "../src/TemporaryId";
-import { Triplet } from "../src/Triplet";
-import { Utils } from "../src/Utils";
 import { IDBConfig } from "../src/interfaces/IDBconfig";
 import { LogManager } from "../src/loggers/LogManager";
+import { Concept } from "../src/models/Concept";
+import { SystemConcepts } from "../src/models/SystemConcepts";
+import { Triplet } from "../src/models/Triplet";
+import { Common } from "../src/utils/Common";
+import { JSONQuery } from "../src/utils/JSONQuery";
+import { TemporaryId } from "../src/utils/TemporaryId";
+import { Entity } from "../src/wrappers/Entity";
+import { EntityFactory } from "../src/wrappers/EntityFactory";
 
-/// This is planet test class, it implements various functions to load and push data
 /// It can be taken as reference to use this plug in. 
 export class PlanetTest {
 
@@ -75,9 +76,9 @@ export class PlanetTest {
         let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
         let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"));
 
-        let ref1 = await Utils.createDBReference("name", "jupiter1");
-        let ref2 = await Utils.createDBReference("size", "10Km");
-        let ref3 = await Utils.createDBReference("name", "europa");
+        let ref1 = await Common.createDBReference("name", "jupiter1");
+        let ref2 = await Common.createDBReference("size", "10Km");
+        let ref3 = await Common.createDBReference("name", "europa");
 
         let p = await planetFactory.create([ref1, ref2]);
         let m = await moonFactory.create([ref3]);
@@ -97,7 +98,7 @@ export class PlanetTest {
         console.log("\n### Loading ####");
 
         let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
-        let ref = await Utils.createDBReference("name", planetName);
+        let ref = await Common.createDBReference("name", planetName);
 
         // Loading enitity data with given ref 
         await planetFactory.load(ref, true, true, 1);
@@ -119,10 +120,10 @@ export class PlanetTest {
         let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
         let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"));
 
-        let refPlanet = await Utils.createDBReference("name", "jupiter1");
+        let refPlanet = await Common.createDBReference("name", "jupiter1");
         await planetFactory.load(refPlanet, true);
 
-        let refMoon = await Utils.createDBReference("name", "europa1");
+        let refMoon = await Common.createDBReference("name", "europa1");
         let m = await moonFactory.create([refMoon]);
 
         await moonFactory.loadAllSubjects();
@@ -166,10 +167,10 @@ export class PlanetTest {
         let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
         let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"));
 
-        let refPlanet = await Utils.createDBReference("name", "jupiter1");
+        let refPlanet = await Common.createDBReference("name", "jupiter1");
         await planetFactory.load(refPlanet, true);
 
-        let refMoon = await Utils.createDBReference("name", "europa1");
+        let refMoon = await Common.createDBReference("name", "europa1");
         let m = await moonFactory.create([refMoon]);
 
         await moonFactory.loadAllSubjects();
@@ -183,7 +184,7 @@ export class PlanetTest {
         // To add new ref setting upsert to false 
         e.setUpsert(false);
 
-        let refNew = await Utils.createDBReference("tilt", "23Deg");
+        let refNew = await Common.createDBReference("tilt", "23Deg");
         await e.addRef(refNew);
 
         // Adding triplet
@@ -220,21 +221,21 @@ export class PlanetTest {
 
             let p = await planetFactory.create(
                 [
-                    await Utils.createDBReference("name", planetId),
-                    await Utils.createDBReference("diameter", "10000"),
+                    await Common.createDBReference("name", planetId),
+                    await Common.createDBReference("diameter", "10000"),
                 ]
             );
 
             let m = await moonFactory.create(
                 [
-                    await Utils.createDBReference("name", moonId),
-                    await Utils.createDBReference("diameter", "10000"),
+                    await Common.createDBReference("name", moonId),
+                    await Common.createDBReference("diameter", "10000"),
                 ]
             );
 
             // Brother with reference attached 
             await p.brother("hasMoon", "true", [
-                await Utils.createDBReference("totalMoon", "1"),
+                await Common.createDBReference("totalMoon", "1"),
             ]);
 
             // Joined entity 
@@ -266,7 +267,7 @@ export class PlanetTest {
         // Creating entity object array in factory 
         for (let i = 0; i < 10; i++) {
             let id = "planet" + i;
-            await planetFactory.create([await Utils.createDBReference("name", id)]);
+            await planetFactory.create([await Common.createDBReference("name", id)]);
         }
 
         console.log("Memory refs creation - " + (Date.now() - time) + "ms");
@@ -323,7 +324,7 @@ export class PlanetTest {
         await this.printFactory(planetFactory);
 
         while (planetFactory.getEntities()?.length > 0) {
-            await Utils.wait(1000);
+            await Common.wait(1000);
             pageIndex = pageIndex + 1;
             let lastID = planetFactory.getEntities()[planetFactory.getEntities().length - 1].getSubject()?.getId();
 
@@ -345,7 +346,7 @@ export class PlanetTest {
         let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
         let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"));
 
-        await moonFactory.load(await Utils.createDBReference("name", moonName));
+        await moonFactory.load(await Common.createDBReference("name", moonName));
 
         if (moonFactory.getEntities()?.length > 0) {
 
@@ -582,7 +583,7 @@ export class PlanetTest {
         let refsArr = [];
         let refKeys = Object.keys(json.refs);
         for (let i = 0; i < refKeys.length; i++) {
-            let ref = await Utils.createDBReference(refKeys[i], json.refs[refKeys[i]], t2);
+            let ref = await Common.createDBReference(refKeys[i], json.refs[refKeys[i]], t2);
             refsArr.push(ref);
         }
 
