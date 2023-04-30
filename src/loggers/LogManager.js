@@ -13,6 +13,5 @@ class LogManager {
         LogManager.instance = logger;
     }
 }
-LogManager.log = true;
 exports.LogManager = LogManager;
 //# sourceMappingURL=LogManager.js.map

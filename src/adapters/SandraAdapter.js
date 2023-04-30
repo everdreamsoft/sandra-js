@@ -70,13 +70,17 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         if (withId)
             sql = "insert ignore into " + this.tables.get(this.TABLE_CONCEPTS) + " set id = ?, code = ?, shortname = ?";
         const [result] = await this.getConnectionPool().query(sql, c.getDBArrayFormat(withId));
-        return new Promise((resolve, reject) => {
-            if (result && result.insertId) {
-                c.setId(result.insertId);
-                return resolve(c);
-            }
-            return resolve(undefined);
-        });
+        if (result && result.insertId) {
+            c.setId(result.insertId);
+        }
+        sql = "select * from " + this.tables.get(this.TABLE_CONCEPTS) + " where shortname = ?";
+        const [rows, fields] = await this.getConnectionPool().query(sql, c.getShortname());
+        if (Array.isArray(rows) && rows.length > 0) {
+            let row = rows[0];
+            c.setId(row.id);
+            c.setCode(row.code);
+        }
+        return Promise.resolve(c);
     }
     /**
      * Queries database for references attached to given triplet and if reference concept is provided

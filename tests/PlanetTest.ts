@@ -1,8 +1,8 @@
 /// This is planet test class, it implements various functions to load and push data
 
+import { resolve } from "path";
 import { Sandra } from "../src/Sandra";
 import { IDBConfig } from "../src/interfaces/IDBconfig";
-import { LogManager } from "../src/loggers/LogManager";
 import { Concept } from "../src/models/Concept";
 import { SystemConcepts } from "../src/models/SystemConcepts";
 import { Triplet } from "../src/models/Triplet";
@@ -22,6 +22,7 @@ export class PlanetTest {
     readonly MOON_ISA = "moon";
 
     readonly DB_CONFIG_LOCAL = {
+        name: "sandra",
         database: "ccc8_batch",
         host: "localhost",
         env: "fondue",
@@ -38,17 +39,20 @@ export class PlanetTest {
     };
 
     constructor() {
-        Sandra.DB_CONFIG = this.DB_CONFIG_LOCAL;
+        Sandra.DB_CONFIG = [this.DB_CONFIG_LOCAL, { ...this.DB_CONFIG_LOCAL, name: "sandra1" }];
         Sandra.APP_CONFIG = this.APP_CONFIG_LOCAL;
+        Sandra.LOG_CONFIG = {
+            main: true,
+            query: false,
+            queryTime: true
+        }
     }
 
     async run() {
 
-        LogManager.log = false;
-
         // Load and Push one by one
         //await this.push();
-        //await this.load("planetE");
+        //await this.load("jupiter11");
         //await this.updateRefAndTriplet();
         //await this.addNewRefAndTripet();
 
@@ -63,10 +67,13 @@ export class PlanetTest {
         //await this.filter("moon1");
 
         // Using JSON query 
-        // await this.selectAsJSON();
-        await this.pushAsJSON();
+        await this.selectAsJSON();
+        //await this.pushAsJSON();
 
-        await this.selectAsJSON()
+        //await this.selectAsJSON()
+
+        //await this.pushMultipleBatch();
+
     }
 
     async push() {
@@ -76,7 +83,7 @@ export class PlanetTest {
         let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
         let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"));
 
-        let ref1 = await Common.createDBReference("name", "jupiter1");
+        let ref1 = await Common.createDBReference("name", "jupiter11");
         let ref2 = await Common.createDBReference("size", "10Km");
         let ref3 = await Common.createDBReference("name", "europa");
 
@@ -206,54 +213,65 @@ export class PlanetTest {
         }
     }
 
-    async pushBatch() {
+    async pushBatch(batchID: string, server: string = "sandra") {
 
         console.log("\n### Push Batch ####");
 
-        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
-        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"));
+        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"), server);
+        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"), server);
 
-        // Creating entity object array in factory 
-        for (let i = 0; i < 1000; i++) {
+        for (let j = 1; j <= 1000; j++) {
 
-            let planetId = "planet" + i;
-            let moonId = "moon" + Math.floor(Math.random() * 100);;
+            console.log("\n### Creating group ####" + j + ", batch - " + batchID);
+            planetFactory.reset();
+            moonFactory.reset();
 
-            let p = await planetFactory.create(
-                [
-                    await Common.createDBReference("name", planetId),
-                    await Common.createDBReference("diameter", "10000"),
-                ]
-            );
+            // Creating entity object array in factory 
+            for (let i = 1; i <= 1000; i++) {
 
-            let m = await moonFactory.create(
-                [
-                    await Common.createDBReference("name", moonId),
-                    await Common.createDBReference("diameter", "10000"),
-                ]
-            );
+                let planetId = "planet" + (j * 1000) + i + batchID;
 
-            // Brother with reference attached 
-            await p.brother("hasMoon", "true", [
-                await Common.createDBReference("totalMoon", "1"),
-            ]);
+                let moonId = "moon" + i; //Math.floor(Math.random() * 100);;
 
-            // Joined entity 
-            await p.join("moon", m);
+                let p = await planetFactory.create(
+                    [
+                        await Common.createDBReference("name", planetId),
+                        await Common.createDBReference("diameter", "10000"),
+                    ]
+                );
+
+                let m = await moonFactory.create(
+                    [
+                        await Common.createDBReference("name", moonId),
+                        await Common.createDBReference("diameter", "10000"),
+                    ]
+                );
+
+                // Brother with reference attached 
+                await p.brother("hasMoon", "true", [
+                    await Common.createDBReference("totalMoon", "1"),
+                ]);
+
+                // Joined entity 
+                await p.join("moon", m);
+
+            }
+
+            // Note: 
+            // Order of factory push should from down to up, as moon is joined to planet 
+            // so we push moon first then planet
+
+            // Loading moon factory to check if present and push 
+            await moonFactory.loadAllSubjects();
+            await moonFactory.pushBatch();
+
+            // Loading all subject to check if present and push 
+            await planetFactory.loadAllSubjects();
+            await planetFactory.pushBatch();
+
+            console.log("\n### Pushed group ####" + j + ", batch - " + batchID);
 
         }
-
-        // Note: 
-        // Order of factory push should from down to up, as moon is joined to planet 
-        // so we push moon first then planet
-
-        // Loading moon factory to check if present and push 
-        await moonFactory.loadAllSubjects();
-        await moonFactory.pushBatch();
-
-        // Loading all subject to check if present and push 
-        await planetFactory.loadAllSubjects();
-        await planetFactory.pushBatch();
 
     }
 
@@ -406,7 +424,7 @@ export class PlanetTest {
             "is_a": "planet",
             "contained_in_file": "planet_file",
             "uniqueRef": "name",
-            "refs": { "name": "earth!!!" },
+            "refs": {},
             "brothers": {
 
             },
@@ -414,7 +432,7 @@ export class PlanetTest {
 
             },
             "options": {
-                "limit": 10,
+                "limit": 1000,
                 "load_data": true
             }
         }
@@ -620,6 +638,18 @@ export class PlanetTest {
 
     }
 
+    async pushMultipleBatch() {
+
+        let p: any = [];
+
+        p.push(this.pushBatch("_B1", "sandra"));
+        p.push(this.pushBatch("_B2", "sandra1"));
+
+        await Promise.all(p);
+
+        console.log("");
+
+    }
 
 }
 

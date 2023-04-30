@@ -193,9 +193,13 @@ export class JSONQuery {
 
         let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX + factory.getIsAVerb(), undefined);
         let sysCiFConcept = await SystemConcepts.get("contained_in_file");
+        let sysisAConcept = await SystemConcepts.get("is_a");
+
         let cifConcept = await SystemConcepts.get(cif);
+        let isAConcept = await SystemConcepts.get(is_a);
 
         let cifTriplet = new Triplet(TemporaryId.create(), subConcept, sysCiFConcept, cifConcept);
+        let isATriplet = new Triplet(TemporaryId.create(), subConcept, sysisAConcept, isAConcept);
 
         let refsArr = [];
         if (json.refs) {
@@ -206,7 +210,7 @@ export class JSONQuery {
             }
         }
 
-        let tripletsArr = [cifTriplet];
+        let tripletsArr = [cifTriplet, isATriplet];
         if (json.brothers) {
             let tripletsKeys = Object.keys(json.brothers);
             for (let i = 0; i < tripletsKeys.length; i++) {

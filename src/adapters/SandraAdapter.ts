@@ -86,16 +86,20 @@ export class SandraAdapter extends DBBaseAdapter {
 
         const [result] = await this.getConnectionPool().query(sql, c.getDBArrayFormat(withId));
 
-        return new Promise((resolve, reject) => {
+        if (result && (result as any).insertId) {
+            c.setId((result as any).insertId);
+        }
 
-            if (result && (result as any).insertId) {
-                c.setId((result as any).insertId);
-                return resolve(c);
-            }
+        sql = "select * from " + this.tables.get(this.TABLE_CONCEPTS) + " where shortname = ?";
+        const [rows, fields] = await this.getConnectionPool().query(sql, c.getShortname());
 
-            return resolve(undefined)
+        if (Array.isArray(rows) && rows.length > 0) {
+            let row: any = rows[0];
+            c.setId(row.id);
+            c.setCode(row.code);
+        }
 
-        });
+        return Promise.resolve(c);
 
     }
 

@@ -65,8 +65,11 @@ class JSONQuery {
         let factory = new EntityFactory_1.EntityFactory(is_a, cif, uniqueRefConcept);
         let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + factory.getIsAVerb(), undefined);
         let sysCiFConcept = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+        let sysisAConcept = await SystemConcepts_1.SystemConcepts.get("is_a");
         let cifConcept = await SystemConcepts_1.SystemConcepts.get(cif);
+        let isAConcept = await SystemConcepts_1.SystemConcepts.get(is_a);
         let cifTriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysCiFConcept, cifConcept);
+        let isATriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysisAConcept, isAConcept);
         let refsArr = [];
         if (json.refs) {
             let refKeys = Object.keys(json.refs);
@@ -75,7 +78,7 @@ class JSONQuery {
                 refsArr.push(ref);
             }
         }
-        let tripletsArr = [cifTriplet];
+        let tripletsArr = [cifTriplet, isATriplet];
         if (json.brothers) {
             let tripletsKeys = Object.keys(json.brothers);
             for (let i = 0; i < tripletsKeys.length; i++) {

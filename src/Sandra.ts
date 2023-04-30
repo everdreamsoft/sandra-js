@@ -6,7 +6,7 @@ import { ILogConfig } from "./interfaces/ILogConfig";
 
 export class Sandra {
 
-    public static DB_CONFIG: IDBConfig;
+    public static DB_CONFIG: IDBConfig | IDBConfig[];
     public static APP_CONFIG: IAppConfig;
     public static LOG_CONFIG: ILogConfig;
 
