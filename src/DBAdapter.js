@@ -321,7 +321,16 @@ class DBAdapter {
      * @param limit
      * @returns
      */
-    async filter(triplets, refs, limit = 1000) {
+    async filter(triplets, refs, limit = 1000, abortSignal) {
+        let connection = this.getConnection();
+        let abort = false;
+        if (abortSignal) {
+            abortSignal.addListener("abort", (reason) => {
+                console.log("Aborting connection - " + reason);
+                abort = true;
+                connection.destroy();
+            });
+        }
         let sql = "";
         let subject;
         // Add triplet filter
@@ -359,10 +368,12 @@ class DBAdapter {
             ((triplets === null || triplets === void 0 ? void 0 : triplets.length) == 1 && (refs === null || refs === void 0 ? void 0 : refs.length) == 0 ? " where " : " and ") +
             " t0.idConceptTarget = " + triplets[0].getTarget().getId();
         sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
-        let res = await this.getConnection().query(sql);
+        let res = await connection.query(sql);
         let data = new Map();
         if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
             res.forEach((row) => {
+                if (abort)
+                    throw new Error("Abort called!");
                 let ts = [];
                 let subConcept = new Concept_1.Concept(row.t0idConceptStart, subject.getCode(), null);
                 for (let i = 0; i < triplets.length; i++) {

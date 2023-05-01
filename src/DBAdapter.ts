@@ -1,4 +1,5 @@
 
+import { EventEmitter } from "stream";
 import { Concept } from "./Concept";
 import { DBConnection } from "./DBConnection";
 import { Entity } from "./Entity";
@@ -438,7 +439,18 @@ export class DBAdapter {
      * @param limit 
      * @returns 
      */
-    async filter(triplets: Triplet[], refs: Reference[], limit: number = 1000) {
+    async filter(triplets: Triplet[], refs: Reference[], limit: number = 1000, abortSignal?: EventEmitter) {
+
+        let connection = this.getConnection();
+        let abort: boolean = false;
+
+        if (abortSignal) {
+            abortSignal.addListener("abort", (reason?: string) => {
+                console.log("Aborting connection - " + reason);
+                abort = true;
+                connection.destroy();
+            })
+        }
 
         let sql = "";
         let subject: Concept;
@@ -488,11 +500,12 @@ export class DBAdapter {
 
         sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
 
-        let res: any = await this.getConnection().query(sql);
+        let res: any = await connection.query(sql);
         let data: Map<Concept, Triplet[]> = new Map();
 
         if (res?.length > 0) {
             res.forEach((row: any) => {
+                if (abort) throw new Error("Abort called!")
                 let ts: Triplet[] = [];
                 let subConcept = new Concept(row.t0idConceptStart, subject.getCode(), null);
                 for (let i = 0; i < triplets.length; i++) {

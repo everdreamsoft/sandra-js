@@ -1145,6 +1145,40 @@ export class Test {
 
     }
 
+    async testAbort(address: string) {
+        
+        let tokenPathFactory: EntityFactory = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code"));
+        let contractFactory: EntityFactory = new EntityFactory("bscContract", "blockchainContractFile", await SystemConcepts.get("id"));
+        let assetFactory: EntityFactory = new EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts.get("assetId"));
+
+        await contractFactory.load(await Utils.createDBReference("id", address), true);
+        let contract = contractFactory.getEntities()[0];
+
+        await assetFactory.load(await Utils.createDBReference("assetId", "Pending"), true);
+        let pendingAsset = assetFactory.getEntities()[0];
+
+        let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            tokenPathFactory.getIsAVerb(), null);
+        let fileConcept = await SystemConcepts.get("tokenPathFile");
+        let cifConcpet = await SystemConcepts.get("contained_in_file");
+
+        let t1 = new Triplet(TemporaryId.create(), subConcept, cifConcpet, fileConcept);
+        let t2 = new Triplet(TemporaryId.create(), subConcept, contract.getSubject(), pendingAsset.getSubject());
+
+        tokenPathFactory.filter([t1, t2], [], 10000).then(r => {
+            tokenPathFactory.loadEntityConcepts().then(r => {
+                console.log("Total tokens found" + tokenPathFactory.getEntities().length);
+                console.log("done.. ");
+            })
+        });
+
+        await Utils.wait(10);
+        
+        tokenPathFactory.abort("User abort!!");
+
+    }
+
+
 }
 
 const LOCAL = false;
@@ -1173,3 +1207,4 @@ console.log(Sandra.getDBConfig());
 console.log(Sandra.DB_CONFIG);
 
 //test.getBalanceForAddress("0x8da2bebe1be9384afabeba0fb4e394163c43ad7f");
+test.testAbort("0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d");

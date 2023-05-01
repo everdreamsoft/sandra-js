@@ -1,3 +1,4 @@
+import { EventEmitter } from "stream";
 import { Concept } from "./Concept";
 import { DBAdapter } from "./DBAdapter";
 import { Entity } from "./Entity";
@@ -7,7 +8,7 @@ import { SystemConcepts } from "./SystemConcepts";
 import { TemporaryId } from "./TemporaryId";
 import { Triplet } from "./Triplet";
 
-export class EntityFactory {
+export class EntityFactory extends EventEmitter {
 
     private is_a: string
     private contained_in_file: string
@@ -15,11 +16,19 @@ export class EntityFactory {
 
     private entityArray: Entity[] = [];
     private pushedStatus = false;
+    private abortSignal: boolean;
 
     constructor(is_a: string, contained_in_file: string, uniqueRefConcept: Concept) {
+        super();
         this.is_a = is_a;
         this.contained_in_file = contained_in_file;
         this.uniqueRefConcept = uniqueRefConcept;
+        this.abortSignal = false;
+    }
+
+    abort(reason?: string) {
+        this.abortSignal = true;
+        this.emit("abort", reason);
     }
 
     setPushedStatus(status: boolean) { this.pushedStatus = status; }
@@ -628,10 +637,11 @@ export class EntityFactory {
     async filter(triplets: Triplet[], refs: Reference[], limit: number) {
 
         let concepts: any = await (await DBAdapter.getInstance()).filter(
-            triplets, refs, limit
+            triplets, refs, limit, this
         );
 
         concepts.forEach((val, key) => {
+            if (this.abortSignal) throw new Error("Abort called!!")
             let e = new Entity();
             e.setSubject(key);
             e.getTriplets().push(...val)

@@ -46,6 +46,18 @@ class DBConnection {
             throw e;
         }
     }
+    async destroy() {
+        try {
+            if (this.connection) {
+                LogManager_1.LogManager.getInstance().info("Closing connection");
+                this.connection.destroy();
+            }
+        }
+        catch (e) {
+            LogManager_1.LogManager.getInstance().error(e);
+            throw e;
+        }
+    }
     /**
      * Closes the DB connection
      */

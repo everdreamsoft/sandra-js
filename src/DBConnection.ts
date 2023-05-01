@@ -27,6 +27,18 @@ export class DBConnection {
         }
     }
 
+    async destroy() {
+        try {
+            if (this.connection) {
+                LogManager.getInstance().info("Closing connection");
+                this.connection.destroy();
+            }
+        } catch (e) {
+            LogManager.getInstance().error(e);
+            throw e;
+        }
+    }
+
     /**
      * Closes the DB connection
      */

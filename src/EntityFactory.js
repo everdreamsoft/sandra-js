@@ -1,19 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EntityFactory = void 0;
+const stream_1 = require("stream");
 const Concept_1 = require("./Concept");
 const DBAdapter_1 = require("./DBAdapter");
 const Entity_1 = require("./Entity");
 const LogManager_1 = require("./loggers/LogManager");
 const SystemConcepts_1 = require("./SystemConcepts");
 const TemporaryId_1 = require("./TemporaryId");
-class EntityFactory {
+class EntityFactory extends stream_1.EventEmitter {
     constructor(is_a, contained_in_file, uniqueRefConcept) {
+        super();
         this.entityArray = [];
         this.pushedStatus = false;
         this.is_a = is_a;
         this.contained_in_file = contained_in_file;
         this.uniqueRefConcept = uniqueRefConcept;
+        this.abortSignal = false;
+    }
+    abort(reason) {
+        this.abortSignal = true;
+        this.emit("abort", reason);
     }
     setPushedStatus(status) { this.pushedStatus = status; }
     getEntities() { return this.entityArray; }
@@ -449,8 +456,10 @@ class EntityFactory {
      * @param limit Number of records to select.
      */
     async filter(triplets, refs, limit) {
-        let concepts = await (await DBAdapter_1.DBAdapter.getInstance()).filter(triplets, refs, limit);
+        let concepts = await (await DBAdapter_1.DBAdapter.getInstance()).filter(triplets, refs, limit, this);
         concepts.forEach((val, key) => {
+            if (this.abortSignal)
+                throw new Error("Abort called!!");
             let e = new Entity_1.Entity();
             e.setSubject(key);
             e.getTriplets().push(...val);

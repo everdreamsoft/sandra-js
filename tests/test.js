@@ -752,6 +752,29 @@ class Test {
         };
         let sourceData = await JSONQuery_1.JSONQuery.selectAsJson(json);
     }
+    async testAbort(address) {
+        let tokenPathFactory = new EntityFactory_1.EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts_1.SystemConcepts.get("code"));
+        let contractFactory = new EntityFactory_1.EntityFactory("bscContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
+        let assetFactory = new EntityFactory_1.EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts_1.SystemConcepts.get("assetId"));
+        await contractFactory.load(await Utils_1.Utils.createDBReference("id", address), true);
+        let contract = contractFactory.getEntities()[0];
+        await assetFactory.load(await Utils_1.Utils.createDBReference("assetId", "Pending"), true);
+        let pendingAsset = assetFactory.getEntities()[0];
+        let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX +
+            tokenPathFactory.getIsAVerb(), null);
+        let fileConcept = await SystemConcepts_1.SystemConcepts.get("tokenPathFile");
+        let cifConcpet = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+        let t1 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, cifConcpet, fileConcept);
+        let t2 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, contract.getSubject(), pendingAsset.getSubject());
+        tokenPathFactory.filter([t1, t2], [], 10000).then(r => {
+            tokenPathFactory.loadEntityConcepts().then(r => {
+                console.log("Total tokens found" + tokenPathFactory.getEntities().length);
+                console.log("done.. ");
+            });
+        });
+        await Utils_1.Utils.wait(10);
+        tokenPathFactory.abort("User abort!!");
+    }
 }
 exports.Test = Test;
 const LOCAL = false;
@@ -774,4 +797,5 @@ let test = new Test();
 console.log(Sandra_1.Sandra.getDBConfig());
 console.log(Sandra_1.Sandra.DB_CONFIG);
 //test.getBalanceForAddress("0x8da2bebe1be9384afabeba0fb4e394163c43ad7f");
+test.testAbort("0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d");
 //# sourceMappingURL=test.js.map
