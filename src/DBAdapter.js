@@ -171,23 +171,34 @@ class DBAdapter {
     /**
      *  Get the triplet attached with given verb and target linked to given reference
      */
-    async getEntityTriplet(verb, target, ref, limit = 1000) {
+    async getEntityTriplet(verb, target, ref, limit = 1000, abortSignal) {
+        let connection = this.getConnection();
+        let abort = false;
+        if (abortSignal) {
+            abortSignal.addListener("abort", (reason) => {
+                console.log("Aborting connection - " + reason);
+                abort = true;
+                connection.destroy();
+            });
+        }
         let sql = "";
         let res = [];
         if (ref) {
             sql = "select t.id, c.id as subjectId, c.code as subjectCode, c.shortname as subjectShortname, t.idConceptLink as verb, t.idConceptTarget as target from " + this.tables.get("triplets") + " as t join  " + this.tables.get("references") + " as r" +
                 " on t.id = r.linkReferenced and t.idConceptLink = ? and t.idConceptTarget = ? and r.value = ? and" +
                 " r.idConcept = ? join " + this.tables.get("concepts") + " as c on t.idConceptStart = c.id limit ?";
-            res = await this.getConnection().query(sql, [verb.getId(), target.getId(), ref.getValue(), ref.getIdConcept().getId(), limit]);
+            res = await connection.query(sql, [verb.getId(), target.getId(), ref.getValue(), ref.getIdConcept().getId(), limit]);
         }
         else {
             sql = "select t.id, c.id as subjectId, c.code as subjectCode, c.shortname as subjectShortname, t.idConceptLink as verb, t.idConceptTarget as target from " + this.tables.get("triplets") + " as t join " +
                 this.tables.get("concepts") + " as c on  t.idConceptStart = c.id and  t.idConceptLink = ? and t.idConceptTarget = ? limit ? ";
-            res = await this.getConnection().query(sql, [verb.getId(), target.getId(), limit]);
+            res = await connection.query(sql, [verb.getId(), target.getId(), limit]);
         }
         let triplets = [];
         if ((res === null || res === void 0 ? void 0 : res.length) > 0) {
             res.forEach(row => {
+                if (abort)
+                    throw new Error("abort function");
                 triplets.push(new Triplet_1.Triplet(row.id, new Concept_1.Concept(row.subjectId, row.subjectCode, row.subjectShortname), verb, target));
             });
         }

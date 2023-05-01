@@ -494,11 +494,11 @@ export class EntityFactory extends EventEmitter {
         let entityTriplets: Triplet[] = await (await DBAdapter.getInstance()).getEntityTriplet(
             await SystemConcepts.get("contained_in_file"),
             await SystemConcepts.get(this.contained_in_file),
-            ref, limit
+            ref, limit, this
         );
 
         for (let index = 0; index < entityTriplets?.length; index++) {
-
+            if (this.abortSignal) throw new Error("Abort called!!")
             let entityTriplet = entityTriplets[index];
             let refs: Reference[] = [];
             let triplets: Triplet[] = [];
@@ -510,6 +510,8 @@ export class EntityFactory extends EventEmitter {
                 );
 
                 for (let i = 0; i < triplets.length; i++) {
+                    
+                    if (this.abortSignal) throw new Error("Abort called!!");
 
                     if (iterateDown) {
 

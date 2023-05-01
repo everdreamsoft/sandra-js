@@ -370,14 +370,18 @@ class EntityFactory extends stream_1.EventEmitter {
         
     */
     async load(ref, loadAllEntityData = true, iterateDown = false, limit = 1000) {
-        let entityTriplets = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), ref, limit);
+        let entityTriplets = await (await DBAdapter_1.DBAdapter.getInstance()).getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), ref, limit, this);
         for (let index = 0; index < (entityTriplets === null || entityTriplets === void 0 ? void 0 : entityTriplets.length); index++) {
+            if (this.abortSignal)
+                throw new Error("Abort called!!");
             let entityTriplet = entityTriplets[index];
             let refs = [];
             let triplets = [];
             if (loadAllEntityData) {
                 triplets = await (await DBAdapter_1.DBAdapter.getInstance()).getTripletsBySubject(entityTriplet.getSubject());
                 for (let i = 0; i < triplets.length; i++) {
+                    if (this.abortSignal)
+                        throw new Error("Abort called!!");
                     if (iterateDown) {
                         let e = await this.loadBySubject(triplets[i].getTarget(), true);
                         if (e) {
