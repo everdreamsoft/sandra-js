@@ -3,14 +3,15 @@ import { ILogger } from "../interfaces/ILogger";
 
 export class Logger implements ILogger {
 
+    private dataModificationQueries = ["insert", "update", "delete"];
+
     logQuery(query: any): void {
         if (Sandra.LOG_CONFIG?.main) {
-            if (typeof query == "string") {
-                console.info(query);
+            let lowerCasedQuery = (typeof query == "string") ? query.toLocaleLowerCase() : JSON.stringify(query).toLocaleLowerCase();
+            if (this.dataModificationQueries.some(v => lowerCasedQuery.includes(v))) {
+                console.warn(lowerCasedQuery)
             }
-            else {
-                console.log(JSON.stringify(query));
-            }
+            else console.info(lowerCasedQuery);
         }
     }
 
