@@ -66,10 +66,7 @@ export class DBConnection {
 
         if (Sandra.LOG_CONFIG?.query) {
             LogManager.getInstance().logQuery(sql);
-            // if (values instanceof Array) {
-            //     LogManager.getInstance().logQuery(values.toString());
-            // }
-            // else LogManager.getInstance().logQuery(values);
+            LogManager.getInstance().logQuery(values.toString());
         }
 
         if (this.connection) {

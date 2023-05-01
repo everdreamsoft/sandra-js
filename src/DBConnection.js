@@ -84,10 +84,7 @@ class DBConnection {
         let start;
         if ((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.query) {
             LogManager_1.LogManager.getInstance().logQuery(sql);
-            // if (values instanceof Array) {
-            //     LogManager.getInstance().logQuery(values.toString());
-            // }
-            // else LogManager.getInstance().logQuery(values);
+            LogManager_1.LogManager.getInstance().logQuery(values.toString());
         }
         if (this.connection) {
             if (((_b = Sandra_1.Sandra.LOG_CONFIG) === null || _b === void 0 ? void 0 : _b.query) && ((_c = Sandra_1.Sandra.LOG_CONFIG) === null || _c === void 0 ? void 0 : _c.queryTime))
