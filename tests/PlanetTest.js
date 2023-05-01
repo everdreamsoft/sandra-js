@@ -51,9 +51,9 @@ class PlanetTest {
         // Load with paging 
         //await this.loadTopPlanetsWithPaging(100);
         // Using Filters 
-        //await this.filter("moon1");
+        await this.filter("moon1");
         // Using JSON query 
-        await this.selectAsJSON();
+        //await this.selectAsJSON();
         //await this.pushAsJSON();
         //await this.selectAsJSON()
         //await this.pushMultipleBatch();
@@ -267,6 +267,7 @@ class PlanetTest {
             let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + planetFactory.getIsAVerb(), undefined);
             // Filter all entities with joined moon as moon1 
             let t1 = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, await SystemConcepts_1.SystemConcepts.get("moon"), moon.getSubject());
+            planetFactory.emit("abort", "from test");
             await planetFactory.filter([t1], [], 999);
             // In case you also want to filter on bases of references then use this code
             // NOTE: while creating ref you need to link its triplet alos in filter array if triplets as well.

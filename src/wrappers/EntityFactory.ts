@@ -1,6 +1,7 @@
-import { DBBaseAdapter } from "../adapters/DBBaseAdapter";
+import { EventEmitter } from "stream";
 import { SandraAdapter } from "../adapters/SandraAdapter";
 import { DB } from "../connections/DB";
+import { IDBAbortController } from "../interfaces/IDBAbortController";
 import { LogManager } from "../loggers/LogManager";
 import { Concept } from "../models/Concept";
 import { Reference } from "../models/Reference";
@@ -9,21 +10,29 @@ import { Triplet } from "../models/Triplet";
 import { TemporaryId } from "../utils/TemporaryId";
 import { Entity } from "./Entity";
 
-export class EntityFactory {
+export class EntityFactory extends EventEmitter implements IDBAbortController {
 
     private is_a: string
     private contained_in_file: string
     private uniqueRefConcept: Concept;
+    private signal: boolean;
 
     private entityArray: Entity[] = [];
     private pushedStatus = false;
     private server: string;
 
     constructor(is_a: string, contained_in_file: string, uniqueRefConcept: Concept, server: string = "sandra") {
+        super();
         this.is_a = is_a;
         this.contained_in_file = contained_in_file;
         this.uniqueRefConcept = uniqueRefConcept;
         this.server = server;
+        this.signal = false;
+        this.on("abort", ((message?: string) => { this.abort(message) }).bind(this));
+    }
+
+    abort(message?: string): void {
+        this.emit("abort", message);
     }
 
     /**
@@ -568,10 +577,11 @@ export class EntityFactory {
     async filter(triplets: Triplet[], refs: Reference[], limit: number) {
 
         let concepts: any = await (DB.getInstance().server(this.server) as SandraAdapter)?.filter(
-            triplets, refs, limit
+            triplets, refs, limit, { abortSignal: this }
         );
 
         concepts.forEach((val: Triplet[], key: Concept) => {
+            if (this.signal) throw Error("Abort signal recieved");
             let e = new Entity();
             e.setSubject(key);
             e.getTriplets().push(...val)

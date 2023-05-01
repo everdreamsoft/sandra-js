@@ -5,6 +5,7 @@ import { performance } from "perf_hooks";
 import { Sandra } from "../Sandra";
 import { IDBConfig } from "../interfaces/IDBconfig";
 import { LogManager } from "../loggers/LogManager";
+import { EventEmitter } from "stream";
 
 
 export class DBPool {
@@ -23,15 +24,16 @@ export class DBPool {
             connectionLimit: this.config.connectionLimit ? this.config.connectionLimit : 10,
             queueLimit: this.config.queueLimit ? this.config.queueLimit : 0,
             acquireTimeout: this.config.acquireTimeout ? this.config.acquireTimeout : 0 // 0 as permanent connection,
-        })
+        });
+
     }
 
     async end(): Promise<void> {
         return this.pool?.end();
     }
 
-    abort(connection: Connection, reason?: string): void {
-        if (reason) console.log("aborted!!" + reason);
+    abort(connection: PoolConnection, reason?: string): void {
+        console.log("Connection destroy.." + reason || "");
         connection.destroy();
     }
 
@@ -45,9 +47,10 @@ export class DBPool {
     * @param values query parameters
     * @returns 
     */
-    async query(sql: string, values?: any | any[] | { [param: string]: any }, timeout: number = 1000000): Promise<[any, any]> {
+    async query(sql: string, values?: any | any[] | { [param: string]: any }, queryTimeout?: number, abortSignal?: EventEmitter): Promise<[any, any]> {
 
         let start: any | undefined, result: any;
+        let timeout = queryTimeout ? queryTimeout : 1000000;
 
         if (Sandra.LOG_CONFIG?.query) {
             LogManager.getInstance().logQuery(sql);
@@ -60,6 +63,10 @@ export class DBPool {
         if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) start = performance.now();
 
         let connection = await this.getConnetion();
+
+        abortSignal?.on("abort", (() => {
+            this.abort(connection, "abort called..");
+        }).bind(this));
 
         try {
 
@@ -74,6 +81,8 @@ export class DBPool {
         } finally {
             connection.release(); // Release the connection back to the pool
         }
+
+        abortSignal?.removeAllListeners();
 
         return result;
 

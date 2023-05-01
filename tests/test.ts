@@ -11,7 +11,12 @@ export class Test {
         this.testDBClass();
     }
 
+    async testAbortSignal() {
+        
+    }
+
     async testDBClass() {
+
 
         DB.getInstance().add(DB_CONFIG);
 
@@ -23,9 +28,9 @@ export class Test {
 
         let res = await con?.query("select * from fondue_SandraConcept limit 10;");
 
-         res = await con?.query("select * from fondue_SandraConcept limit 100;");
-        
-         res = await con?.query("select * from fondue_SandraConcept limit 1000;");
+        res = await con?.query("select * from fondue_SandraConcept limit 100;");
+
+        res = await con?.query("select * from fondue_SandraConcept limit 1000;");
 
         console.log(con);
 

@@ -64,10 +64,10 @@ export class PlanetTest {
         //await this.loadTopPlanetsWithPaging(100);
 
         // Using Filters 
-        //await this.filter("moon1");
+        await this.filter("moon1");
 
         // Using JSON query 
-        await this.selectAsJSON();
+        //await this.selectAsJSON();
         //await this.pushAsJSON();
 
         //await this.selectAsJSON()
@@ -383,6 +383,8 @@ export class PlanetTest {
                 await SystemConcepts.get("moon"),
                 moon.getSubject()
             );
+
+            planetFactory.abort("from test");
 
             await planetFactory.filter([t1], [], 999);
 

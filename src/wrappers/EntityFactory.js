@@ -1,20 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EntityFactory = void 0;
+const stream_1 = require("stream");
 const DB_1 = require("../connections/DB");
 const LogManager_1 = require("../loggers/LogManager");
 const Concept_1 = require("../models/Concept");
 const SystemConcepts_1 = require("../models/SystemConcepts");
 const TemporaryId_1 = require("../utils/TemporaryId");
 const Entity_1 = require("./Entity");
-class EntityFactory {
+class EntityFactory extends stream_1.EventEmitter {
     constructor(is_a, contained_in_file, uniqueRefConcept, server = "sandra") {
+        super();
         this.entityArray = [];
         this.pushedStatus = false;
         this.is_a = is_a;
         this.contained_in_file = contained_in_file;
         this.uniqueRefConcept = uniqueRefConcept;
         this.server = server;
+        this.signal = false;
+        this.on("abort", ((message) => { this.abort(message); }).bind(this));
+    }
+    abort(message) {
+        this.signal = true;
     }
     /**
      *
@@ -408,8 +415,10 @@ class EntityFactory {
      */
     async filter(triplets, refs, limit) {
         var _a;
-        let concepts = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.filter(triplets, refs, limit));
+        let concepts = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.filter(triplets, refs, limit, { abortSignal: this }));
         concepts.forEach((val, key) => {
+            if (this.signal)
+                throw Error("Abort signal recieved");
             let e = new Entity_1.Entity();
             e.setSubject(key);
             e.getTriplets().push(...val);

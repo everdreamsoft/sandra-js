@@ -4,6 +4,7 @@ import { DBBaseAdapter } from "../adapters/DBBaseAdapter";
 import { SandraAdapter } from "../adapters/SandraAdapter";
 import { IDBConfig } from "../interfaces/IDBconfig";
 import { LogManager } from "../loggers/LogManager";
+import { EventEmitter } from "stream";
 
 export class DB {
 
@@ -91,6 +92,7 @@ export class DB {
             LogManager.getInstance().info("conf name not set, taking as default: " + name);
             Sandra.DB_CONFIG.name = name;
         }
+
 
         return this.add(Sandra.DB_CONFIG);
 

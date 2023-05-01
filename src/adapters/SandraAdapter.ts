@@ -84,7 +84,7 @@ export class SandraAdapter extends DBBaseAdapter {
         if (withId)
             sql = "insert ignore into " + this.tables.get(this.TABLE_CONCEPTS) + " set id = ?, code = ?, shortname = ?";
 
-        const [result] = await this.getConnectionPool().query(sql, c.getDBArrayFormat(withId));
+        const [result] = await this.getConnectionPool().query(sql, c.getDBArrayFormat(withId), options?.timeout, options?.abortSignal);
 
         if (result && (result as any).insertId) {
             c.setId((result as any).insertId);
@@ -515,9 +515,16 @@ export class SandraAdapter extends DBBaseAdapter {
 
         sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
 
-        let [rows]: any = await this.getConnectionPool().query(sql);
+        let [rows]: any = await this.getConnectionPool().query(sql, undefined, options?.timeout, options?.abortSignal);
 
         return new Promise((resolve, reject) => {
+
+            if(options?.abortSignal)
+            {
+                options.abortSignal.addListener("abort", ()=> {
+                    return reject();
+                })
+            }
 
             if (options?.abort)
                 return reject(new Error("Operation aborted"));

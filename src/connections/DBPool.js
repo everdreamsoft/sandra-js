@@ -27,8 +27,7 @@ class DBPool {
         return (_a = this.pool) === null || _a === void 0 ? void 0 : _a.end();
     }
     abort(connection, reason) {
-        if (reason)
-            console.log("aborted!!" + reason);
+        console.log("Connection destroy.." + reason || "");
         connection.destroy();
     }
     getConnetion() {
@@ -40,9 +39,10 @@ class DBPool {
     * @param values query parameters
     * @returns
     */
-    async query(sql, values, timeout = 1000000) {
+    async query(sql, values, queryTimeout, abortSignal) {
         var _a, _b, _c, _d, _e;
         let start, result;
+        let timeout = queryTimeout ? queryTimeout : 1000000;
         if ((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.query) {
             LogManager_1.LogManager.getInstance().logQuery(sql);
             // if (values instanceof Array) {
@@ -53,6 +53,9 @@ class DBPool {
         if (((_b = Sandra_1.Sandra.LOG_CONFIG) === null || _b === void 0 ? void 0 : _b.query) && ((_c = Sandra_1.Sandra.LOG_CONFIG) === null || _c === void 0 ? void 0 : _c.queryTime))
             start = perf_hooks_1.performance.now();
         let connection = await this.getConnetion();
+        abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.on("abort", (() => {
+            this.abort(connection, "abort called..");
+        }).bind(this));
         try {
             result = await connection.query({ sql, timeout }, values);
             if (((_d = Sandra_1.Sandra.LOG_CONFIG) === null || _d === void 0 ? void 0 : _d.query) && ((_e = Sandra_1.Sandra.LOG_CONFIG) === null || _e === void 0 ? void 0 : _e.queryTime)) {
@@ -65,6 +68,7 @@ class DBPool {
         finally {
             connection.release(); // Release the connection back to the pool
         }
+        abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.removeAllListeners();
         return result;
     }
 }

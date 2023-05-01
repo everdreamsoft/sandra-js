@@ -69,7 +69,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         let sql = "insert ignore into " + this.tables.get(this.TABLE_CONCEPTS) + " set code = ?, shortname = ?";
         if (withId)
             sql = "insert ignore into " + this.tables.get(this.TABLE_CONCEPTS) + " set id = ?, code = ?, shortname = ?";
-        const [result] = await this.getConnectionPool().query(sql, c.getDBArrayFormat(withId));
+        const [result] = await this.getConnectionPool().query(sql, c.getDBArrayFormat(withId), options === null || options === void 0 ? void 0 : options.timeout, options === null || options === void 0 ? void 0 : options.abortSignal);
         if (result && result.insertId) {
             c.setId(result.insertId);
         }
@@ -381,8 +381,13 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             " t0.idConceptTarget = " + ((_c = triplets[0].getTarget()) === null || _c === void 0 ? void 0 : _c.getId()) + " and " +
             " t0.idConceptLink = " + ((_d = triplets[0].getVerb()) === null || _d === void 0 ? void 0 : _d.getId());
         sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
-        let [rows] = await this.getConnectionPool().query(sql);
+        let [rows] = await this.getConnectionPool().query(sql, undefined, options === null || options === void 0 ? void 0 : options.timeout, options === null || options === void 0 ? void 0 : options.abortSignal);
         return new Promise((resolve, reject) => {
+            if (options === null || options === void 0 ? void 0 : options.abortSignal) {
+                options.abortSignal.addListener("abort", () => {
+                    return reject();
+                });
+            }
             if (options === null || options === void 0 ? void 0 : options.abort)
                 return reject(new Error("Operation aborted"));
             if ((rows === null || rows === void 0 ? void 0 : rows.length) > 0) {

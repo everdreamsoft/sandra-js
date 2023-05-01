@@ -9,6 +9,8 @@ class Test {
     async run() {
         this.testDBClass();
     }
+    async testAbortSignal() {
+    }
     async testDBClass() {
         DB_1.DB.getInstance().add(DB_CONFIG);
         let server = DB_1.DB.getInstance().server("sandra_linode_ranjit");

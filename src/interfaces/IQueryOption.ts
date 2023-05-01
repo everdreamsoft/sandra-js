@@ -1,5 +1,7 @@
+import { EventEmitter } from "stream";
+
 export interface IQueryOption {
-   timeout: number,
-   abortController?: AbortController,
-   abort?:boolean
+   timeout?: number,
+   abort?: boolean,
+   abortSignal?: EventEmitter
 }
