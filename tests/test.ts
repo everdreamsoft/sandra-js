@@ -1147,6 +1147,10 @@ export class Test {
 
     async testAbort(address: string) {
 
+        // let a = await (await DBAdapter.getInstance()).addLog("test", "test", "test", 9)
+
+        // console.log("");
+
         let tokenPathFactory: EntityFactory = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code"));
         let contractFactory: EntityFactory = new EntityFactory("bscContract", "blockchainContractFile", await SystemConcepts.get("id"));
         let assetFactory: EntityFactory = new EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts.get("assetId"));
@@ -1186,7 +1190,7 @@ const LOCAL = false;
 const DB_CONFIG = {
     database: "jetski",
     host: "139.162.176.241",
-    env: "fondue",
+    env: "balor",
     password: "4TyijLEBEZHJ1hsabPto",
     user: "remote1"
 };

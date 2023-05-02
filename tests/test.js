@@ -753,6 +753,8 @@ class Test {
         let sourceData = await JSONQuery_1.JSONQuery.selectAsJson(json);
     }
     async testAbort(address) {
+        // let a = await (await DBAdapter.getInstance()).addLog("test", "test", "test", 9)
+        // console.log("");
         let tokenPathFactory = new EntityFactory_1.EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts_1.SystemConcepts.get("code"));
         let contractFactory = new EntityFactory_1.EntityFactory("bscContract", "blockchainContractFile", await SystemConcepts_1.SystemConcepts.get("id"));
         let assetFactory = new EntityFactory_1.EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts_1.SystemConcepts.get("assetId"));
@@ -781,7 +783,7 @@ const LOCAL = false;
 const DB_CONFIG = {
     database: "jetski",
     host: "139.162.176.241",
-    env: "fondue",
+    env: "balor",
     password: "4TyijLEBEZHJ1hsabPto",
     user: "remote1"
 };

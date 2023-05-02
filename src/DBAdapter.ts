@@ -25,6 +25,7 @@ export class DBAdapter {
         this.tables.set("references", this.config.env + "_SandraReferences");
         this.tables.set("triplets", this.config.env + "_SandraTriplets");
         this.tables.set("datastorage", this.config.env + "_SandraDatastorage");
+        this.tables.set("logs", this.config.env + "_SandraLogs");
 
     }
 
@@ -1089,6 +1090,12 @@ export class DBAdapter {
 
         return Promise.resolve();
 
+    }
+
+    async addLog(type: string, message: string, values: string, exectime: number) {
+        let sql = "insert into " + this.tables.get("logs") + " (type, message, `values`, time) values (?,?,?,?) ";
+        await this.getConnection().query(sql, [type, message, values, exectime]);
+        return Promise.resolve();
     }
 
     //////////// BENCHMARK TEST FUNCTION - START /////////////////////
