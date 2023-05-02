@@ -35,9 +35,12 @@ export class PlanetTest {
         Sandra.DB_CONFIG = this.DB_CONFIG_LOCAL;
         Sandra.APP_CONFIG = this.APP_CONFIG_LOCAL;
         Sandra.LOG_CONFIG = {
-            main: true,
-            query: true,
-            queryTime: true
+            enable: true,
+            query: {
+                enable: true,
+                time: true,
+                values: true
+            }
         };
     }
 

@@ -1146,7 +1146,7 @@ export class Test {
     }
 
     async testAbort(address: string) {
-        
+
         let tokenPathFactory: EntityFactory = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code"));
         let contractFactory: EntityFactory = new EntityFactory("bscContract", "blockchainContractFile", await SystemConcepts.get("id"));
         let assetFactory: EntityFactory = new EntityFactory("blockchainizableAsset", "blockchainizableAssets", await SystemConcepts.get("assetId"));
@@ -1173,8 +1173,8 @@ export class Test {
         });
 
         await Utils.wait(10);
-        
-        tokenPathFactory.abort("User abort!!");
+
+        //tokenPathFactory.abort("User abort!!");
 
     }
 

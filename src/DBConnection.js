@@ -80,18 +80,19 @@ class DBConnection {
      * @returns
      */
     async query(sql, values) {
-        var _a, _b, _c, _d, _e;
-        let start;
-        if ((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.query) {
-            LogManager_1.LogManager.getInstance().logQuery(sql);
-            LogManager_1.LogManager.getInstance().logQuery(values.toString());
-        }
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        let start, end, time;
         if (this.connection) {
-            if (((_b = Sandra_1.Sandra.LOG_CONFIG) === null || _b === void 0 ? void 0 : _b.query) && ((_c = Sandra_1.Sandra.LOG_CONFIG) === null || _c === void 0 ? void 0 : _c.queryTime))
+            if (((_b = (_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.query) === null || _b === void 0 ? void 0 : _b.enable) && ((_d = (_c = Sandra_1.Sandra.LOG_CONFIG) === null || _c === void 0 ? void 0 : _c.query) === null || _d === void 0 ? void 0 : _d.time))
                 start = perf_hooks_1.performance.now();
             let res = await this.connection.query(sql, values);
-            if (((_d = Sandra_1.Sandra.LOG_CONFIG) === null || _d === void 0 ? void 0 : _d.query) && ((_e = Sandra_1.Sandra.LOG_CONFIG) === null || _e === void 0 ? void 0 : _e.queryTime)) {
-                LogManager_1.LogManager.getInstance().logQuery(`Time: ${(perf_hooks_1.performance.now() - start)} milliseconds`);
+            if ((_f = (_e = Sandra_1.Sandra.LOG_CONFIG) === null || _e === void 0 ? void 0 : _e.query) === null || _f === void 0 ? void 0 : _f.enable) {
+                let params = undefined;
+                if ((_h = (_g = Sandra_1.Sandra.LOG_CONFIG) === null || _g === void 0 ? void 0 : _g.query) === null || _h === void 0 ? void 0 : _h.time)
+                    time = perf_hooks_1.performance.now() - start;
+                if ((_k = (_j = Sandra_1.Sandra.LOG_CONFIG) === null || _j === void 0 ? void 0 : _j.query) === null || _k === void 0 ? void 0 : _k.values)
+                    params = values;
+                LogManager_1.LogManager.getInstance().query(sql, params, time);
             }
             return res;
         }
@@ -104,17 +105,19 @@ class DBConnection {
      * @returns
      */
     async batch(sql, values) {
-        var _a, _b, _c, _d, _e;
-        let start;
-        if ((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.query) {
-            LogManager_1.LogManager.getInstance().logQuery(sql);
-        }
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        let start, end, time;
         if (this.connection) {
-            if (((_b = Sandra_1.Sandra.LOG_CONFIG) === null || _b === void 0 ? void 0 : _b.query) && ((_c = Sandra_1.Sandra.LOG_CONFIG) === null || _c === void 0 ? void 0 : _c.queryTime))
+            if (((_b = (_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.query) === null || _b === void 0 ? void 0 : _b.enable) && ((_d = (_c = Sandra_1.Sandra.LOG_CONFIG) === null || _c === void 0 ? void 0 : _c.query) === null || _d === void 0 ? void 0 : _d.time))
                 start = perf_hooks_1.performance.now();
             let res = await this.connection.batch(sql, values);
-            if (((_d = Sandra_1.Sandra.LOG_CONFIG) === null || _d === void 0 ? void 0 : _d.query) && ((_e = Sandra_1.Sandra.LOG_CONFIG) === null || _e === void 0 ? void 0 : _e.queryTime)) {
-                LogManager_1.LogManager.getInstance().logQuery(`Time: ${(perf_hooks_1.performance.now() - start)} milliseconds`);
+            if ((_f = (_e = Sandra_1.Sandra.LOG_CONFIG) === null || _e === void 0 ? void 0 : _e.query) === null || _f === void 0 ? void 0 : _f.enable) {
+                let params = undefined;
+                if ((_h = (_g = Sandra_1.Sandra.LOG_CONFIG) === null || _g === void 0 ? void 0 : _g.query) === null || _h === void 0 ? void 0 : _h.time)
+                    time = perf_hooks_1.performance.now() - start;
+                if ((_k = (_j = Sandra_1.Sandra.LOG_CONFIG) === null || _j === void 0 ? void 0 : _j.query) === null || _k === void 0 ? void 0 : _k.values)
+                    params = values;
+                LogManager_1.LogManager.getInstance().query(sql, params, time);
             }
             return res;
         }

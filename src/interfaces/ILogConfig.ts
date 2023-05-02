@@ -1,5 +1,9 @@
 export interface ILogConfig {
-    main: boolean
-    query: boolean,
-    queryTime: boolean
+    enable: boolean
+    query: {
+        enable: boolean,
+        time: boolean,
+        values: boolean
+    },
+
 } 

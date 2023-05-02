@@ -62,21 +62,19 @@ export class DBConnection {
      */
     async query(sql: string | QueryOptions, values?: any): Promise<any> {
 
-        let start: any | undefined;
-
-        if (Sandra.LOG_CONFIG?.query) {
-            LogManager.getInstance().logQuery(sql);
-            LogManager.getInstance().logQuery(values.toString());
-        }
+        let start: any | undefined, end: any | undefined, time: any | undefined;
 
         if (this.connection) {
 
-            if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) start = performance.now();
+            if (Sandra.LOG_CONFIG?.query?.enable && Sandra.LOG_CONFIG?.query?.time) start = performance.now();
 
             let res = await this.connection.query(sql, values);
 
-            if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) {
-                LogManager.getInstance().logQuery(`Time: ${(performance.now() - start)} milliseconds`);
+            if (Sandra.LOG_CONFIG?.query?.enable) {
+                let params = undefined;
+                if (Sandra.LOG_CONFIG?.query?.time) time = performance.now() - start;
+                if (Sandra.LOG_CONFIG?.query?.values) params = values;
+                LogManager.getInstance().query(sql, params, time);
             }
 
             return res;
@@ -94,19 +92,18 @@ export class DBConnection {
      */
     async batch(sql: string | QueryOptions, values?: any): Promise<any> {
 
-        let start: any | undefined;
-
-        if (Sandra.LOG_CONFIG?.query) {
-            LogManager.getInstance().logQuery(sql);
-        }
+        let start: any | undefined, end: any | undefined, time: any | undefined;
 
         if (this.connection) {
-            if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) start = performance.now();
+            if (Sandra.LOG_CONFIG?.query?.enable && Sandra.LOG_CONFIG?.query?.time) start = performance.now();
 
             let res = await this.connection.batch(sql, values);
 
-            if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) {
-                LogManager.getInstance().logQuery(`Time: ${(performance.now() - start)} milliseconds`);
+            if (Sandra.LOG_CONFIG?.query?.enable) {
+                let params = undefined;
+                if (Sandra.LOG_CONFIG?.query?.time) time = performance.now() - start;
+                if (Sandra.LOG_CONFIG?.query?.values) params = values;
+                LogManager.getInstance().query(sql, params, time);
             }
 
             return res;

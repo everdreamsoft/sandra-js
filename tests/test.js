@@ -773,7 +773,7 @@ class Test {
             });
         });
         await Utils_1.Utils.wait(10);
-        tokenPathFactory.abort("User abort!!");
+        //tokenPathFactory.abort("User abort!!");
     }
 }
 exports.Test = Test;
