@@ -8,5 +8,5 @@ export interface IDBConfig {
     waitForConnections?: boolean,
     connectionLimit?: number,
     queueLimit?: number,
-    acquireTimeout?: number
+    enableKeepAlive?: boolean
 }

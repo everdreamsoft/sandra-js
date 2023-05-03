@@ -54,9 +54,12 @@ const DB_CONFIG_LOCAL = {
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 Sandra_1.Sandra.LOG_CONFIG = {
-    main: true,
-    query: false,
-    queryTime: false
+    enable: true,
+    query: {
+        enable: true,
+        time: true,
+        values: true
+    }
 };
 let test = new Test();
 test.run();

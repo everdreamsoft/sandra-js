@@ -22,17 +22,15 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
      * Begins DB transaction.
      */
     async beginTransaction() {
-        LogManager_1.LogManager.getInstance().info("Starting transaction..");
-        let sql = "Start Transaction;";
-        await this.getConnectionPool().query(sql);
+        LogManager_1.LogManager.getInstance().info("starting transaction..");
+        await this.getConnectionPool().query("start transaction;");
     }
     /**
      * Commits DB transactions.
      */
     async commit() {
-        LogManager_1.LogManager.getInstance().info("Committing tranaction..");
-        let sql = "Commit;";
-        await this.getConnectionPool().query(sql);
+        LogManager_1.LogManager.getInstance().info("committing tranaction..");
+        await this.getConnectionPool().query("commit;");
     }
     /**
      * Runs DB query to sleep for given durations.
@@ -40,8 +38,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
      */
     async sleep(durationInSec) {
         LogManager_1.LogManager.getInstance().info("Sleep for " + durationInSec + "s");
-        let sql = "select sleep(" + durationInSec + ")";
-        await this.getConnectionPool().query(sql);
+        await this.getConnectionPool().query("select sleep(" + durationInSec + ")");
     }
     /**
      * Queries database concepts table for given shortname
@@ -50,7 +47,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
      */
     async getConcept(shortname, options) {
         let sql = "select * from " + this.tables.get(this.TABLE_CONCEPTS) + " where shortname = ?";
-        const [rows, fields] = await this.getConnectionPool().query(sql, shortname);
+        const [rows, fields] = await this.getConnectionPool().query(sql, shortname, options);
         return new Promise((resolve, reject) => {
             if (Array.isArray(rows) && rows.length > 0) {
                 let row = rows[0];
@@ -69,12 +66,12 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         let sql = "insert ignore into " + this.tables.get(this.TABLE_CONCEPTS) + " set code = ?, shortname = ?";
         if (withId)
             sql = "insert ignore into " + this.tables.get(this.TABLE_CONCEPTS) + " set id = ?, code = ?, shortname = ?";
-        const [result] = await this.getConnectionPool().query(sql, c.getDBArrayFormat(withId), options === null || options === void 0 ? void 0 : options.timeout, options === null || options === void 0 ? void 0 : options.abortSignal);
+        const [result] = await this.getConnectionPool().query(sql, c.getDBArrayFormat(withId), options);
         if (result && result.insertId) {
             c.setId(result.insertId);
         }
         sql = "select * from " + this.tables.get(this.TABLE_CONCEPTS) + " where shortname = ?";
-        const [rows, fields] = await this.getConnectionPool().query(sql, c.getShortname());
+        const [rows, fields] = await this.getConnectionPool().query(sql, c.getShortname(), options);
         if (Array.isArray(rows) && rows.length > 0) {
             let row = rows[0];
             c.setId(row.id);
@@ -99,7 +96,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         let sql = "select r.id, c.id as cId, c.code, c.shortname, r.value from "
             + this.tables.get(this.TABLE_REFERENCES) + " as r " + " join "
             + this.tables.get(this.TABLE_CONCEPTS) + " as c on r.idConcept = c.id and r.linkReferenced = ?" + refCon;
-        let [rows] = await this.getConnectionPool().query(sql, v);
+        let [rows] = await this.getConnectionPool().query(sql, v, options);
         return new Promise((resolve, reject) => {
             let refs = [];
             if ((rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
@@ -123,7 +120,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             this.tables.get(this.TABLE_CONCEPTS) + " as c " +
             " on r.idConcept = c.id and r.linkReferenced in (?)";
         let v = triplets.map(t => t.getId());
-        let [rows] = await this.getConnectionPool().query(sql, [v]);
+        let [rows] = await this.getConnectionPool().query(sql, [v], options);
         return new Promise((resolve, reject) => {
             let refs = [];
             if ((rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
@@ -148,7 +145,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
                 this.tables.get(this.TABLE_REFERENCES) + " as r " +
                 " on t.id = r.linkReferenced and t.idConceptLink = ? and t.idConceptTarget = ? and r.value = ? and r.idConcept = ? join " +
                 this.tables.get(this.TABLE_CONCEPTS) + " as c on t.idConceptStart = c.id limit ?";
-            [rows] = await this.getConnectionPool().query(sql, [verb.getId(), target.getId(), ref.getValue(), (_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getId(), limit]);
+            [rows] = await this.getConnectionPool().query(sql, [verb.getId(), target.getId(), ref.getValue(), (_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getId(), limit], options);
         }
         else {
             sql = "select t.id, c.id as subjectId, c.code as subjectCode, c.shortname as subjectShortname, t.idConceptLink as verb, t.idConceptTarget as target from " +
@@ -193,13 +190,13 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             if (loadVerbData) {
                 sql = sql + " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink ";
             }
-            [rows] = await this.getConnectionPool().query(sql, [subConcept, verbConcept]);
+            [rows] = await this.getConnectionPool().query(sql, [subConcept, verbConcept], options);
         }
         else {
             if (loadVerbData) {
                 sql = sql + " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink ";
             }
-            [rows] = await this.getConnectionPool().query(sql, [subConcept]);
+            [rows] = await this.getConnectionPool().query(sql, [subConcept], options);
         }
         ;
         return new Promise((resolve, reject) => {
@@ -231,7 +228,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             " and r.idConcept = ? " +
             " and t.idConceptLink =  ? " +
             " and t.idConceptTarget = ? ";
-        let [rows] = await this.getConnectionPool().query(sql, [refsValuesToSearch, refConcept.getId(), verb.getId(), target.getId()]);
+        let [rows] = await this.getConnectionPool().query(sql, [refsValuesToSearch, refConcept.getId(), verb.getId(), target.getId()], options);
         return new Promise((resolve, reject) => {
             if (options === null || options === void 0 ? void 0 : options.abort)
                 return reject(new Error("Operation aborted"));
@@ -266,7 +263,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         let sql = "select c.id, c.code, c.shortname from " + this.tables.get(this.TABLE_TRIPLETS) +
             " as t join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t.idConceptStart = c.id " +
             " and t.idConceptLink = ?  and t.idConceptTarget =  ? " + lastIdQ + limitQ;
-        const [rows] = await this.getConnectionPool().query(sql, [cifFileVerb.getId(), cifFileTargetSub.getId()]);
+        const [rows] = await this.getConnectionPool().query(sql, [cifFileVerb.getId(), cifFileTargetSub.getId()], options);
         return new Promise((resolve, reject) => {
             if (options === null || options === void 0 ? void 0 : options.abort)
                 return reject(new Error("Operation aborted"));
@@ -306,7 +303,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on r.idConcept = c.id" +
             " and t.idConceptStart in ? " +
             " and t.idConceptLink =  ? ";
-        let [rows] = await this.getConnectionPool().query(sql, [[subjs], containedInFileConcept.getId()]);
+        let [rows] = await this.getConnectionPool().query(sql, [[subjs], containedInFileConcept.getId()], options);
         return new Promise((resolve, reject) => {
             if (options === null || options === void 0 ? void 0 : options.abort)
                 return reject(new Error("Operation aborted"));
@@ -381,7 +378,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             " t0.idConceptTarget = " + ((_c = triplets[0].getTarget()) === null || _c === void 0 ? void 0 : _c.getId()) + " and " +
             " t0.idConceptLink = " + ((_d = triplets[0].getVerb()) === null || _d === void 0 ? void 0 : _d.getId());
         sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
-        let [rows] = await this.getConnectionPool().query(sql, undefined, options === null || options === void 0 ? void 0 : options.timeout, options === null || options === void 0 ? void 0 : options.abortSignal);
+        let [rows] = await this.getConnectionPool().query(sql, undefined, options);
         return new Promise((resolve, reject) => {
             if (options === null || options === void 0 ? void 0 : options.abortSignal) {
                 options.abortSignal.addListener("abort", () => {
@@ -421,7 +418,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
                 "c.id = t.idConceptStart and  t.idConceptStart = ? " +
                 "join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink " +
                 "join " + this.tables.get(this.TABLE_CONCEPTS) + " as c2 on c2.id = t.idConceptTarget";
-            let [rows] = await this.getConnectionPool().query(sql, [subject.getId()]);
+            let [rows] = await this.getConnectionPool().query(sql, [subject.getId()], options);
             return new Promise((resolve, reject) => {
                 if (options === null || options === void 0 ? void 0 : options.abort)
                     return reject(new Error("Operation aborted"));
@@ -444,7 +441,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
      */
     async getConceptById(conceptId, options) {
         let sql = "select id, code, shortname from " + this.tables.get(this.TABLE_CONCEPTS) + " where id = ?";
-        let [rows] = await this.getConnectionPool().query(sql, [conceptId]);
+        let [rows] = await this.getConnectionPool().query(sql, [conceptId], options);
         return new Promise((resolve, reject) => {
             if (options === null || options === void 0 ? void 0 : options.abort)
                 return reject(new Error("Operation aborted"));
@@ -471,7 +468,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             sql = "insert into " + this.tables.get(this.TABLE_TRIPLETS) + " set id = ?, idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
         else
             sql = "insert into " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
-        const [result] = await this.getConnectionPool().query(sql, t.getDBArrayFormat(withId));
+        const [result] = await this.getConnectionPool().query(sql, t.getDBArrayFormat(withId), options);
         if (result && (result === null || result === void 0 ? void 0 : result.insertId)) {
             t.setId(result.insertId);
             return Promise.resolve();
@@ -487,18 +484,18 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
     async upsertTriplet(t, options) {
         var _a, _b, _c;
         let sql = "select id from " + this.tables.get(this.TABLE_TRIPLETS) + " where idConceptStart = ? and idConceptLink = ?";
-        const [rows] = await this.getConnectionPool().query(sql, [(_a = t.getSubject()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getId()]);
+        const [rows] = await this.getConnectionPool().query(sql, [(_a = t.getSubject()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getId()], options);
         if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
             // Update
             sql = "update " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptTarget = ? where id = ?";
-            await this.getConnectionPool().query(sql, [(_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getId(), rows[0].id]);
+            await this.getConnectionPool().query(sql, [(_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getId(), rows[0].id], options);
             t.setId(rows[0].id);
             return Promise.resolve();
         }
         else {
             // Insert
             sql = "insert into " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
-            const [result] = await this.getConnectionPool().query(sql, t.getDBArrayFormat(false));
+            const [result] = await this.getConnectionPool().query(sql, t.getDBArrayFormat(false), options);
             if (result && (result === null || result === void 0 ? void 0 : result.insertId)) {
                 t.setId(result.insertId);
                 return Promise.resolve();
@@ -514,13 +511,13 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
     async addRefs(ref, options) {
         var _a, _b;
         let sql = "select id from " + this.tables.get(this.TABLE_REFERENCES) + " where idConcept = ? and linkReferenced = ?";
-        const [rows] = await this.getConnectionPool().query(sql, [(_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = ref.getTripletLink()) === null || _b === void 0 ? void 0 : _b.getId()]);
+        const [rows] = await this.getConnectionPool().query(sql, [(_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = ref.getTripletLink()) === null || _b === void 0 ? void 0 : _b.getId()], options);
         if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
             ref.setId(rows[0].id);
             return Promise.resolve();
         }
         sql = "insert into " + this.tables.get(this.TABLE_REFERENCES) + " set idConcept = ?, linkReferenced = ?, value = ?";
-        const [result] = await this.getConnectionPool().query(sql, ref.getDBArrayFormat(false));
+        const [result] = await this.getConnectionPool().query(sql, ref.getDBArrayFormat(false), options);
         if (result && (result === null || result === void 0 ? void 0 : result.insertId)) {
             ref.setId(result.insertId);
             return Promise.resolve();
@@ -536,16 +533,16 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         var _a, _b, _c, _d;
         // Selecting updated or inserted ref
         let sql = "select id from " + this.tables.get(this.TABLE_REFERENCES) + " where idConcept = ? and linkReferenced = ? ";
-        const [rows] = await this.getConnectionPool().query(sql, [(_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = ref.getTripletLink()) === null || _b === void 0 ? void 0 : _b.getId()]);
+        const [rows] = await this.getConnectionPool().query(sql, [(_a = ref.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = ref.getTripletLink()) === null || _b === void 0 ? void 0 : _b.getId()], options);
         if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
             ref.setId(rows[0].id);
             sql = "update " + this.tables.get(this.TABLE_REFERENCES) + " set value = ? where idConcept = ? and linkReferenced = ? ";
-            await this.getConnectionPool().query(sql, [ref.getValue(), (_c = ref.getIdConcept()) === null || _c === void 0 ? void 0 : _c.getId(), (_d = ref.getTripletLink()) === null || _d === void 0 ? void 0 : _d.getId()]);
+            await this.getConnectionPool().query(sql, [ref.getValue(), (_c = ref.getIdConcept()) === null || _c === void 0 ? void 0 : _c.getId(), (_d = ref.getTripletLink()) === null || _d === void 0 ? void 0 : _d.getId()], options);
             return Promise.resolve();
         }
         // Upserting
         sql = "insert into " + this.tables.get(this.TABLE_REFERENCES) + " (idConcept, linkReferenced, value ) values (?,?,?)";
-        const [res] = await this.getConnectionPool().query(sql, ref.getDBArrayFormat(false));
+        const [res] = await this.getConnectionPool().query(sql, ref.getDBArrayFormat(false), options);
         if (res && (res === null || res === void 0 ? void 0 : res.insertId)) {
             ref.setId(res.insertId);
             return Promise.resolve();
@@ -566,7 +563,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         });
         let whereStatement = " where id in (" + ids.toString() + ")";
         let sql = "update " + this.tables.get(this.TABLE_REFERENCES) + " set value = ( case " + caseStatemet + " end ) " + whereStatement;
-        await this.getConnectionPool().query(sql);
+        await this.getConnectionPool().query(sql, undefined, options);
         return Promise.resolve();
     }
     /**
@@ -587,7 +584,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         });
         let whereStatement = " where id in (" + ids.toString() + ")";
         let sql = "update " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptTarget = ( case " + caseStatemet + " end ) " + whereStatement;
-        await this.getConnectionPool().query(sql);
+        await this.getConnectionPool().query(sql, undefined, options);
         return Promise.resolve();
     }
     /**
@@ -601,7 +598,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             conceptsData.push(concept.getDBArrayFormat(false));
         });
         let sql = "insert into " + this.tables.get(this.TABLE_CONCEPTS) + " (code, shortname) values ?";
-        let [result] = await this.getConnectionPool().query(sql, [conceptsData]);
+        let [result] = await this.getConnectionPool().query(sql, [conceptsData], options);
         if (result) {
             let insertId = result.insertId;
             const affectedRows = result.affectedRows;
@@ -632,7 +629,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             sql = "insert into " + this.tables.get(this.TABLE_TRIPLETS) + " (id, idConceptStart, idConceptLink, idConceptTarget, flag) values ?";
         else
             sql = "insert " + (withIgnore ? " ignore " : "") + " into " + this.tables.get(this.TABLE_TRIPLETS) + " (idConceptStart, idConceptLink, idConceptTarget, flag) values ? ";
-        let [result] = await this.getConnectionPool().query(sql, [tripletsData]);
+        let [result] = await this.getConnectionPool().query(sql, [tripletsData], options);
         if (result && !withIgnore && !withId) {
             let insertId = result.insertId;
             const affectedRows = result.affectedRows;
@@ -663,7 +660,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             values = values = " (idConcept, linkReferenced, value) values ? ";
         }
         let sql = "insert ignore into " + this.tables.get(this.TABLE_REFERENCES) + values;
-        await this.getConnectionPool().query(sql, [refsData]);
+        await this.getConnectionPool().query(sql, [refsData], options);
         return Promise.resolve();
     }
 }

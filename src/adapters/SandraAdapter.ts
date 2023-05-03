@@ -1,5 +1,5 @@
+import { IAbortOption } from "../interfaces/IAbortOption";
 import { IDBConfig } from "../interfaces/IDBconfig";
-import { IQueryOption } from "../interfaces/IQueryOption";
 import { LogManager } from "../loggers/LogManager";
 import { Concept } from "../models/Concept";
 import { Reference } from "../models/Reference";
@@ -27,18 +27,16 @@ export class SandraAdapter extends DBBaseAdapter {
      * Begins DB transaction. 
      */
     async beginTransaction() {
-        LogManager.getInstance().info("Starting transaction..")
-        let sql = "Start Transaction;";
-        await this.getConnectionPool().query(sql);
+        LogManager.getInstance().info("starting transaction..")
+        await this.getConnectionPool().query("start transaction;");
     }
 
     /**
      * Commits DB transactions.
      */
     async commit() {
-        LogManager.getInstance().info("Committing tranaction..")
-        let sql = "Commit;";
-        await this.getConnectionPool().query(sql);
+        LogManager.getInstance().info("committing tranaction..")
+        await this.getConnectionPool().query("commit;");
     }
 
     /**
@@ -47,8 +45,7 @@ export class SandraAdapter extends DBBaseAdapter {
      */
     async sleep(durationInSec: number) {
         LogManager.getInstance().info("Sleep for " + durationInSec + "s");
-        let sql = "select sleep(" + durationInSec + ")";
-        await this.getConnectionPool().query(sql);
+        await this.getConnectionPool().query("select sleep(" + durationInSec + ")");
     }
 
     /**
@@ -56,10 +53,10 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param shortname 
      * @returns Returns promise of concept with given shortname
      */
-    async getConcept(shortname: string, options?: IQueryOption): Promise<Concept | undefined> {
+    async getConcept(shortname: string, options?: IAbortOption): Promise<Concept | undefined> {
 
         let sql = "select * from " + this.tables.get(this.TABLE_CONCEPTS) + " where shortname = ?";
-        const [rows, fields] = await this.getConnectionPool().query(sql, shortname);
+        const [rows, fields] = await this.getConnectionPool().query(sql, shortname, options);
 
         return new Promise((resolve, reject) => {
             if (Array.isArray(rows) && rows.length > 0) {
@@ -77,21 +74,21 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param withId 
      * @returns Returns added concept else null 
      */
-    async addConcept(c: Concept, withId: boolean = false, options?: IQueryOption): Promise<Concept | undefined> {
+    async addConcept(c: Concept, withId: boolean = false, options?: IAbortOption): Promise<Concept | undefined> {
 
         let sql = "insert ignore into " + this.tables.get(this.TABLE_CONCEPTS) + " set code = ?, shortname = ?";
 
         if (withId)
             sql = "insert ignore into " + this.tables.get(this.TABLE_CONCEPTS) + " set id = ?, code = ?, shortname = ?";
 
-        const [result] = await this.getConnectionPool().query(sql, c.getDBArrayFormat(withId), options?.timeout, options?.abortSignal);
+        const [result] = await this.getConnectionPool().query(sql, c.getDBArrayFormat(withId), options);
 
         if (result && (result as any).insertId) {
             c.setId((result as any).insertId);
         }
 
         sql = "select * from " + this.tables.get(this.TABLE_CONCEPTS) + " where shortname = ?";
-        const [rows, fields] = await this.getConnectionPool().query(sql, c.getShortname());
+        const [rows, fields] = await this.getConnectionPool().query(sql, c.getShortname(), options);
 
         if (Array.isArray(rows) && rows.length > 0) {
             let row: any = rows[0];
@@ -110,7 +107,7 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param refConcept 
      * @returns Returns Reference class object of given triplet.
      */
-    async getReferenceByTriplet(triplet: Triplet, refConcept?: Concept, options?: IQueryOption): Promise<Reference[]> {
+    async getReferenceByTriplet(triplet: Triplet, refConcept?: Concept, options?: IAbortOption): Promise<Reference[]> {
 
         let refCon = "";
         let v = [triplet.getId()];
@@ -124,7 +121,7 @@ export class SandraAdapter extends DBBaseAdapter {
             + this.tables.get(this.TABLE_REFERENCES) + " as r " + " join "
             + this.tables.get(this.TABLE_CONCEPTS) + " as c on r.idConcept = c.id and r.linkReferenced = ?" + refCon;
 
-        let [rows]: any = await this.getConnectionPool().query(sql, v);
+        let [rows]: any = await this.getConnectionPool().query(sql, v, options);
 
         return new Promise((resolve, reject) => {
             let refs: Reference[] = [];
@@ -151,7 +148,7 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param triplets 
      * @returns Returns a promis of References array for given triplets
      */
-    async getReferenceByTriplets(triplets: Triplet[], options?: IQueryOption): Promise<Reference[]> {
+    async getReferenceByTriplets(triplets: Triplet[], options?: IAbortOption): Promise<Reference[]> {
 
         let sql = "select r.id,  r.linkReferenced as tripletId, c.id as cId, c.code, c.shortname, r.value from " +
             this.tables.get(this.TABLE_REFERENCES) + " as r join " +
@@ -159,7 +156,7 @@ export class SandraAdapter extends DBBaseAdapter {
             " on r.idConcept = c.id and r.linkReferenced in (?)";
 
         let v: string[] = triplets.map(t => t.getId());
-        let [rows]: any = await this.getConnectionPool().query(sql, [v]);
+        let [rows]: any = await this.getConnectionPool().query(sql, [v], options);
 
         return new Promise((resolve, reject) => {
             let refs: Reference[] = [];
@@ -184,7 +181,7 @@ export class SandraAdapter extends DBBaseAdapter {
     /**
      *  Get the triplet attached with given verb and target linked to given reference
      */
-    async getEntityTriplet(verb: Concept, target: Concept, ref: Reference | undefined, limit: number = 9999999, options?: IQueryOption): Promise<Triplet[]> {
+    async getEntityTriplet(verb: Concept, target: Concept, ref: Reference | undefined, limit: number = 9999999, options?: IAbortOption): Promise<Triplet[]> {
 
         let sql = "", rows: any;
 
@@ -195,7 +192,7 @@ export class SandraAdapter extends DBBaseAdapter {
                 " on t.id = r.linkReferenced and t.idConceptLink = ? and t.idConceptTarget = ? and r.value = ? and r.idConcept = ? join " +
                 this.tables.get(this.TABLE_CONCEPTS) + " as c on t.idConceptStart = c.id limit ?";
 
-            [rows] = await this.getConnectionPool().query(sql, [verb.getId(), target.getId(), ref.getValue(), ref.getIdConcept()?.getId(), limit]);
+            [rows] = await this.getConnectionPool().query(sql, [verb.getId(), target.getId(), ref.getValue(), ref.getIdConcept()?.getId(), limit], options);
         }
         else {
             sql = "select t.id, c.id as subjectId, c.code as subjectCode, c.shortname as subjectShortname, t.idConceptLink as verb, t.idConceptTarget as target from " +
@@ -238,7 +235,7 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param loadVerbData 
      * @returns Returns array of triplets for given subject and verb
      */
-    async getTriplets(subjects: Concept[], verbs: Concept[] | undefined = undefined, loadVerbData: boolean = false, options?: IQueryOption): Promise<Triplet[]> {
+    async getTriplets(subjects: Concept[], verbs: Concept[] | undefined = undefined, loadVerbData: boolean = false, options?: IAbortOption): Promise<Triplet[]> {
 
         let subConcept = subjects.map(s => s.getId());
         let verbConcept = verbs?.map(v => v.getId());
@@ -259,13 +256,13 @@ export class SandraAdapter extends DBBaseAdapter {
             if (loadVerbData) {
                 sql = sql + " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink "
             }
-            [rows] = await this.getConnectionPool().query(sql, [subConcept, verbConcept]);
+            [rows] = await this.getConnectionPool().query(sql, [subConcept, verbConcept], options);
         }
         else {
             if (loadVerbData) {
                 sql = sql + " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink "
             }
-            [rows] = await this.getConnectionPool().query(sql, [subConcept])
+            [rows] = await this.getConnectionPool().query(sql, [subConcept], options)
         };
 
         return new Promise((resolve, reject) => {
@@ -298,7 +295,7 @@ export class SandraAdapter extends DBBaseAdapter {
   * @param refConcept 
   * @returns Returns map of reference value and corresponding Concept
   */
-    async getEntityConceptsByRefs(verb: Concept, target: Concept, refsValuesToSearch: string[], refConcept: Concept, options?: IQueryOption): Promise<Map<string, Concept>> {
+    async getEntityConceptsByRefs(verb: Concept, target: Concept, refsValuesToSearch: string[], refConcept: Concept, options?: IAbortOption): Promise<Map<string, Concept>> {
 
         let sql = "select  c.id, c.code, c.shortname, r.value from " +
             this.tables.get(this.TABLE_REFERENCES) + "  as r " +
@@ -309,7 +306,7 @@ export class SandraAdapter extends DBBaseAdapter {
             " and t.idConceptLink =  ? " +
             " and t.idConceptTarget = ? ";
 
-        let [rows]: any = await this.getConnectionPool().query(sql, [refsValuesToSearch, refConcept.getId(), verb.getId(), target.getId()]);
+        let [rows]: any = await this.getConnectionPool().query(sql, [refsValuesToSearch, refConcept.getId(), verb.getId(), target.getId()], options);
 
         return new Promise((resolve, reject) => {
 
@@ -340,7 +337,7 @@ export class SandraAdapter extends DBBaseAdapter {
    * @param limit - Limit records 
    * @returns Concepts array
    */
-    async getEntityConcepts(cifFileVerb: Concept, cifFileTargetSub: Concept, lastId?: string, limit?: string, options?: IQueryOption): Promise<Concept[]> {
+    async getEntityConcepts(cifFileVerb: Concept, cifFileTargetSub: Concept, lastId?: string, limit?: string, options?: IAbortOption): Promise<Concept[]> {
 
         let limitQ = "";
         let lastIdQ = "";
@@ -358,7 +355,7 @@ export class SandraAdapter extends DBBaseAdapter {
             " as t join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t.idConceptStart = c.id " +
             " and t.idConceptLink = ?  and t.idConceptTarget =  ? " + lastIdQ + limitQ;
 
-        const [rows]: any = await this.getConnectionPool().query(sql, [cifFileVerb.getId(), cifFileTargetSub.getId()]);
+        const [rows]: any = await this.getConnectionPool().query(sql, [cifFileVerb.getId(), cifFileTargetSub.getId()], options);
 
         return new Promise((resolve, reject) => {
 
@@ -394,7 +391,7 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param containedInFileConcept 
      * @returns 
      */
-    async getEntityConceptsRefs(entities: Entity[], containedInFileConcept: Concept, options?: IQueryOption): Promise<void> {
+    async getEntityConceptsRefs(entities: Entity[], containedInFileConcept: Concept, options?: IAbortOption): Promise<void> {
 
         if (entities?.length == 0) return;
 
@@ -417,7 +414,7 @@ export class SandraAdapter extends DBBaseAdapter {
             " and t.idConceptStart in ? " +
             " and t.idConceptLink =  ? ";
 
-        let [rows]: any = await this.getConnectionPool().query(sql, [[subjs], containedInFileConcept.getId()]);
+        let [rows]: any = await this.getConnectionPool().query(sql, [[subjs], containedInFileConcept.getId()], options);
 
         return new Promise((resolve, reject) => {
 
@@ -466,7 +463,7 @@ export class SandraAdapter extends DBBaseAdapter {
       * @param limit 
       * @returns 
       */
-    async filter(triplets: Triplet[], refs: Reference[], limit: number = 1000, options?: IQueryOption): Promise<Map<Concept, Triplet[]>> {
+    async filter(triplets: Triplet[], refs: Reference[], limit: number = 1000, options?: IAbortOption): Promise<Map<Concept, Triplet[]>> {
 
         let sql = "";
         let subject: Concept | undefined;
@@ -515,13 +512,12 @@ export class SandraAdapter extends DBBaseAdapter {
 
         sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
 
-        let [rows]: any = await this.getConnectionPool().query(sql, undefined, options?.timeout, options?.abortSignal);
+        let [rows]: any = await this.getConnectionPool().query(sql, undefined, options);
 
         return new Promise((resolve, reject) => {
 
-            if(options?.abortSignal)
-            {
-                options.abortSignal.addListener("abort", ()=> {
+            if (options?.abortSignal) {
+                options.abortSignal.addListener("abort", () => {
                     return reject();
                 })
             }
@@ -559,7 +555,7 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param subject 
      * @returns Returns tripets array with given subject id
      */
-    async getTripletsBySubject(subject: Concept | undefined, options?: IQueryOption): Promise<Triplet[]> {
+    async getTripletsBySubject(subject: Concept | undefined, options?: IAbortOption): Promise<Triplet[]> {
 
         if (subject) {
             let sql = "SELECT t.id as id, " +
@@ -572,7 +568,7 @@ export class SandraAdapter extends DBBaseAdapter {
                 "join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink " +
                 "join " + this.tables.get(this.TABLE_CONCEPTS) + " as c2 on c2.id = t.idConceptTarget";
 
-            let [rows]: any = await this.getConnectionPool().query(sql, [subject.getId()]);
+            let [rows]: any = await this.getConnectionPool().query(sql, [subject.getId()], options);
 
             return new Promise((resolve, reject) => {
                 if (options?.abort)
@@ -602,10 +598,10 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param conceptId 
      * @returns Returns promise of Concept with given id
      */
-    async getConceptById(conceptId: number, options?: IQueryOption): Promise<Concept | undefined> {
+    async getConceptById(conceptId: number, options?: IAbortOption): Promise<Concept | undefined> {
 
         let sql = "select id, code, shortname from " + this.tables.get(this.TABLE_CONCEPTS) + " where id = ?";
-        let [rows]: any = await this.getConnectionPool().query(sql, [conceptId]);
+        let [rows]: any = await this.getConnectionPool().query(sql, [conceptId], options);
 
         return new Promise((resolve, reject) => {
             if (options?.abort)
@@ -624,7 +620,7 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param withId 
      * @returns Returns added or selected triplet
      */
-    async addTriplet(t: Triplet, withId: boolean = false, options?: IQueryOption): Promise<void> {
+    async addTriplet(t: Triplet, withId: boolean = false, options?: IAbortOption): Promise<void> {
 
         let sql = "";
 
@@ -641,7 +637,7 @@ export class SandraAdapter extends DBBaseAdapter {
         else
             sql = "insert into " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
 
-        const [result]: any = await this.getConnectionPool().query(sql, t.getDBArrayFormat(withId));
+        const [result]: any = await this.getConnectionPool().query(sql, t.getDBArrayFormat(withId), options);
 
         if (result && result?.insertId) {
             t.setId(result.insertId);
@@ -657,22 +653,22 @@ export class SandraAdapter extends DBBaseAdapter {
    * @param t 
    * @returns Returns upserted or selected triplet
    */
-    async upsertTriplet(t: Triplet, options?: IQueryOption): Promise<void> {
+    async upsertTriplet(t: Triplet, options?: IAbortOption): Promise<void> {
 
         let sql = "select id from " + this.tables.get(this.TABLE_TRIPLETS) + " where idConceptStart = ? and idConceptLink = ?";
-        const [rows]: any = await this.getConnectionPool().query(sql, [t.getSubject()?.getId(), t.getVerb()?.getId()]);
+        const [rows]: any = await this.getConnectionPool().query(sql, [t.getSubject()?.getId(), t.getVerb()?.getId()], options);
 
         if (rows && rows?.length > 0) {
             // Update
             sql = "update " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptTarget = ? where id = ?";
-            await this.getConnectionPool().query(sql, [t.getTarget()?.getId(), rows[0].id]);
+            await this.getConnectionPool().query(sql, [t.getTarget()?.getId(), rows[0].id], options);
             t.setId(rows[0].id);
             return Promise.resolve();
         }
         else {
             // Insert
             sql = "insert into " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptStart = ?, idConceptLink = ?, idConceptTarget = ?, flag = ?";
-            const [result]: any = await this.getConnectionPool().query(sql, t.getDBArrayFormat(false));
+            const [result]: any = await this.getConnectionPool().query(sql, t.getDBArrayFormat(false), options);
             if (result && result?.insertId) {
                 t.setId(result.insertId);
                 return Promise.resolve();
@@ -687,10 +683,10 @@ export class SandraAdapter extends DBBaseAdapter {
    * @param ref 
    * @returns Returns added or selected Reference
    */
-    async addRefs(ref: Reference, options?: IQueryOption): Promise<void> {
+    async addRefs(ref: Reference, options?: IAbortOption): Promise<void> {
 
         let sql = "select id from " + this.tables.get(this.TABLE_REFERENCES) + " where idConcept = ? and linkReferenced = ?";
-        const [rows]: any = await this.getConnectionPool().query(sql, [ref.getIdConcept()?.getId(), ref.getTripletLink()?.getId()]);
+        const [rows]: any = await this.getConnectionPool().query(sql, [ref.getIdConcept()?.getId(), ref.getTripletLink()?.getId()], options);
 
         if (rows && rows?.length > 0) {
             ref.setId(rows[0].id);
@@ -698,7 +694,7 @@ export class SandraAdapter extends DBBaseAdapter {
         }
 
         sql = "insert into " + this.tables.get(this.TABLE_REFERENCES) + " set idConcept = ?, linkReferenced = ?, value = ?";
-        const [result]: any = await this.getConnectionPool().query(sql, ref.getDBArrayFormat(false));
+        const [result]: any = await this.getConnectionPool().query(sql, ref.getDBArrayFormat(false), options);
 
         if (result && result?.insertId) {
             ref.setId(result.insertId);
@@ -714,22 +710,22 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param ref 
      * @returns Returns upserted or selected Reference
      */
-    async upsertRefs(ref: Reference, options?: IQueryOption): Promise<void> {
+    async upsertRefs(ref: Reference, options?: IAbortOption): Promise<void> {
 
         // Selecting updated or inserted ref
         let sql = "select id from " + this.tables.get(this.TABLE_REFERENCES) + " where idConcept = ? and linkReferenced = ? ";
-        const [rows]: any = await this.getConnectionPool().query(sql, [ref.getIdConcept()?.getId(), ref.getTripletLink()?.getId()]);
+        const [rows]: any = await this.getConnectionPool().query(sql, [ref.getIdConcept()?.getId(), ref.getTripletLink()?.getId()], options);
 
         if (rows && rows?.length > 0) {
             ref.setId(rows[0].id);
             sql = "update " + this.tables.get(this.TABLE_REFERENCES) + " set value = ? where idConcept = ? and linkReferenced = ? ";
-            await this.getConnectionPool().query(sql, [ref.getValue(), ref.getIdConcept()?.getId(), ref.getTripletLink()?.getId()]);
+            await this.getConnectionPool().query(sql, [ref.getValue(), ref.getIdConcept()?.getId(), ref.getTripletLink()?.getId()], options);
             return Promise.resolve();
         }
 
         // Upserting
         sql = "insert into " + this.tables.get(this.TABLE_REFERENCES) + " (idConcept, linkReferenced, value ) values (?,?,?)";
-        const [res]: any = await this.getConnectionPool().query(sql, ref.getDBArrayFormat(false));
+        const [res]: any = await this.getConnectionPool().query(sql, ref.getDBArrayFormat(false), options);
 
         if (res && res?.insertId) {
             ref.setId(res.insertId);
@@ -745,7 +741,7 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param refs 
      * @returns 
      */
-    async updateRefsBatchById(refs: Reference[], options?: IQueryOption): Promise<void> {
+    async updateRefsBatchById(refs: Reference[], options?: IAbortOption): Promise<void> {
 
         let caseStatemet = "";
         let ids = [];
@@ -758,7 +754,7 @@ export class SandraAdapter extends DBBaseAdapter {
         let whereStatement = " where id in (" + ids.toString() + ")";
         let sql = "update " + this.tables.get(this.TABLE_REFERENCES) + " set value = ( case " + caseStatemet + " end ) " + whereStatement;
 
-        await this.getConnectionPool().query(sql);
+        await this.getConnectionPool().query(sql, undefined, options);
 
         return Promise.resolve();
 
@@ -770,7 +766,7 @@ export class SandraAdapter extends DBBaseAdapter {
    * @param triplets 
    * @returns
    */
-    async updateTripletsBatchById(triplets: Triplet[], options?: IQueryOption): Promise<void> {
+    async updateTripletsBatchById(triplets: Triplet[], options?: IAbortOption): Promise<void> {
 
         if (triplets?.length == 0)
             return Promise.resolve();
@@ -783,7 +779,7 @@ export class SandraAdapter extends DBBaseAdapter {
         });
         let whereStatement = " where id in (" + ids.toString() + ")";
         let sql = "update " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptTarget = ( case " + caseStatemet + " end ) " + whereStatement;
-        await this.getConnectionPool().query(sql);
+        await this.getConnectionPool().query(sql, undefined, options);
 
         return Promise.resolve();
     }
@@ -793,7 +789,7 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param concepts 
      * @returns 
      */
-    async addConceptsBatch(concepts: Concept[], options?: IQueryOption): Promise<void> {
+    async addConceptsBatch(concepts: Concept[], options?: IAbortOption): Promise<void> {
 
         let conceptsData: any[] = [];
 
@@ -803,7 +799,7 @@ export class SandraAdapter extends DBBaseAdapter {
 
         let sql = "insert into " + this.tables.get(this.TABLE_CONCEPTS) + " (code, shortname) values ?";
 
-        let [result]: any = await this.getConnectionPool().query(sql, [conceptsData]);
+        let [result]: any = await this.getConnectionPool().query(sql, [conceptsData], options);
 
         if (result) {
             let insertId: number = result.insertId;
@@ -825,7 +821,7 @@ export class SandraAdapter extends DBBaseAdapter {
   * @param withId 
   * @returns 
   */
-    async addTripletsBatch(triplets: Triplet[], withId: boolean = true, withIgnore: boolean = true, options?: IQueryOption): Promise<void> {
+    async addTripletsBatch(triplets: Triplet[], withId: boolean = true, withIgnore: boolean = true, options?: IAbortOption): Promise<void> {
 
         let tripletsData: any[] = [];
 
@@ -842,7 +838,7 @@ export class SandraAdapter extends DBBaseAdapter {
         else
             sql = "insert " + (withIgnore ? " ignore " : "") + " into " + this.tables.get(this.TABLE_TRIPLETS) + " (idConceptStart, idConceptLink, idConceptTarget, flag) values ? ";
 
-        let [result]: any = await this.getConnectionPool().query(sql, [tripletsData]);
+        let [result]: any = await this.getConnectionPool().query(sql, [tripletsData], options);
 
         if (result && !withIgnore && !withId) {
             let insertId: number = result.insertId;
@@ -864,7 +860,7 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param withId 
      * @returns 
      */
-    async addReferencesBatch(refs: Reference[], withId: boolean = false, options?: IQueryOption): Promise<void> {
+    async addReferencesBatch(refs: Reference[], withId: boolean = false, options?: IAbortOption): Promise<void> {
 
         let refsData: any[] = [];
 
@@ -881,7 +877,7 @@ export class SandraAdapter extends DBBaseAdapter {
         }
 
         let sql = "insert ignore into " + this.tables.get(this.TABLE_REFERENCES) + values;
-        await this.getConnectionPool().query(sql, [refsData]);
+        await this.getConnectionPool().query(sql, [refsData], options);
 
         return Promise.resolve();
 

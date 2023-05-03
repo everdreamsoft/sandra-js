@@ -1,4 +1,4 @@
-import { IQueryOption } from "./IQueryOption";
+import { IAbortOption } from "./IAbortOption";
 
 export interface IDBQueryOption {
    sql: string,

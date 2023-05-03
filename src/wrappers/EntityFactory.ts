@@ -1,7 +1,7 @@
 import { EventEmitter } from "stream";
 import { SandraAdapter } from "../adapters/SandraAdapter";
 import { DB } from "../connections/DB";
-import { IDBAbortController } from "../interfaces/IDBAbortController";
+import { IAbortOption } from "../interfaces/IAbortOption";
 import { LogManager } from "../loggers/LogManager";
 import { Concept } from "../models/Concept";
 import { Reference } from "../models/Reference";
@@ -10,29 +10,22 @@ import { Triplet } from "../models/Triplet";
 import { TemporaryId } from "../utils/TemporaryId";
 import { Entity } from "./Entity";
 
-export class EntityFactory extends EventEmitter implements IDBAbortController {
+export class EntityFactory {
 
     private is_a: string
     private contained_in_file: string
     private uniqueRefConcept: Concept;
-    private signal: boolean;
 
     private entityArray: Entity[] = [];
     private pushedStatus = false;
     private server: string;
+    private abortOptions?: IAbortOption;
 
     constructor(is_a: string, contained_in_file: string, uniqueRefConcept: Concept, server: string = "sandra") {
-        super();
         this.is_a = is_a;
         this.contained_in_file = contained_in_file;
         this.uniqueRefConcept = uniqueRefConcept;
         this.server = server;
-        this.signal = false;
-        this.on("abort", ((message?: string) => { this.abort(message) }).bind(this));
-    }
-
-    abort(message?: string): void {
-        this.emit("abort", message);
     }
 
     /**
@@ -114,12 +107,31 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
     }
 
     setPushedStatus(status: boolean) { this.pushedStatus = status; }
+    setAbortOptions(options?: IAbortOption) { this.abortOptions = options; }
+    setQueryTimeout(timeMs: number) {
+        if (this.abortOptions) this.abortOptions.timeout = timeMs;
+        else this.abortOptions = { timeout: timeMs }
+    }
+    setAbortSignal(signal: EventEmitter) {
+        if (this.abortOptions) this.abortOptions.abortSignal = signal;
+        else this.abortOptions = { abort: false, abortSignal: signal }
+    }
+
     getEntities(): Entity[] { return this.entityArray; }
     getPushedStatus() { return this.pushedStatus; }
     getIsAVerb() { return this.is_a; }
     getFullName() { return this.is_a + "/" + this.contained_in_file; }
     getContainedInFileVerb() { return this.contained_in_file; }
     getUniqueRefConcept() { return this.uniqueRefConcept; }
+
+    /**
+     * If factory abort options are set then it 
+     * emits abort signal for queries and sets abort 
+     * signal in factory to exit any running loop
+     */
+    abort(reason?: string) {
+        this.abortOptions?.abortSignal?.emit("abort", reason);
+    }
 
     /**
      * 
@@ -192,7 +204,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
 
             if (sub && TemporaryId.isValid(sub.getId())) {
                 // Create subject 
-                await (DB.getInstance().server(this.server) as SandraAdapter)?.addConcept(sub);
+                await (DB.getInstance().server(this.server) as SandraAdapter)?.addConcept(sub, false, this.abortOptions);
             }
 
             // Create triplets
@@ -209,10 +221,10 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
                 }
 
                 if (t.isUpsert()) {
-                    await (DB.getInstance().server(this.server) as SandraAdapter)?.upsertTriplet(t);
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.upsertTriplet(t, this.abortOptions);
                 }
                 else {
-                    await (DB.getInstance().server(this.server) as SandraAdapter)?.addTriplet(t);
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.addTriplet(t, false, this.abortOptions);
                 }
 
             }
@@ -220,9 +232,9 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
             // Create refs
             for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
                 if (entity.isUpsert()) {
-                    await (DB.getInstance().server(this.server) as SandraAdapter)?.upsertRefs(entity.getRefs()[indexRef]);
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.upsertRefs(entity.getRefs()[indexRef], this.abortOptions);
                 } else {
-                    await (DB.getInstance().server(this.server) as SandraAdapter)?.addRefs(entity.getRefs()[indexRef]);
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.addRefs(entity.getRefs()[indexRef], this.abortOptions);
                 }
             }
 
@@ -248,9 +260,9 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
             // Create refs
             for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
                 if (entity.isUpsert()) {
-                    await (DB.getInstance().server(this.server) as SandraAdapter)?.upsertRefs(entity.getRefs()[indexRef]);
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.upsertRefs(entity.getRefs()[indexRef], this.abortOptions);
                 } else {
-                    await (DB.getInstance().server(this.server) as SandraAdapter)?.addRefs(entity.getRefs()[indexRef]);
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.addRefs(entity.getRefs()[indexRef], this.abortOptions);
                 }
             }
 
@@ -274,10 +286,10 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
                 let t = entity.getTriplets()[indexTriplet];
 
                 if (t.isUpsert()) {
-                    await (DB.getInstance().server(this.server) as SandraAdapter)?.upsertTriplet(t);
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.upsertTriplet(t, this.abortOptions);
                 }
                 else {
-                    await (DB.getInstance().server(this.server) as SandraAdapter)?.addTriplet(t);
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.addTriplet(t, false, this.abortOptions);
                 }
 
             }
@@ -316,7 +328,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
         }
 
         if (triplets.length > 0)
-            await (DB.getInstance().server(this.server) as SandraAdapter)?.addTripletsBatch(triplets, false);
+            await (DB.getInstance().server(this.server) as SandraAdapter)?.addTripletsBatch(triplets, false, true, this.abortOptions);
 
     }
 
@@ -360,13 +372,13 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
             await (DB.getInstance().server(this.server) as SandraAdapter)?.beginTransaction();
 
             if (newConcepts.length > 0)
-                await (DB.getInstance().server(this.server) as SandraAdapter)?.addConceptsBatch(newConcepts);
+                await (DB.getInstance().server(this.server) as SandraAdapter)?.addConceptsBatch(newConcepts, this.abortOptions);
 
             if (newTriplets.length > 0)
-                await (DB.getInstance().server(this.server) as SandraAdapter)?.addTripletsBatch(newTriplets, false, false);
+                await (DB.getInstance().server(this.server) as SandraAdapter)?.addTripletsBatch(newTriplets, false, false, this.abortOptions);
 
             if (newRefs.length > 0)
-                await (DB.getInstance().server(this.server) as SandraAdapter)?.addReferencesBatch(newRefs, false);
+                await (DB.getInstance().server(this.server) as SandraAdapter)?.addReferencesBatch(newRefs, false, this.abortOptions);
 
             await (DB.getInstance().server(this.server) as SandraAdapter)?.commit();
 
@@ -390,7 +402,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
             refs.push(...this.entityArray[i].getRefs());
         }
 
-        await (DB.getInstance().server(this.server) as SandraAdapter)?.addReferencesBatch(refs);
+        await (DB.getInstance().server(this.server) as SandraAdapter)?.addReferencesBatch(refs, false, this.abortOptions);
 
     }
 
@@ -405,7 +417,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
             triplets.push(...this.entityArray[i].getTriplets());
         }
 
-        await (DB.getInstance().server(this.server) as SandraAdapter)?.addTripletsBatch(triplets, false);
+        await (DB.getInstance().server(this.server) as SandraAdapter)?.addTripletsBatch(triplets, false, true, this.abortOptions);
 
     }
 
@@ -423,7 +435,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
                 refs.push(...r);
         });
 
-        await (DB.getInstance().server(this.server) as SandraAdapter)?.updateRefsBatchById(refs);
+        await (DB.getInstance().server(this.server) as SandraAdapter)?.updateRefsBatchById(refs, this.abortOptions);
 
     }
 
@@ -438,7 +450,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
             triplets.push(...this.entityArray[i].getTriplets().filter(t => { return t.isUpsert() }));
         }
 
-        await (DB.getInstance().server(this.server) as SandraAdapter)?.updateTripletsBatchById(triplets);
+        await (DB.getInstance().server(this.server) as SandraAdapter)?.updateTripletsBatchById(triplets, this.abortOptions);
 
     }
 
@@ -455,7 +467,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
         let entityTriplets: Triplet[] = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityTriplet(
             await SystemConcepts.get("contained_in_file"),
             await SystemConcepts.get(this.contained_in_file),
-            ref, limit
+            ref, limit, this.abortOptions
         );
 
         for (let index = 0; index < entityTriplets?.length; index++) {
@@ -467,7 +479,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
             if (loadAllEntityData) {
 
                 triplets = await (DB.getInstance().server(this.server) as SandraAdapter)?.getTripletsBySubject(
-                    entityTriplet.getSubject()
+                    entityTriplet.getSubject(), this.abortOptions
                 );
 
                 for (let i = 0; i < triplets.length; i++) {
@@ -482,7 +494,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
                     }
 
                     let r = await (DB.getInstance().server(this.server) as SandraAdapter)?.getReferenceByTriplet(
-                        triplets[i]
+                        triplets[i], undefined, this.abortOptions
                     );
 
                     refs.push(...r);
@@ -522,14 +534,16 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
     async loadBySubject(subject: Concept | undefined, iterateDown: boolean = false) {
 
         let entityConcept: Concept | undefined = await ((DB.getInstance().server(this.server) as SandraAdapter) as SandraAdapter)?.getConceptById(
-            Number(subject?.getId())
+            Number(subject?.getId()),
+            this.abortOptions
         );
 
         if (entityConcept) {
 
             // Get all the triplets for this entity 
             let triplets: Triplet[] = await (DB.getInstance().server(this.server) as SandraAdapter)?.getTripletsBySubject(
-                entityConcept
+                entityConcept,
+                this.abortOptions
             );
 
             let refs: Reference[] = [];
@@ -546,7 +560,9 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
                 }
 
                 let r = await (DB.getInstance().server(this.server) as SandraAdapter)?.getReferenceByTriplet(
-                    triplets[i]
+                    triplets[i],
+                    undefined,
+                    this.abortOptions
                 );
 
                 refs.push(...r);
@@ -577,11 +593,11 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
     async filter(triplets: Triplet[], refs: Reference[], limit: number) {
 
         let concepts: any = await (DB.getInstance().server(this.server) as SandraAdapter)?.filter(
-            triplets, refs, limit, { abortSignal: this }
+            triplets, refs, limit, this.abortOptions
         );
 
         concepts.forEach((val: Triplet[], key: Concept) => {
-            if (this.signal) throw Error("Abort signal recieved");
+            if (this.abortOptions?.abort) throw Error("Abort signal recieved");
             let e = new Entity();
             e.setSubject(key);
             e.getTriplets().push(...val)
@@ -604,7 +620,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
         let cifFileVerbSub = await SystemConcepts.get("contained_in_file");
 
         let entityConcepts: Concept[] = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityConcepts(
-            cifFileVerbSub, cifFileTargetSub, lastId, limit
+            cifFileVerbSub, cifFileTargetSub, lastId, limit, this.abortOptions
         );
 
         for (let index = 0; index < entityConcepts?.length; index++) {
@@ -623,7 +639,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
     async loadEntityConceptsRefs() {
         let cifSystem = await SystemConcepts.get("contained_in_file");
         await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityConceptsRefs(
-            this.entityArray, cifSystem
+            this.entityArray, cifSystem, this.abortOptions
         );
     }
 
@@ -644,7 +660,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
         })
 
         let triplets = await (DB.getInstance().server(this.server) as SandraAdapter)?.getTriplets(
-            s, undefined, loadVerbData
+            s, undefined, loadVerbData, this.abortOptions
         );
 
         this.entityArray.forEach(e => {
@@ -684,7 +700,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
         })
 
         let triplets = await (DB.getInstance().server(this.server) as SandraAdapter)?.getTriplets(
-            s, [verb], loadVerbData
+            s, [verb], loadVerbData, this.abortOptions
         );
 
         this.entityArray.forEach(e => {
@@ -729,7 +745,8 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
             await SystemConcepts.get("contained_in_file"),
             await SystemConcepts.get(this.contained_in_file),
             refs,
-            this.uniqueRefConcept
+            this.uniqueRefConcept,
+            this.abortOptions
         );
 
         this.entityArray.forEach(entity => {
@@ -759,7 +776,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
     /**
      * Loads all the references of each triplets of all the entities of current factory class object.
      */
-    async loadAllTripletRefs(refConcept?: Concept) {
+    async loadAllTripletRefs() {
 
         let ts: Triplet[] = [];
 
@@ -769,7 +786,7 @@ export class EntityFactory extends EventEmitter implements IDBAbortController {
         this.entityArray?.map(e => { ts = [...ts, ...e.getTriplets()] });
 
         let refs = await (DB.getInstance().server(this.server) as SandraAdapter)?.getReferenceByTriplets(
-            ts
+            ts, this.abortOptions
         );
 
         for (let i = 0; i < this.entityArray?.length; i++) {

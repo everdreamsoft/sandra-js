@@ -1,27 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EntityFactory = void 0;
-const stream_1 = require("stream");
 const DB_1 = require("../connections/DB");
 const LogManager_1 = require("../loggers/LogManager");
 const Concept_1 = require("../models/Concept");
 const SystemConcepts_1 = require("../models/SystemConcepts");
 const TemporaryId_1 = require("../utils/TemporaryId");
 const Entity_1 = require("./Entity");
-class EntityFactory extends stream_1.EventEmitter {
+class EntityFactory {
     constructor(is_a, contained_in_file, uniqueRefConcept, server = "sandra") {
-        super();
         this.entityArray = [];
         this.pushedStatus = false;
         this.is_a = is_a;
         this.contained_in_file = contained_in_file;
         this.uniqueRefConcept = uniqueRefConcept;
         this.server = server;
-        this.signal = false;
-        this.on("abort", ((message) => { this.abort(message); }).bind(this));
-    }
-    abort(message) {
-        this.signal = true;
     }
     /**
      *
@@ -77,12 +70,34 @@ class EntityFactory extends stream_1.EventEmitter {
         return e;
     }
     setPushedStatus(status) { this.pushedStatus = status; }
+    setAbortOptions(options) { this.abortOptions = options; }
+    setQueryTimeout(timeMs) {
+        if (this.abortOptions)
+            this.abortOptions.timeout = timeMs;
+        else
+            this.abortOptions = { timeout: timeMs };
+    }
+    setAbortSignal(signal) {
+        if (this.abortOptions)
+            this.abortOptions.abortSignal = signal;
+        else
+            this.abortOptions = { abort: false, abortSignal: signal };
+    }
     getEntities() { return this.entityArray; }
     getPushedStatus() { return this.pushedStatus; }
     getIsAVerb() { return this.is_a; }
     getFullName() { return this.is_a + "/" + this.contained_in_file; }
     getContainedInFileVerb() { return this.contained_in_file; }
     getUniqueRefConcept() { return this.uniqueRefConcept; }
+    /**
+     * If factory abort options are set then it
+     * emits abort signal for queries and sets abort
+     * signal in factory to exit any running loop
+     */
+    abort(reason) {
+        var _a, _b;
+        (_b = (_a = this.abortOptions) === null || _a === void 0 ? void 0 : _a.abortSignal) === null || _b === void 0 ? void 0 : _b.emit("abort", reason);
+    }
     /**
      *
      * @param factory Factory class object to compare
@@ -142,7 +157,7 @@ class EntityFactory extends stream_1.EventEmitter {
             let sub = entity.getSubject();
             if (sub && TemporaryId_1.TemporaryId.isValid(sub.getId())) {
                 // Create subject 
-                await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.addConcept(sub));
+                await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.addConcept(sub, false, this.abortOptions));
             }
             // Create triplets
             for (let indexTriplet = 0; indexTriplet < entity.getTriplets().length; indexTriplet++) {
@@ -155,19 +170,19 @@ class EntityFactory extends stream_1.EventEmitter {
                     }
                 }
                 if (t.isUpsert()) {
-                    await ((_g = DB_1.DB.getInstance().server(this.server)) === null || _g === void 0 ? void 0 : _g.upsertTriplet(t));
+                    await ((_g = DB_1.DB.getInstance().server(this.server)) === null || _g === void 0 ? void 0 : _g.upsertTriplet(t, this.abortOptions));
                 }
                 else {
-                    await ((_h = DB_1.DB.getInstance().server(this.server)) === null || _h === void 0 ? void 0 : _h.addTriplet(t));
+                    await ((_h = DB_1.DB.getInstance().server(this.server)) === null || _h === void 0 ? void 0 : _h.addTriplet(t, false, this.abortOptions));
                 }
             }
             // Create refs
             for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
                 if (entity.isUpsert()) {
-                    await ((_j = DB_1.DB.getInstance().server(this.server)) === null || _j === void 0 ? void 0 : _j.upsertRefs(entity.getRefs()[indexRef]));
+                    await ((_j = DB_1.DB.getInstance().server(this.server)) === null || _j === void 0 ? void 0 : _j.upsertRefs(entity.getRefs()[indexRef], this.abortOptions));
                 }
                 else {
-                    await ((_k = DB_1.DB.getInstance().server(this.server)) === null || _k === void 0 ? void 0 : _k.addRefs(entity.getRefs()[indexRef]));
+                    await ((_k = DB_1.DB.getInstance().server(this.server)) === null || _k === void 0 ? void 0 : _k.addRefs(entity.getRefs()[indexRef], this.abortOptions));
                 }
             }
             entity.setPushedStatus(true);
@@ -185,10 +200,10 @@ class EntityFactory extends stream_1.EventEmitter {
             // Create refs
             for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
                 if (entity.isUpsert()) {
-                    await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.upsertRefs(entity.getRefs()[indexRef]));
+                    await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.upsertRefs(entity.getRefs()[indexRef], this.abortOptions));
                 }
                 else {
-                    await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.addRefs(entity.getRefs()[indexRef]));
+                    await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.addRefs(entity.getRefs()[indexRef], this.abortOptions));
                 }
             }
         }
@@ -204,10 +219,10 @@ class EntityFactory extends stream_1.EventEmitter {
             for (let indexTriplet = 0; indexTriplet < entity.getTriplets().length; indexTriplet++) {
                 let t = entity.getTriplets()[indexTriplet];
                 if (t.isUpsert()) {
-                    await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.upsertTriplet(t));
+                    await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.upsertTriplet(t, this.abortOptions));
                 }
                 else {
-                    await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.addTriplet(t));
+                    await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.addTriplet(t, false, this.abortOptions));
                 }
             }
         }
@@ -237,7 +252,7 @@ class EntityFactory extends stream_1.EventEmitter {
             }
         }
         if (triplets.length > 0)
-            await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.addTripletsBatch(triplets, false));
+            await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.addTripletsBatch(triplets, false, true, this.abortOptions));
     }
     /**
      * Pushes entity list of the facotry class object in batch.
@@ -273,11 +288,11 @@ class EntityFactory extends stream_1.EventEmitter {
             });
             await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.beginTransaction());
             if (newConcepts.length > 0)
-                await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.addConceptsBatch(newConcepts));
+                await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.addConceptsBatch(newConcepts, this.abortOptions));
             if (newTriplets.length > 0)
-                await ((_d = DB_1.DB.getInstance().server(this.server)) === null || _d === void 0 ? void 0 : _d.addTripletsBatch(newTriplets, false, false));
+                await ((_d = DB_1.DB.getInstance().server(this.server)) === null || _d === void 0 ? void 0 : _d.addTripletsBatch(newTriplets, false, false, this.abortOptions));
             if (newRefs.length > 0)
-                await ((_e = DB_1.DB.getInstance().server(this.server)) === null || _e === void 0 ? void 0 : _e.addReferencesBatch(newRefs, false));
+                await ((_e = DB_1.DB.getInstance().server(this.server)) === null || _e === void 0 ? void 0 : _e.addReferencesBatch(newRefs, false, this.abortOptions));
             await ((_f = DB_1.DB.getInstance().server(this.server)) === null || _f === void 0 ? void 0 : _f.commit());
             LogManager_1.LogManager.getInstance().info("Pushed factory batch - " + this.getFullName());
         }
@@ -294,7 +309,7 @@ class EntityFactory extends stream_1.EventEmitter {
         for (let i = 0; i < this.entityArray.length; i++) {
             refs.push(...this.entityArray[i].getRefs());
         }
-        await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.addReferencesBatch(refs));
+        await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.addReferencesBatch(refs, false, this.abortOptions));
     }
     /**
      * Pushes triplets of all the entities of given facotry in batch call.
@@ -305,7 +320,7 @@ class EntityFactory extends stream_1.EventEmitter {
         for (let i = 0; i < this.entityArray.length; i++) {
             triplets.push(...this.entityArray[i].getTriplets());
         }
-        await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.addTripletsBatch(triplets, false));
+        await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.addTripletsBatch(triplets, false, true, this.abortOptions));
     }
     /**
      * Updates reference in DB of all the entities of a factory with given concept
@@ -319,7 +334,7 @@ class EntityFactory extends stream_1.EventEmitter {
             if (r)
                 refs.push(...r);
         });
-        await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.updateRefsBatchById(refs));
+        await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.updateRefsBatchById(refs, this.abortOptions));
     }
     /**
      * Udpates all the triplet where triplet upsert is true of all the entities of the factory object.
@@ -330,7 +345,7 @@ class EntityFactory extends stream_1.EventEmitter {
         for (let i = 0; i < this.entityArray.length; i++) {
             triplets.push(...this.entityArray[i].getTriplets().filter(t => { return t.isUpsert(); }));
         }
-        await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.updateTripletsBatchById(triplets));
+        await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.updateTripletsBatchById(triplets, this.abortOptions));
     }
     /**
         * Loads all the entities with given reference of the factory object.
@@ -342,13 +357,13 @@ class EntityFactory extends stream_1.EventEmitter {
     */
     async load(ref, loadAllEntityData = true, iterateDown = false, limit = 1000) {
         var _a, _b, _c;
-        let entityTriplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), ref, limit));
+        let entityTriplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), ref, limit, this.abortOptions));
         for (let index = 0; index < (entityTriplets === null || entityTriplets === void 0 ? void 0 : entityTriplets.length); index++) {
             let entityTriplet = entityTriplets[index];
             let refs = [];
             let triplets = [];
             if (loadAllEntityData) {
-                triplets = await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.getTripletsBySubject(entityTriplet.getSubject()));
+                triplets = await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.getTripletsBySubject(entityTriplet.getSubject(), this.abortOptions));
                 for (let i = 0; i < triplets.length; i++) {
                     if (iterateDown) {
                         let e = await this.loadBySubject(triplets[i].getTarget(), true);
@@ -356,7 +371,7 @@ class EntityFactory extends stream_1.EventEmitter {
                             triplets[i].setJoinedEntity(e);
                         }
                     }
-                    let r = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplet(triplets[i]));
+                    let r = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplet(triplets[i], undefined, this.abortOptions));
                     refs.push(...r);
                 }
             }
@@ -383,10 +398,10 @@ class EntityFactory extends stream_1.EventEmitter {
      */
     async loadBySubject(subject, iterateDown = false) {
         var _a, _b, _c;
-        let entityConcept = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getConceptById(Number(subject === null || subject === void 0 ? void 0 : subject.getId())));
+        let entityConcept = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getConceptById(Number(subject === null || subject === void 0 ? void 0 : subject.getId()), this.abortOptions));
         if (entityConcept) {
             // Get all the triplets for this entity 
-            let triplets = await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.getTripletsBySubject(entityConcept));
+            let triplets = await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.getTripletsBySubject(entityConcept, this.abortOptions));
             let refs = [];
             for (let i = 0; i < triplets.length; i++) {
                 if (iterateDown) {
@@ -395,7 +410,7 @@ class EntityFactory extends stream_1.EventEmitter {
                         triplets[i].setJoinedEntity(e);
                     }
                 }
-                let r = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplet(triplets[i]));
+                let r = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplet(triplets[i], undefined, this.abortOptions));
                 refs.push(...r);
             }
             let e = new Entity_1.Entity();
@@ -415,9 +430,10 @@ class EntityFactory extends stream_1.EventEmitter {
      */
     async filter(triplets, refs, limit) {
         var _a;
-        let concepts = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.filter(triplets, refs, limit, { abortSignal: this }));
+        let concepts = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.filter(triplets, refs, limit, this.abortOptions));
         concepts.forEach((val, key) => {
-            if (this.signal)
+            var _a;
+            if ((_a = this.abortOptions) === null || _a === void 0 ? void 0 : _a.abort)
                 throw Error("Abort signal recieved");
             let e = new Entity_1.Entity();
             e.setSubject(key);
@@ -437,7 +453,7 @@ class EntityFactory extends stream_1.EventEmitter {
         var _a;
         let cifFileTargetSub = await SystemConcepts_1.SystemConcepts.get(this.getContainedInFileVerb());
         let cifFileVerbSub = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
-        let entityConcepts = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConcepts(cifFileVerbSub, cifFileTargetSub, lastId, limit));
+        let entityConcepts = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConcepts(cifFileVerbSub, cifFileTargetSub, lastId, limit, this.abortOptions));
         for (let index = 0; index < (entityConcepts === null || entityConcepts === void 0 ? void 0 : entityConcepts.length); index++) {
             let entityConcept = entityConcepts[index];
             let e = new Entity_1.Entity();
@@ -452,7 +468,7 @@ class EntityFactory extends stream_1.EventEmitter {
     async loadEntityConceptsRefs() {
         var _a;
         let cifSystem = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
-        await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsRefs(this.entityArray, cifSystem));
+        await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsRefs(this.entityArray, cifSystem, this.abortOptions));
     }
     /***
      * Loading all the triplets of given factrory entities
@@ -468,7 +484,7 @@ class EntityFactory extends stream_1.EventEmitter {
             if (sub)
                 s.push(sub);
         });
-        let triplets = await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.getTriplets(s, undefined, loadVerbData));
+        let triplets = await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.getTriplets(s, undefined, loadVerbData, this.abortOptions));
         this.entityArray.forEach(e => {
             var _a;
             let subId = (_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.getId();
@@ -502,7 +518,7 @@ class EntityFactory extends stream_1.EventEmitter {
             if (sub)
                 s.push(sub);
         });
-        let triplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getTriplets(s, [verb], loadVerbData));
+        let triplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getTriplets(s, [verb], loadVerbData, this.abortOptions));
         this.entityArray.forEach(e => {
             var _a;
             let subId = (_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.getId();
@@ -538,7 +554,7 @@ class EntityFactory extends stream_1.EventEmitter {
             if (r)
                 refs.push(r.getValue());
         });
-        let entityConceptsMap = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsByRefs(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), refs, this.uniqueRefConcept));
+        let entityConceptsMap = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsByRefs(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), refs, this.uniqueRefConcept, this.abortOptions));
         this.entityArray.forEach(entity => {
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
@@ -564,13 +580,13 @@ class EntityFactory extends stream_1.EventEmitter {
     /**
      * Loads all the references of each triplets of all the entities of current factory class object.
      */
-    async loadAllTripletRefs(refConcept) {
+    async loadAllTripletRefs() {
         var _a, _b, _c, _d;
         let ts = [];
         if (((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length) == 0)
             return;
         (_b = this.entityArray) === null || _b === void 0 ? void 0 : _b.map(e => { ts = [...ts, ...e.getTriplets()]; });
-        let refs = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplets(ts));
+        let refs = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplets(ts, this.abortOptions));
         for (let i = 0; i < ((_d = this.entityArray) === null || _d === void 0 ? void 0 : _d.length); i++) {
             let e = this.entityArray[i];
             let triplets = e.getTriplets();

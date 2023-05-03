@@ -12,7 +12,7 @@ export class Test {
     }
 
     async testAbortSignal() {
-        
+
     }
 
     async testDBClass() {
@@ -76,11 +76,14 @@ const DB_CONFIG_LOCAL = {
 
 Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 Sandra.LOG_CONFIG = {
-    main: true,
-    query: false,
-    queryTime: false
-
+    enable: true,
+    query: {
+        enable: true,
+        time: true,
+        values: true
+    }
 }
+
 let test = new Test();
 
 test.run();

@@ -1,11 +1,10 @@
-import { Connection } from "mysql2";
 import mysql from "mysql2/promise";
 import PoolConnection from "mysql2/typings/mysql/lib/PoolConnection";
 import { performance } from "perf_hooks";
 import { Sandra } from "../Sandra";
+import { IAbortOption } from "../interfaces/IAbortOption";
 import { IDBConfig } from "../interfaces/IDBconfig";
 import { LogManager } from "../loggers/LogManager";
-import { EventEmitter } from "stream";
 
 
 export class DBPool {
@@ -23,70 +22,56 @@ export class DBPool {
             waitForConnections: this.config.waitForConnections ? this.config.waitForConnections : true,
             connectionLimit: this.config.connectionLimit ? this.config.connectionLimit : 10,
             queueLimit: this.config.queueLimit ? this.config.queueLimit : 0,
-            acquireTimeout: this.config.acquireTimeout ? this.config.acquireTimeout : 0 // 0 as permanent connection,
+            enableKeepAlive: this.config?.enableKeepAlive ? this.config?.enableKeepAlive : false
         });
+    }
 
+    private getConnetion(): Promise<PoolConnection> {
+        return this.pool.getConnection();
     }
 
     async end(): Promise<void> {
         return this.pool?.end();
     }
 
-    abort(connection: PoolConnection, reason?: string): void {
-        console.log("Connection destroy.." + reason || "");
-        connection.destroy();
-    }
+    async query(sql: string, values?: any | any[] | { [param: string]: any }, abortOption?: IAbortOption): Promise<[any, any]> {
 
-    getConnetion(): Promise<PoolConnection> {
-        return this.pool.getConnection();
-    }
-
-    /**
-    * Runs give query
-    * @param sql Sql query
-    * @param values query parameters
-    * @returns 
-    */
-    async query(sql: string, values?: any | any[] | { [param: string]: any }, queryTimeout?: number, abortSignal?: EventEmitter): Promise<[any, any]> {
-
-        let start: any | undefined, result: any;
-        let timeout = queryTimeout ? queryTimeout : 1000000;
-
-        if (Sandra.LOG_CONFIG?.query) {
-            LogManager.getInstance().logQuery(sql);
-            // if (values instanceof Array) {
-            //     LogManager.getInstance().logQuery(values.toString());
-            // }
-            // else LogManager.getInstance().logQuery(values);
-        }
-
-        if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) start = performance.now();
+        let start: any | undefined, time: any | undefined;
+        let result: any, timeout = abortOption?.timeout ? abortOption?.timeout : 10000;
 
         let connection = await this.getConnetion();
 
-        abortSignal?.on("abort", (() => {
-            this.abort(connection, "abort called..");
+        abortOption?.abortSignal?.on("abort", ((reason?: string) => {
+            console.log("connection destroy.." + reason || "");
+            abortOption.abort = true;
+            connection.destroy();
         }).bind(this));
 
         try {
 
-            result = await connection.query({ sql, timeout }, values);
+            if (Sandra.LOG_CONFIG?.query?.enable && Sandra.LOG_CONFIG?.query?.time) start = performance.now();
 
-            if (Sandra.LOG_CONFIG?.query && Sandra.LOG_CONFIG?.queryTime) {
-                LogManager.getInstance().logQuery(`Time: ${(performance.now() - start)} milliseconds`);
+            result = connection.query({ sql, timeout }, values);
+
+            if (Sandra.LOG_CONFIG?.query?.enable) {
+                let params = undefined;
+                if (Sandra.LOG_CONFIG?.query?.time) time = performance.now() - start;
+                if (Sandra.LOG_CONFIG?.query?.values) params = values;
+                LogManager.getInstance().query(sql, params, time);
             }
 
         } catch (e: any) {
             LogManager.getInstance().error(e);
         } finally {
-            connection.release(); // Release the connection back to the pool
+            // Release the connection back to the pool
+            connection.release();
         }
 
-        abortSignal?.removeAllListeners();
+        // Removing listeners
+        abortOption?.abortSignal?.removeAllListeners();
 
         return result;
 
     }
-
 
 }
