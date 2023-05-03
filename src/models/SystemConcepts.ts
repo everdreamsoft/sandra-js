@@ -1,4 +1,3 @@
-import { DBBaseAdapter } from "../adapters/DBBaseAdapter";
 import { SandraAdapter } from "../adapters/SandraAdapter";
 import { DB } from "../connections/DB";
 import { TemporaryId } from "../utils/TemporaryId";

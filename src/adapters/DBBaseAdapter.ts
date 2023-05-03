@@ -1,6 +1,5 @@
 import { DBPool } from "../connections/DBPool";
 import { IDBConfig } from "../interfaces/IDBconfig";
-import { LogManager } from "../loggers/LogManager";
 
 export class DBBaseAdapter {
 

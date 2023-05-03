@@ -3,7 +3,7 @@ import { LogManager } from "../loggers/LogManager";
 import { Concept } from "../models/Concept";
 import { Reference } from "../models/Reference";
 import { SystemConcepts } from "../models/SystemConcepts";
-import { Triplet } from  "../models/Triplet";
+import { Triplet } from "../models/Triplet";
 import { TemporaryId } from "../utils/TemporaryId";
 import { EntityFactory } from "./EntityFactory";
 

@@ -1,4 +1,3 @@
-import { DBBaseAdapter } from "./adapters/DBBaseAdapter";
 import { DB } from "./connections/DB";
 import { IAppConfig } from "./interfaces/IAppConfig";
 import { IDBConfig } from "./interfaces/IDBconfig";

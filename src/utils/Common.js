@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Common = void 0;
 const crypto_1 = __importDefault(require("crypto"));
-const Reference_1 = require("../models/Reference");
 const Sandra_1 = require("../Sandra");
+const Reference_1 = require("../models/Reference");
 const SystemConcepts_1 = require("../models/SystemConcepts");
 const TemporaryId_1 = require("./TemporaryId");
 class Common {

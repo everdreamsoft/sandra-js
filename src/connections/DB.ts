@@ -1,10 +1,8 @@
-import { isArray } from "util";
 import { Sandra } from "../Sandra";
 import { DBBaseAdapter } from "../adapters/DBBaseAdapter";
 import { SandraAdapter } from "../adapters/SandraAdapter";
 import { IDBConfig } from "../interfaces/IDBconfig";
 import { LogManager } from "../loggers/LogManager";
-import { EventEmitter } from "stream";
 
 export class DB {
 

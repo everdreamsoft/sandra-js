@@ -1,5 +1,5 @@
 export interface IDBConfig {
-    name:string,
+    name: string,
     host: string,
     user: string,
     password: string,

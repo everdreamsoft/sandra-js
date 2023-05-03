@@ -1,9 +1,9 @@
 import crypto from "crypto";
-import { Reference } from "../models/Reference";
 import { Sandra } from "../Sandra";
+import { Reference } from "../models/Reference";
 import { SystemConcepts } from "../models/SystemConcepts";
+import { Triplet } from "../models/Triplet";
 import { TemporaryId } from "./TemporaryId";
-import { Triplet } from  "../models/Triplet";
 
 export class Common {
 

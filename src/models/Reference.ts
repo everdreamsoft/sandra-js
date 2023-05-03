@@ -1,5 +1,5 @@
+import { Triplet } from "../models/Triplet";
 import { Concept } from "./Concept";
-import { Triplet } from  "../models/Triplet";
 
 export class Reference {
 
