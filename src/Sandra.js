@@ -8,14 +8,11 @@ class Sandra {
         if ((_a = DB_1.DB.getInstance()) === null || _a === void 0 ? void 0 : _a.server()) {
             return (_c = (_b = DB_1.DB.getInstance()) === null || _b === void 0 ? void 0 : _b.server(server)) === null || _c === void 0 ? void 0 : _c.end();
         }
-        console.log("closing sandra connection / instance not found");
         return Promise.resolve(0);
     }
-    static getDBConfig() {
-        let conf = Object.assign({}, Sandra.DB_CONFIG);
-        delete conf.password;
-        delete conf.user;
-        return conf;
+    static getDBConfig(server = "sandra") {
+        var _a, _b, _c;
+        return (_c = (_b = (_a = DB_1.DB.getInstance()) === null || _a === void 0 ? void 0 : _a.server(server)) === null || _b === void 0 ? void 0 : _b.getConnectionPool()) === null || _c === void 0 ? void 0 : _c.getConfig();
     }
 }
 exports.Sandra = Sandra;

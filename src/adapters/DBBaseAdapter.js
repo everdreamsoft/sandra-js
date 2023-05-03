@@ -6,9 +6,7 @@ class DBBaseAdapter {
     constructor(config) {
         this.pool = new DBPool_1.DBPool(config);
     }
-    getConnectionPool() {
-        return this.pool;
-    }
+    getConnectionPool() { return this.pool; }
     end() {
         return this.pool.end();
     }

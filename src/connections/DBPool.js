@@ -26,9 +26,16 @@ class DBPool {
     getConnetion() {
         return this.pool.getConnection();
     }
+    getConfig() {
+        let conf = Object.assign({}, this.config);
+        delete conf.password;
+        delete conf.user;
+        return conf;
+    }
     async end() {
-        var _a;
-        return (_a = this.pool) === null || _a === void 0 ? void 0 : _a.end();
+        var _a, _b;
+        LogManager_1.LogManager.getInstance().warn("ending pool" + JSON.stringify((_a = this.pool) === null || _a === void 0 ? void 0 : _a.getConfig()));
+        return (_b = this.pool) === null || _b === void 0 ? void 0 : _b.end();
     }
     async query(sql, values, abortOption) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
@@ -36,7 +43,7 @@ class DBPool {
         let result, timeout = (abortOption === null || abortOption === void 0 ? void 0 : abortOption.timeout) ? abortOption === null || abortOption === void 0 ? void 0 : abortOption.timeout : 10000;
         let connection = await this.getConnetion();
         (_a = abortOption === null || abortOption === void 0 ? void 0 : abortOption.abortSignal) === null || _a === void 0 ? void 0 : _a.on("abort", ((reason) => {
-            console.log("connection destroy.." + reason || "");
+            LogManager_1.LogManager.getInstance().warn("connection destroy.." + reason || "");
             abortOption.abort = true;
             connection.destroy();
         }).bind(this));

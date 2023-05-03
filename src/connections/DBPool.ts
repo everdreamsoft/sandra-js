@@ -26,11 +26,20 @@ export class DBPool {
         });
     }
 
+
     private getConnetion(): Promise<PoolConnection> {
         return this.pool.getConnection();
     }
 
+    getConfig() {
+        let conf: any = { ...this.config };
+        delete conf.password;
+        delete conf.user;
+        return conf;
+    }
+
     async end(): Promise<void> {
+        LogManager.getInstance().warn("ending pool" + JSON.stringify(this.pool?.getConfig()));
         return this.pool?.end();
     }
 
@@ -42,7 +51,7 @@ export class DBPool {
         let connection = await this.getConnetion();
 
         abortOption?.abortSignal?.on("abort", ((reason?: string) => {
-            console.log("connection destroy.." + reason || "");
+            LogManager.getInstance().warn("connection destroy.." + reason || "");
             abortOption.abort = true;
             connection.destroy();
         }).bind(this));

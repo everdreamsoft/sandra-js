@@ -1,5 +1,6 @@
 import { DBPool } from "../connections/DBPool";
 import { IDBConfig } from "../interfaces/IDBconfig";
+import { LogManager } from "../loggers/LogManager";
 
 export class DBBaseAdapter {
 
@@ -9,13 +10,9 @@ export class DBBaseAdapter {
         this.pool = new DBPool(config);
     }
 
-    getConnectionPool()
-    {
-        return this.pool;
-    }
+    getConnectionPool() { return this.pool; }
 
-    end()
-    {
+    end() {
         return this.pool.end();
     }
 

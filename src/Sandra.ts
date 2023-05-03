@@ -11,22 +11,14 @@ export class Sandra {
     public static LOG_CONFIG: ILogConfig;
 
     static async close(server: string = "sandra") {
-
         if (DB.getInstance()?.server()) {
             return DB.getInstance()?.server(server)?.end();
         }
-
-        console.log("closing sandra connection / instance not found");
-
         return Promise.resolve(0);
-
     }
 
-    static getDBConfig(): any {
-        let conf: any = { ...Sandra.DB_CONFIG };
-        delete conf.password;
-        delete conf.user;
-        return conf;
+    static getDBConfig(server: string = "sandra"): any {
+        return DB.getInstance()?.server(server)?.getConnectionPool()?.getConfig()
     }
 
 }
