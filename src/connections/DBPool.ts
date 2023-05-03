@@ -45,7 +45,7 @@ export class DBPool {
 
     async query(sql: string, values?: any | any[] | { [param: string]: any }, abortOption?: IAbortOption): Promise<[any, any]> {
 
-        let start: any | undefined, time: any | undefined;
+        let start: any | undefined;
         let result: any, timeout = abortOption?.timeout ? abortOption?.timeout : 10000;
 
         let connection = await this.getConnetion();
@@ -58,16 +58,12 @@ export class DBPool {
 
         try {
 
-            if (Sandra.LOG_CONFIG?.query?.enable && Sandra.LOG_CONFIG?.query?.time) start = performance.now();
+            start = performance.now();
 
             result = connection.query({ sql, timeout }, values);
 
-            if (Sandra.LOG_CONFIG?.query?.enable) {
-                let params = undefined;
-                if (Sandra.LOG_CONFIG?.query?.time) time = performance.now() - start;
-                if (Sandra.LOG_CONFIG?.query?.values) params = values;
-                LogManager.getInstance().query(sql, params, time);
-            }
+            LogManager.getInstance().query(sql, values, (performance.now() - start));
+
 
         } catch (e: any) {
             LogManager.getInstance().error(e);
