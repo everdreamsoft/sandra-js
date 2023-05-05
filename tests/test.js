@@ -20,9 +20,9 @@ class Test {
         res = await (con === null || con === void 0 ? void 0 : con.query("select * from fondue_SandraConcept limit 1000;"));
         console.log(con);
     }
-    async testDB() {
+    async testDB(server = "sandra") {
         //let controller = new AbortController();
-        let facotry = new EntityFactory_1.EntityFactory("planet", "planet_file", await SystemConcepts_1.SystemConcepts.get("name"));
+        let facotry = new EntityFactory_1.EntityFactory("planet", "planet_file", await SystemConcepts_1.SystemConcepts.get("name", server), server);
         await facotry.loadEntityConcepts();
         await facotry.loadEntityConceptsRefs();
         console.log("a");

@@ -15,10 +15,11 @@ export class Entity {
     private uniqueRefConcept: Concept | undefined;
 
     private upsert: boolean = false;
-    private factory: EntityFactory | undefined;
+    private factory: EntityFactory;
     private pushedStatus: boolean = false;
 
-    constructor() {
+    constructor(factory: EntityFactory) {
+        this.factory = factory;
     }
 
     /**
@@ -259,7 +260,7 @@ export class Entity {
             this.references.push(ref);
         }
         else {
-            let c = await SystemConcepts.get("contained_in_file");
+            let c = await SystemConcepts.get("contained_in_file", this.factory.getServerName());
             let i = this.triplets.findIndex(t => { return t.getVerb()?.isEqual(c) });
             if (i >= 0) {
                 ref.setTripletLink(this.triplets[i]);
@@ -280,7 +281,7 @@ export class Entity {
      * @returns Return triplet object created for added brother triplet
      */
     async brother(verb: string, target: string, refs: Reference[] | undefined = undefined, upsert: boolean = false): Promise<Triplet> {
-        return await this.addTriplet(await SystemConcepts.get(verb), await SystemConcepts.get(target), refs, true, upsert);
+        return await this.addTriplet(await SystemConcepts.get(verb, this.factory.getServerName()), await SystemConcepts.get(target, this.factory.getServerName()), refs, true, upsert);
     }
 
     /**
@@ -292,7 +293,7 @@ export class Entity {
      */
     async join(verb: string, entity: Entity, refs: Reference[] | undefined = undefined): Promise<Triplet> {
 
-        let verbConcept = await SystemConcepts.get(verb);
+        let verbConcept = await SystemConcepts.get(verb, this.factory.getServerName());
 
         let i = this.triplets.findIndex(t => {
             return t.getVerb()?.isEqual(verbConcept) && t.getJoinedEntity()?.getSubject()?.getId() == entity.getSubject()?.getId()
@@ -303,7 +304,7 @@ export class Entity {
             return this.triplets[i];
         }
 
-        let t = await this.addTriplet(await SystemConcepts.get(verb), entity.getSubject(), refs, false)
+        let t = await this.addTriplet(await SystemConcepts.get(verb, this.factory.getServerName()), entity.getSubject(), refs, false)
 
         t.setJoinedEntity(entity);
 

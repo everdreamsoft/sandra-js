@@ -10,17 +10,24 @@ import { Concept } from "./Concept";
  */
 export class SystemConcepts {
 
-    private static concepts: Map<string, Concept> = new Map();
+    private static servers: Map<string, Map<string, Concept>> = new Map();
 
-    constructor() {
-    }
+    /**
+     * Gets system concpets for perticular server 
+     * @param server name of the server 
+     * @returns concpets maps
+     */
+    private static getServerConcepts(server: string): Map<string, Concept> {
 
-    private static async add(concept: Concept): Promise<Concept> {
+        let concepts: Map<string, Concept> | undefined = SystemConcepts.servers.get(server);
 
-        if (concept.getShortname()) {
-            return SystemConcepts.get(concept.getShortname());
-        }
-        throw new Error("Not a system concpet, trying to push shortname with null value");
+        if (concepts)
+            return concepts;
+
+        concepts = new Map();
+
+        SystemConcepts.servers.set(server, concepts);
+        return concepts;
 
     }
 
@@ -29,13 +36,16 @@ export class SystemConcepts {
      * if its not found then it tries to get it from the database, if not present in the database
      * it creates a new concept entry in the dabase and also in its list and returns the concpet object. 
      */
-    static async get(shortname: string | undefined, server: string = "sandra"): Promise<Concept> {
+    static async get(shortname: string | undefined, server: string): Promise<Concept> {
 
         if (shortname)
+
             return new Promise((resolve, reject) => {
 
+                let serverConceptsMap = SystemConcepts.getServerConcepts(server);
+
                 // check if it exist in memory 
-                let c = SystemConcepts.concepts.get(shortname);
+                let c = serverConceptsMap.get(shortname);
 
                 if (c) {
                     return resolve(c);
@@ -46,7 +56,7 @@ export class SystemConcepts {
                 db.getConcept(shortname).then(c => {
 
                     if (c) {
-                        SystemConcepts.concepts.set(shortname, c);
+                        serverConceptsMap.set(shortname, c);
                         return resolve(c);
                     }
 
@@ -55,7 +65,7 @@ export class SystemConcepts {
                     db.addConcept(newConcept).then(c => {
 
                         if (c) {
-                            SystemConcepts.concepts.set(shortname, c);
+                            serverConceptsMap.set(shortname, c);
                             return resolve(c);
                         }
 

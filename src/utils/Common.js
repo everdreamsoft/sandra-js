@@ -17,8 +17,8 @@ class Common {
      * @param tripletLink
      * @returns Returns a new Reference object with given shortname, value and triplet link
      */
-    static async createDBReference(shortname, value, tripletLink = undefined) {
-        return new Reference_1.Reference(TemporaryId_1.TemporaryId.create(), await SystemConcepts_1.SystemConcepts.get(shortname), tripletLink, value);
+    static async createDBReference(shortname, value, tripletLink = undefined, server) {
+        return new Reference_1.Reference(TemporaryId_1.TemporaryId.create(), await SystemConcepts_1.SystemConcepts.get(shortname, server), tripletLink, value);
     }
     /**
      *

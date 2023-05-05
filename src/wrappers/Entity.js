@@ -6,11 +6,12 @@ const SystemConcepts_1 = require("../models/SystemConcepts");
 const Triplet_1 = require("../models/Triplet");
 const TemporaryId_1 = require("../utils/TemporaryId");
 class Entity {
-    constructor() {
+    constructor(factory) {
         this.triplets = [];
         this.references = [];
         this.upsert = false;
         this.pushedStatus = false;
+        this.factory = factory;
     }
     /**
      * Sets subject concept for current entity.
@@ -222,7 +223,7 @@ class Entity {
             this.references.push(ref);
         }
         else {
-            let c = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+            let c = await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.factory.getServerName());
             let i = this.triplets.findIndex(t => { var _a; return (_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.isEqual(c); });
             if (i >= 0) {
                 ref.setTripletLink(this.triplets[i]);
@@ -241,7 +242,7 @@ class Entity {
      * @returns Return triplet object created for added brother triplet
      */
     async brother(verb, target, refs = undefined, upsert = false) {
-        return await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), await SystemConcepts_1.SystemConcepts.get(target), refs, true, upsert);
+        return await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb, this.factory.getServerName()), await SystemConcepts_1.SystemConcepts.get(target, this.factory.getServerName()), refs, true, upsert);
     }
     /**
      * Adds joined enitty to current entity object.
@@ -252,7 +253,7 @@ class Entity {
      */
     async join(verb, entity, refs = undefined) {
         var _a, _b;
-        let verbConcept = await SystemConcepts_1.SystemConcepts.get(verb);
+        let verbConcept = await SystemConcepts_1.SystemConcepts.get(verb, this.factory.getServerName());
         let i = this.triplets.findIndex(t => {
             var _a, _b, _c, _d;
             return ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.isEqual(verbConcept)) && ((_c = (_b = t.getJoinedEntity()) === null || _b === void 0 ? void 0 : _b.getSubject()) === null || _c === void 0 ? void 0 : _c.getId()) == ((_d = entity.getSubject()) === null || _d === void 0 ? void 0 : _d.getId());
@@ -261,7 +262,7 @@ class Entity {
             LogManager_1.LogManager.getInstance().info("adding same triplets again for entity subject - " + ((_a = this.getSubject()) === null || _a === void 0 ? void 0 : _a.getId()) + " " + ((_b = this.getFactory()) === null || _b === void 0 ? void 0 : _b.getFullName()));
             return this.triplets[i];
         }
-        let t = await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb), entity.getSubject(), refs, false);
+        let t = await this.addTriplet(await SystemConcepts_1.SystemConcepts.get(verb, this.factory.getServerName()), entity.getSubject(), refs, false);
         t.setJoinedEntity(entity);
         return t;
     }

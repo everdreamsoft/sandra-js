@@ -79,16 +79,16 @@ export class PlanetTest {
 
     }
 
-    async push() {
+    async push(server: string = "sandra") {
 
         console.log("\n### Push ####");
 
-        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
-        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"));
+        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name", server));
+        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name", server));
 
-        let ref1 = await Common.createDBReference("name", "jupiter11");
-        let ref2 = await Common.createDBReference("size", "10Km");
-        let ref3 = await Common.createDBReference("name", "europa");
+        let ref1 = await Common.createDBReference("name", "jupiter11", undefined, server);
+        let ref2 = await Common.createDBReference("size", "10Km", undefined, server);
+        let ref3 = await Common.createDBReference("name", "europa", undefined, server);
 
         let p = await planetFactory.create([ref1, ref2]);
         let m = await moonFactory.create([ref3]);
@@ -103,12 +103,12 @@ export class PlanetTest {
 
     }
 
-    async load(planetName: string) {
+    async load(planetName: string, server: string = "sandra") {
 
         console.log("\n### Loading ####");
 
-        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
-        let ref = await Common.createDBReference("name", planetName);
+        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name", server));
+        let ref = await Common.createDBReference("name", planetName, undefined, server);
 
         // Loading enitity data with given ref 
         await planetFactory.load(ref, true, true, 1);
@@ -123,17 +123,17 @@ export class PlanetTest {
 
     }
 
-    async updateRefAndTriplet() {
+    async updateRefAndTriplet(server: string = "sandra") {
 
         console.log("\n### Updating ####");
 
-        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
-        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"));
+        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name", server));
+        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name", server));
 
-        let refPlanet = await Common.createDBReference("name", "jupiter1");
+        let refPlanet = await Common.createDBReference("name", "jupiter1", undefined, server);
         await planetFactory.load(refPlanet, true);
 
-        let refMoon = await Common.createDBReference("name", "europa1");
+        let refMoon = await Common.createDBReference("name", "europa1", undefined, server);
         let m = await moonFactory.create([refMoon]);
 
         await moonFactory.loadAllSubjects();
@@ -146,13 +146,13 @@ export class PlanetTest {
         // Set to update or insert references
         e.setUpsert(true);
 
-        let ref1 = e.getRef(await SystemConcepts.get("size"));
+        let ref1 = e.getRef(await SystemConcepts.get("size", server));
 
         // Updating reference
         ref1?.setValue("10Km");
 
         // Updating triplet
-        e.addTriplet(await SystemConcepts.get("moon"), m.getSubject(), [], true, true);
+        e.addTriplet(await SystemConcepts.get("moon", server), m.getSubject(), [], true, true);
 
         // Updating 
         await planetFactory.push();
@@ -170,17 +170,17 @@ export class PlanetTest {
         }
     }
 
-    async addNewRefAndTripet() {
+    async addNewRefAndTripet(server: string = "sandra") {
 
         console.log("\n### Updating ####");
 
-        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
-        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"));
+        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name", server));
+        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name", server));
 
-        let refPlanet = await Common.createDBReference("name", "jupiter1");
+        let refPlanet = await Common.createDBReference("name", "jupiter1", undefined, server);
         await planetFactory.load(refPlanet, true);
 
-        let refMoon = await Common.createDBReference("name", "europa1");
+        let refMoon = await Common.createDBReference("name", "europa1", undefined, server);
         let m = await moonFactory.create([refMoon]);
 
         await moonFactory.loadAllSubjects();
@@ -194,11 +194,11 @@ export class PlanetTest {
         // To add new ref setting upsert to false 
         e.setUpsert(false);
 
-        let refNew = await Common.createDBReference("tilt", "23Deg");
+        let refNew = await Common.createDBReference("tilt", "23Deg", undefined, server);
         await e.addRef(refNew);
 
         // Adding triplet
-        e.addTriplet(await SystemConcepts.get("moon1"), m.getSubject(), [], true, false);
+        e.addTriplet(await SystemConcepts.get("moon1", server), m.getSubject(), [], true, false);
 
         // Updating 
         await planetFactory.push();
@@ -220,8 +220,8 @@ export class PlanetTest {
 
         console.log("\n### Push Batch ####");
 
-        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"), server);
-        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"), server);
+        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name", server), server);
+        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name", server), server);
 
         for (let j = 1; j <= 1000; j++) {
 
@@ -238,21 +238,21 @@ export class PlanetTest {
 
                 let p = await planetFactory.create(
                     [
-                        await Common.createDBReference("name", planetId),
-                        await Common.createDBReference("diameter", "10000"),
+                        await Common.createDBReference("name", planetId, undefined, server),
+                        await Common.createDBReference("diameter", "10000", undefined, server),
                     ]
                 );
 
                 let m = await moonFactory.create(
                     [
-                        await Common.createDBReference("name", moonId),
-                        await Common.createDBReference("diameter", "10000"),
+                        await Common.createDBReference("name", moonId, undefined, server),
+                        await Common.createDBReference("diameter", "10000", undefined, server),
                     ]
                 );
 
                 // Brother with reference attached 
                 await p.brother("hasMoon", "true", [
-                    await Common.createDBReference("totalMoon", "1"),
+                    await Common.createDBReference("totalMoon", "1", undefined, server),
                 ]);
 
                 // Joined entity 
@@ -278,17 +278,17 @@ export class PlanetTest {
 
     }
 
-    async loadBatch() {
+    async loadBatch(server: string = "sandra") {
 
         console.log("\n### Loading Batch ####");
 
         let time = Date.now();
-        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
+        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name", server));
 
         // Creating entity object array in factory 
         for (let i = 0; i < 10; i++) {
             let id = "planet" + i;
-            await planetFactory.create([await Common.createDBReference("name", id)]);
+            await planetFactory.create([await Common.createDBReference("name", id, undefined, server)]);
         }
 
         console.log("Memory refs creation - " + (Date.now() - time) + "ms");
@@ -330,12 +330,12 @@ export class PlanetTest {
 
     }
 
-    async loadTopPlanetsWithPaging(limit: number = 100) {
+    async loadTopPlanetsWithPaging(limit: number = 100, server: string = "sandra") {
 
         console.log("\n### Loading Top Planets ####");
         let pageIndex = 1;
         let time = Date.now();
-        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
+        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name", server));
 
         await planetFactory.loadEntityConcepts(undefined, limit.toString());
         await planetFactory.loadTriplets();
@@ -361,13 +361,13 @@ export class PlanetTest {
 
     }
 
-    async filter(moonName: string) {
+    async filter(moonName: string, server: string = "sandra") {
 
         console.log("\n### Filter entities with given moon  ####");
-        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name"));
-        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name"));
+        let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name", server));
+        let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name", server));
 
-        await moonFactory.load(await Common.createDBReference("name", moonName));
+        await moonFactory.load(await Common.createDBReference("name", moonName, undefined, server));
 
         if (moonFactory.getEntities()?.length > 0) {
 
@@ -383,7 +383,7 @@ export class PlanetTest {
             let t1 = new Triplet(
                 TemporaryId.create(),
                 subConcept,
-                await SystemConcepts.get("moon"),
+                await SystemConcepts.get("moon", server),
                 moon.getSubject()
             );
 
@@ -423,7 +423,7 @@ export class PlanetTest {
 
     }
 
-    async selectAsJSON() {
+    async selectAsJSON(server: string = "sandra") {
 
         let json: any = {
             "is_a": "planet",
@@ -442,7 +442,7 @@ export class PlanetTest {
             }
         }
 
-        let r = await JSONQuery.selectAsJson(json);
+        let r = await JSONQuery.selectAsJson(json, server);
 
         console.log(r);
 
@@ -450,7 +450,7 @@ export class PlanetTest {
 
     }
 
-    async pushAsJSON() {
+    async pushAsJSON(server: string = "sandra") {
 
         let json = {
             "is_a": "planet",
@@ -531,7 +531,7 @@ export class PlanetTest {
             }
         };
 
-        await JSONQuery.push(json);
+        await JSONQuery.push(json, server);
 
         console.log("Done!!");
 
@@ -589,24 +589,24 @@ export class PlanetTest {
         }
     }
 
-    async QueryJSON(json: any, level: number = 0): Promise<Entity[]> {
+    async QueryJSON(json: any, level: number = 0, server: string = "sandra"): Promise<Entity[]> {
 
         let limit = 1;
         if (level == 0) limit = json.limit;
 
-        let uniqueRefConcept = await SystemConcepts.get(json["uniqueRef"]);
+        let uniqueRefConcept = await SystemConcepts.get(json["uniqueRef"], server);
         let factory = new EntityFactory(json["is_a"], json["contained_in_file"], uniqueRefConcept);
 
         let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX + factory.getIsAVerb(), undefined);
 
-        let cFile = await SystemConcepts.get(json["contained_in_file"]);
-        let sysCiF = await SystemConcepts.get("contained_in_file");
+        let cFile = await SystemConcepts.get(json["contained_in_file"], server);
+        let sysCiF = await SystemConcepts.get("contained_in_file", server);
         let t2 = new Triplet(TemporaryId.create(), subConcept, sysCiF, cFile);
 
         let refsArr = [];
         let refKeys = Object.keys(json.refs);
         for (let i = 0; i < refKeys.length; i++) {
-            let ref = await Common.createDBReference(refKeys[i], json.refs[refKeys[i]], t2);
+            let ref = await Common.createDBReference(refKeys[i], json.refs[refKeys[i]], t2, server);
             refsArr.push(ref);
         }
 
@@ -616,14 +616,14 @@ export class PlanetTest {
             tripletsArr.push(new Triplet(
                 TemporaryId.create(),
                 subConcept,
-                await SystemConcepts.get(tripletsKeys[i]),
-                await SystemConcepts.get(json.brothers[tripletsKeys[i]])
+                await SystemConcepts.get(tripletsKeys[i], server),
+                await SystemConcepts.get(json.brothers[tripletsKeys[i]], server)
             ));
         }
 
         let joinedKeys = Object.keys(json.joined);
         for (let i = 0; i < joinedKeys?.length; i++) {
-            let verbConcept = await SystemConcepts.get(joinedKeys[i]);
+            let verbConcept = await SystemConcepts.get(joinedKeys[i], server);
             let targets = await this.QueryJSON(json.joined[joinedKeys[i]], level + 1);
             if (targets?.length > 0) {
                 tripletsArr.push(new Triplet(TemporaryId.create(), subConcept, verbConcept, targets[0].getSubject()));

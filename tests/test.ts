@@ -37,9 +37,9 @@ export class Test {
     }
 
 
-    async testDB() {
+    async testDB(server: string = "sandra") {
         //let controller = new AbortController();
-        let facotry = new EntityFactory("planet", "planet_file", await SystemConcepts.get("name"))
+        let facotry = new EntityFactory("planet", "planet_file", await SystemConcepts.get("name", server), server)
         await facotry.loadEntityConcepts();
         await facotry.loadEntityConceptsRefs();
         console.log("a");

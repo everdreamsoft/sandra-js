@@ -53,10 +53,9 @@ class EntityFactory {
             });
         }
         else {
-            e = new Entity_1.Entity();
+            e = new Entity_1.Entity(this);
             e.setUpsert(upsert);
             let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), undefined);
-            e.setFactory(this);
             e.setSubject(subConcept);
             // Set unique ref concept
             e.setUniqueRefConcept(this.uniqueRefConcept);
@@ -89,6 +88,7 @@ class EntityFactory {
     getFullName() { return this.is_a + "/" + this.contained_in_file; }
     getContainedInFileVerb() { return this.contained_in_file; }
     getUniqueRefConcept() { return this.uniqueRefConcept; }
+    getServerName() { return this.server; }
     /**
      * If factory abort options are set then it
      * emits abort signal for queries and sets abort
@@ -357,7 +357,7 @@ class EntityFactory {
     */
     async load(ref, loadAllEntityData = true, iterateDown = false, limit = 1000) {
         var _a, _b, _c;
-        let entityTriplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), ref, limit, this.abortOptions));
+        let entityTriplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file, this.server), ref, limit, this.abortOptions));
         for (let index = 0; index < (entityTriplets === null || entityTriplets === void 0 ? void 0 : entityTriplets.length); index++) {
             let entityTriplet = entityTriplets[index];
             let refs = [];
@@ -375,7 +375,7 @@ class EntityFactory {
                     refs.push(...r);
                 }
             }
-            let e = new Entity_1.Entity();
+            let e = new Entity_1.Entity(this);
             let subject = entityTriplet.getSubject();
             if (subject)
                 e.setSubject(subject);
@@ -413,7 +413,7 @@ class EntityFactory {
                 let r = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplet(triplets[i], undefined, this.abortOptions));
                 refs.push(...r);
             }
-            let e = new Entity_1.Entity();
+            let e = new Entity_1.Entity(this);
             if (subject)
                 e.setSubject(subject);
             e.getTriplets().push(...triplets);
@@ -435,7 +435,7 @@ class EntityFactory {
             var _a;
             if ((_a = this.abortOptions) === null || _a === void 0 ? void 0 : _a.abort)
                 throw Error("Abort signal recieved");
-            let e = new Entity_1.Entity();
+            let e = new Entity_1.Entity(this);
             e.setSubject(key);
             e.getTriplets().push(...val);
             e.setPushedStatus(true);
@@ -451,12 +451,12 @@ class EntityFactory {
      */
     async loadEntityConcepts(lastId, limit) {
         var _a;
-        let cifFileTargetSub = await SystemConcepts_1.SystemConcepts.get(this.getContainedInFileVerb());
-        let cifFileVerbSub = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+        let cifFileTargetSub = await SystemConcepts_1.SystemConcepts.get(this.getContainedInFileVerb(), this.server);
+        let cifFileVerbSub = await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server);
         let entityConcepts = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConcepts(cifFileVerbSub, cifFileTargetSub, lastId, limit, this.abortOptions));
         for (let index = 0; index < (entityConcepts === null || entityConcepts === void 0 ? void 0 : entityConcepts.length); index++) {
             let entityConcept = entityConcepts[index];
-            let e = new Entity_1.Entity();
+            let e = new Entity_1.Entity(this);
             e.setSubject(entityConcept);
             e.setUniqueRefConcept(this.uniqueRefConcept);
             this.entityArray.push(e);
@@ -467,7 +467,7 @@ class EntityFactory {
      */
     async loadEntityConceptsRefs() {
         var _a;
-        let cifSystem = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
+        let cifSystem = await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server);
         await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsRefs(this.entityArray, cifSystem, this.abortOptions));
     }
     /***
@@ -554,7 +554,7 @@ class EntityFactory {
             if (r)
                 refs.push(r.getValue());
         });
-        let entityConceptsMap = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsByRefs(await SystemConcepts_1.SystemConcepts.get("contained_in_file"), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file), refs, this.uniqueRefConcept, this.abortOptions));
+        let entityConceptsMap = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsByRefs(await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file, this.server), refs, this.uniqueRefConcept, this.abortOptions));
         this.entityArray.forEach(entity => {
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
@@ -617,7 +617,7 @@ class EntityFactory {
         let i = this.entityArray.findIndex(e => { var _a; return (_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.isEqual(subject); });
         if (i >= 0)
             return;
-        let e = new Entity_1.Entity();
+        let e = new Entity_1.Entity(this);
         e.setSubject(subject);
         this.entityArray.push(e);
     }

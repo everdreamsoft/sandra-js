@@ -29,16 +29,16 @@ class JSONQuery {
      * @param query JSON query
      * @returns Promise<Entity[]>
      */
-    static async select(query) {
-        return JSONQuery.filter(query);
+    static async select(query, server) {
+        return JSONQuery.filter(query, 0, server);
     }
     /***
     * Gets entities as json on bases of given json
     * @param query JSON query
     * @returns Promise<any>
     */
-    static async selectAsJson(query) {
-        let res = await JSONQuery.filter(query);
+    static async selectAsJson(query, server) {
+        let res = await JSONQuery.filter(query, 0, server);
         let jsonRes = [];
         res.forEach(e => {
             jsonRes.push(e.asJSON());
@@ -50,10 +50,10 @@ class JSONQuery {
     * @param data entity data as json
     * @returns Promise<void>
     */
-    static async push(data) {
-        await JSONQuery.pushJson(data);
+    static async push(data, server) {
+        await JSONQuery.pushJson(data, 0, server);
     }
-    static async filter(json, level = 0) {
+    static async filter(json, level = 0, server) {
         var _a;
         let limit = 1;
         if (level == 0)
@@ -61,20 +61,20 @@ class JSONQuery {
         let is_a = json["is_a"];
         let cif = json["contained_in_file"];
         let uniqueRef = json["uniqueRef"];
-        let uniqueRefConcept = await SystemConcepts_1.SystemConcepts.get(uniqueRef);
+        let uniqueRefConcept = await SystemConcepts_1.SystemConcepts.get(uniqueRef, server);
         let factory = new EntityFactory_1.EntityFactory(is_a, cif, uniqueRefConcept);
         let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + factory.getIsAVerb(), undefined);
-        let sysCiFConcept = await SystemConcepts_1.SystemConcepts.get("contained_in_file");
-        let sysisAConcept = await SystemConcepts_1.SystemConcepts.get("is_a");
-        let cifConcept = await SystemConcepts_1.SystemConcepts.get(cif);
-        let isAConcept = await SystemConcepts_1.SystemConcepts.get(is_a);
+        let sysCiFConcept = await SystemConcepts_1.SystemConcepts.get("contained_in_file", server);
+        let sysisAConcept = await SystemConcepts_1.SystemConcepts.get("is_a", server);
+        let cifConcept = await SystemConcepts_1.SystemConcepts.get(cif, server);
+        let isAConcept = await SystemConcepts_1.SystemConcepts.get(is_a, server);
         let cifTriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysCiFConcept, cifConcept);
         let isATriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysisAConcept, isAConcept);
         let refsArr = [];
         if (json.refs) {
             let refKeys = Object.keys(json.refs);
             for (let i = 0; i < refKeys.length; i++) {
-                let ref = await Common_1.Common.createDBReference(refKeys[i], json.refs[refKeys[i]], cifTriplet);
+                let ref = await Common_1.Common.createDBReference(refKeys[i], json.refs[refKeys[i]], cifTriplet, server);
                 refsArr.push(ref);
             }
         }
@@ -86,13 +86,13 @@ class JSONQuery {
                 let brotherTargetValues = json.brothers[tripletsKeys[i]];
                 if (brotherTargetValues.target) {
                     let brotherTarget = brotherTargetValues.target;
-                    let brotherTriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, await SystemConcepts_1.SystemConcepts.get(brotherVerb), await SystemConcepts_1.SystemConcepts.get(brotherTarget));
+                    let brotherTriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, await SystemConcepts_1.SystemConcepts.get(brotherVerb, server), await SystemConcepts_1.SystemConcepts.get(brotherTarget, server));
                     tripletsArr.push(brotherTriplet);
                     if (brotherTargetValues.refs) {
                         // References attached with this brother triplet 
                         let refKeys = Object.keys(brotherTargetValues.refs);
                         for (let i = 0; i < refKeys.length; i++) {
-                            let ref = await Common_1.Common.createDBReference(refKeys[i], brotherTargetValues.refs[refKeys[i]], brotherTriplet);
+                            let ref = await Common_1.Common.createDBReference(refKeys[i], brotherTargetValues.refs[refKeys[i]], brotherTriplet, server);
                             refsArr.push(ref);
                         }
                     }
@@ -102,11 +102,11 @@ class JSONQuery {
         if (json.joined) {
             let joinedKeys = Object.keys(json.joined);
             for (let i = 0; i < (joinedKeys === null || joinedKeys === void 0 ? void 0 : joinedKeys.length); i++) {
-                let verbConcept = await SystemConcepts_1.SystemConcepts.get(joinedKeys[i]);
+                let verbConcept = await SystemConcepts_1.SystemConcepts.get(joinedKeys[i], server);
                 let joinedTargetValues = json.joined[joinedKeys[i]];
                 if (joinedTargetValues.target) {
                     let joinedTarget = joinedTargetValues.target;
-                    let targets = await this.filter(joinedTarget, level + 1);
+                    let targets = await this.filter(joinedTarget, level + 1, server);
                     if ((targets === null || targets === void 0 ? void 0 : targets.length) > 0) {
                         let triplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, verbConcept, targets[0].getSubject());
                         triplet.setJoinedEntity(targets[0]);
@@ -114,7 +114,7 @@ class JSONQuery {
                             // References attached with this brother triplet 
                             let refKeys = Object.keys(joinedTargetValues.refs);
                             for (let i = 0; i < refKeys.length; i++) {
-                                let ref = await Common_1.Common.createDBReference(refKeys[i], joinedTargetValues.refs[refKeys[i]], triplet);
+                                let ref = await Common_1.Common.createDBReference(refKeys[i], joinedTargetValues.refs[refKeys[i]], triplet, server);
                                 refsArr.push(ref);
                             }
                         }
@@ -133,18 +133,18 @@ class JSONQuery {
         }
         return Promise.resolve(factory.getEntities());
     }
-    static async pushJson(json, level = 0) {
+    static async pushJson(json, level = 0, server) {
         var _a;
         let is_a = json["is_a"];
         let cif = json["contained_in_file"];
         let uniqueRef = json["uniqueRef"];
-        let uniqueRefConcept = await SystemConcepts_1.SystemConcepts.get(uniqueRef);
+        let uniqueRefConcept = await SystemConcepts_1.SystemConcepts.get(uniqueRef, server);
         let factory = new EntityFactory_1.EntityFactory(is_a, cif, uniqueRefConcept);
         let refsArr = [];
         if (json.refs) {
             let refKeys = Object.keys(json.refs);
             for (let i = 0; i < refKeys.length; i++) {
-                let ref = await Common_1.Common.createDBReference(refKeys[i], json.refs[refKeys[i]]);
+                let ref = await Common_1.Common.createDBReference(refKeys[i], json.refs[refKeys[i]], undefined, server);
                 refsArr.push(ref);
             }
         }
@@ -162,7 +162,7 @@ class JSONQuery {
                         // References attached with this brother triplet 
                         let refKeys = Object.keys(brotherTargetValues.refs);
                         for (let i = 0; i < refKeys.length; i++) {
-                            let ref = await Common_1.Common.createDBReference(refKeys[i], brotherTargetValues.refs[refKeys[i]]);
+                            let ref = await Common_1.Common.createDBReference(refKeys[i], brotherTargetValues.refs[refKeys[i]], undefined, server);
                             brotherRefs.push(ref);
                         }
                     }
@@ -173,18 +173,18 @@ class JSONQuery {
         if (json.joined) {
             let joinedKeys = Object.keys(json.joined);
             for (let i = 0; i < (joinedKeys === null || joinedKeys === void 0 ? void 0 : joinedKeys.length); i++) {
-                let verbConcept = await SystemConcepts_1.SystemConcepts.get(joinedKeys[i]);
+                let verbConcept = await SystemConcepts_1.SystemConcepts.get(joinedKeys[i], server);
                 let joinedTargetValues = json.joined[joinedKeys[i]];
                 if (joinedTargetValues.target) {
                     let joinedTarget = joinedTargetValues.target;
                     let joinedRefs = [];
-                    let targets = (_a = (await this.pushJson(joinedTarget, level + 1))) === null || _a === void 0 ? void 0 : _a.getEntities();
+                    let targets = (_a = (await this.pushJson(joinedTarget, level + 1, server))) === null || _a === void 0 ? void 0 : _a.getEntities();
                     if (targets && (targets === null || targets === void 0 ? void 0 : targets.length) > 0) {
                         if (joinedTargetValues.refs) {
                             // References attached with this joined triplet 
                             let refKeys = Object.keys(joinedTargetValues.refs);
                             for (let i = 0; i < refKeys.length; i++) {
-                                let ref = await Common_1.Common.createDBReference(refKeys[i], joinedTargetValues.refs[refKeys[i]]);
+                                let ref = await Common_1.Common.createDBReference(refKeys[i], joinedTargetValues.refs[refKeys[i]], undefined, server);
                                 joinedRefs.push(ref);
                             }
                         }

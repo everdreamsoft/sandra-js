@@ -78,13 +78,11 @@ export class EntityFactory {
         }
         else {
 
-            e = new Entity();
+            e = new Entity(this);
 
             e.setUpsert(upsert);
 
             let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), undefined);
-
-            e.setFactory(this);
 
             e.setSubject(subConcept);
 
@@ -123,6 +121,7 @@ export class EntityFactory {
     getFullName() { return this.is_a + "/" + this.contained_in_file; }
     getContainedInFileVerb() { return this.contained_in_file; }
     getUniqueRefConcept() { return this.uniqueRefConcept; }
+    getServerName() { return this.server; }
 
     /**
      * If factory abort options are set then it 
@@ -465,8 +464,8 @@ export class EntityFactory {
     async load(ref: Reference, loadAllEntityData: boolean = true, iterateDown: boolean = false, limit: number = 1000) {
 
         let entityTriplets: Triplet[] = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityTriplet(
-            await SystemConcepts.get("contained_in_file"),
-            await SystemConcepts.get(this.contained_in_file),
+            await SystemConcepts.get("contained_in_file", this.server),
+            await SystemConcepts.get(this.contained_in_file, this.server),
             ref, limit, this.abortOptions
         );
 
@@ -503,7 +502,7 @@ export class EntityFactory {
 
             }
 
-            let e = new Entity();
+            let e = new Entity(this);
             let subject = entityTriplet.getSubject();
 
             if (subject)
@@ -569,7 +568,7 @@ export class EntityFactory {
 
             }
 
-            let e = new Entity();
+            let e = new Entity(this);
 
             if (subject)
                 e.setSubject(subject);
@@ -598,7 +597,7 @@ export class EntityFactory {
 
         concepts.forEach((val: Triplet[], key: Concept) => {
             if (this.abortOptions?.abort) throw Error("Abort signal recieved");
-            let e = new Entity();
+            let e = new Entity(this);
             e.setSubject(key);
             e.getTriplets().push(...val)
             e.setPushedStatus(true);
@@ -616,8 +615,8 @@ export class EntityFactory {
      */
     async loadEntityConcepts(lastId?: string, limit?: string) {
 
-        let cifFileTargetSub = await SystemConcepts.get(this.getContainedInFileVerb());
-        let cifFileVerbSub = await SystemConcepts.get("contained_in_file");
+        let cifFileTargetSub = await SystemConcepts.get(this.getContainedInFileVerb(), this.server);
+        let cifFileVerbSub = await SystemConcepts.get("contained_in_file", this.server);
 
         let entityConcepts: Concept[] = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityConcepts(
             cifFileVerbSub, cifFileTargetSub, lastId, limit, this.abortOptions
@@ -625,7 +624,7 @@ export class EntityFactory {
 
         for (let index = 0; index < entityConcepts?.length; index++) {
             let entityConcept = entityConcepts[index];
-            let e = new Entity();
+            let e = new Entity(this);
             e.setSubject(entityConcept);
             e.setUniqueRefConcept(this.uniqueRefConcept);
             this.entityArray.push(e);
@@ -637,7 +636,7 @@ export class EntityFactory {
      * Loads the references of all entites of given factory 
      */
     async loadEntityConceptsRefs() {
-        let cifSystem = await SystemConcepts.get("contained_in_file");
+        let cifSystem = await SystemConcepts.get("contained_in_file", this.server);
         await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityConceptsRefs(
             this.entityArray, cifSystem, this.abortOptions
         );
@@ -742,8 +741,8 @@ export class EntityFactory {
         });
 
         let entityConceptsMap: Map<string, Concept> = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityConceptsByRefs(
-            await SystemConcepts.get("contained_in_file"),
-            await SystemConcepts.get(this.contained_in_file),
+            await SystemConcepts.get("contained_in_file", this.server),
+            await SystemConcepts.get(this.contained_in_file, this.server),
             refs,
             this.uniqueRefConcept,
             this.abortOptions
@@ -825,7 +824,7 @@ export class EntityFactory {
         if (i >= 0)
             return;
 
-        let e = new Entity();
+        let e = new Entity(this);
         e.setSubject(subject);
         this.entityArray.push(e);
 
