@@ -46,7 +46,7 @@ export class DBPool {
     async query(sql: string, values?: any | any[] | { [param: string]: any }, abortOption?: IAbortOption): Promise<[any, any]> {
 
         let start: any | undefined;
-        let result: any, timeout = abortOption?.timeout ? abortOption?.timeout : 10000;
+        let result: any, timeout = abortOption?.timeout ? abortOption?.timeout : 1000000;
 
         let connection = await this.getConnetion();
 

@@ -19,7 +19,7 @@ class PlanetTest {
         this.MOON_ISA = "moon";
         this.DB_CONFIG_LOCAL = {
             name: "sandra",
-            database: "ccc8_batch",
+            database: "jetski",
             host: "localhost",
             env: "fondue",
             password: "",
@@ -44,7 +44,7 @@ class PlanetTest {
     }
     async run() {
         // Load and Push one by one
-        //await this.push();
+        await this.push();
         //await this.load("jupiter11");
         //await this.updateRefAndTriplet();
         //await this.addNewRefAndTripet();
@@ -54,7 +54,7 @@ class PlanetTest {
         // Load with paging 
         //await this.loadTopPlanetsWithPaging(100);
         // Using Filters 
-        await this.filter("moon1");
+        //await this.filter("moon1");
         // Using JSON query 
         //await this.selectAsJSON();
         //await this.pushAsJSON();
@@ -65,9 +65,9 @@ class PlanetTest {
         console.log("\n### Push ####");
         let planetFactory = new EntityFactory_1.EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts_1.SystemConcepts.get("name", server));
         let moonFactory = new EntityFactory_1.EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts_1.SystemConcepts.get("name", server));
-        let ref1 = await Common_1.Common.createDBReference("name", "jupiter11", undefined, server);
+        let ref1 = await Common_1.Common.createDBReference("name", "ranjit111", undefined, server);
         let ref2 = await Common_1.Common.createDBReference("size", "10Km", undefined, server);
-        let ref3 = await Common_1.Common.createDBReference("name", "europa", undefined, server);
+        let ref3 = await Common_1.Common.createDBReference("name", "ranjit2111", undefined, server);
         let p = await planetFactory.create([ref1, ref2]);
         let m = await moonFactory.create([ref3]);
         p.join("moon", m);
@@ -75,6 +75,7 @@ class PlanetTest {
         await moonFactory.loadAllSubjects();
         await planetFactory.loadAllSubjects();
         await planetFactory.push();
+        console.log("done");
     }
     async load(planetName, server = "sandra") {
         var _a, _b;

@@ -23,7 +23,7 @@ export class PlanetTest {
 
     readonly DB_CONFIG_LOCAL = {
         name: "sandra",
-        database: "ccc8_batch",
+        database: "jetski",
         host: "localhost",
         env: "fondue",
         password: "",
@@ -54,7 +54,7 @@ export class PlanetTest {
     async run() {
 
         // Load and Push one by one
-        //await this.push();
+        await this.push();
         //await this.load("jupiter11");
         //await this.updateRefAndTriplet();
         //await this.addNewRefAndTripet();
@@ -67,7 +67,7 @@ export class PlanetTest {
         //await this.loadTopPlanetsWithPaging(100);
 
         // Using Filters 
-        await this.filter("moon1");
+        //await this.filter("moon1");
 
         // Using JSON query 
         //await this.selectAsJSON();
@@ -86,9 +86,9 @@ export class PlanetTest {
         let planetFactory = new EntityFactory(this.PLANET_ISA, this.PLANET_FILE, await SystemConcepts.get("name", server));
         let moonFactory = new EntityFactory(this.MOON_ISA, this.MOON_FILE, await SystemConcepts.get("name", server));
 
-        let ref1 = await Common.createDBReference("name", "jupiter11", undefined, server);
+        let ref1 = await Common.createDBReference("name", "ranjit111", undefined, server);
         let ref2 = await Common.createDBReference("size", "10Km", undefined, server);
-        let ref3 = await Common.createDBReference("name", "europa", undefined, server);
+        let ref3 = await Common.createDBReference("name", "ranjit2111", undefined, server);
 
         let p = await planetFactory.create([ref1, ref2]);
         let m = await moonFactory.create([ref3]);
@@ -100,6 +100,8 @@ export class PlanetTest {
         await planetFactory.loadAllSubjects();
 
         await planetFactory.push();
+
+        console.log("done");
 
     }
 

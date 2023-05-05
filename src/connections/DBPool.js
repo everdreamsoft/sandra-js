@@ -39,7 +39,7 @@ class DBPool {
     async query(sql, values, abortOption) {
         var _a, _b;
         let start;
-        let result, timeout = (abortOption === null || abortOption === void 0 ? void 0 : abortOption.timeout) ? abortOption === null || abortOption === void 0 ? void 0 : abortOption.timeout : 10000;
+        let result, timeout = (abortOption === null || abortOption === void 0 ? void 0 : abortOption.timeout) ? abortOption === null || abortOption === void 0 ? void 0 : abortOption.timeout : 1000000;
         let connection = await this.getConnetion();
         (_a = abortOption === null || abortOption === void 0 ? void 0 : abortOption.abortSignal) === null || _a === void 0 ? void 0 : _a.on("abort", ((reason) => {
             LogManager_1.LogManager.getInstance().warn("connection destroy.." + reason || "");
