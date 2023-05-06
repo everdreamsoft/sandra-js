@@ -327,7 +327,7 @@ export class EntityFactory {
         }
 
         if (triplets.length > 0)
-            await (DB.getInstance().server(this.server) as SandraAdapter)?.addTripletsBatch(triplets, false, !ignoreIfVerbExist, this.abortOptions);
+            await (DB.getInstance().server(this.server) as SandraAdapter)?.addTripletsBatch(triplets, false, true, this.abortOptions);
 
     }
 

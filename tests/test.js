@@ -6,6 +6,7 @@ const SystemConcepts_1 = require("../src/models/SystemConcepts");
 const EntityFactory_1 = require("../src/wrappers/EntityFactory");
 const DB_1 = require("../src/connections/DB");
 const Common_1 = require("../src/utils/Common");
+const Concept_1 = require("../src/models/Concept");
 class Test {
     async run() {
         this.testDB();
@@ -23,13 +24,16 @@ class Test {
     }
     async testDB(server = "sandra") {
         //let controller = new AbortController();
-        let blockFactory = new EntityFactory_1.EntityFactory("blockchainBloc", "blockchainblocFile", await SystemConcepts_1.SystemConcepts.get("blockIndex", server), server);
-        for (let i = 0; i < 10; i++) {
-            let b = await blockFactory.create([
-                await Common_1.Common.createDBReference("blockIndex", String(i), undefined, server),
-            ]);
-        }
-        await blockFactory.loadAllSubjects();
+        let tokenPathFactory = new EntityFactory_1.EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts_1.SystemConcepts.get("code", server), server);
+        let token = await tokenPathFactory.create([
+            await Common_1.Common.createDBReference("code", "tokenId" + "-" + 0, undefined, server),
+        ]);
+        let contractSub = new Concept_1.Concept("962283", "", "");
+        let contractSub1 = new Concept_1.Concept("12311", "", "");
+        await token.addTriplet(contractSub, contractSub1);
+        await tokenPathFactory.loadAllSubjects();
+        await tokenPathFactory.loadTriplets(contractSub, contractSub1);
+        await tokenPathFactory.pushTripletsBatchWithVerb(contractSub, true);
         console.log("a");
     }
 }

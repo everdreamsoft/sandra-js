@@ -5,6 +5,7 @@ import { EntityFactory } from "../src/wrappers/EntityFactory";
 import { DB } from "../src/connections/DB";
 import { SandraAdapter } from "../src/adapters/SandraAdapter";
 import { Common } from "../src/utils/Common";
+import { Concept } from "../src/models/Concept";
 
 export class Test {
 
@@ -40,16 +41,21 @@ export class Test {
 
     async testDB(server: string = "sandra") {
         //let controller = new AbortController();
+        let tokenPathFactory: EntityFactory | undefined = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code", server), server);
 
-        let blockFactory: EntityFactory | undefined = new EntityFactory("blockchainBloc", "blockchainblocFile", await SystemConcepts.get("blockIndex", server), server);
 
-        for (let i = 0; i < 10; i++) {
-            let b = await blockFactory.create([
-                await Common.createDBReference("blockIndex", String(i), undefined, server),
-            ]);
-        }
+        let token = await tokenPathFactory.create([
+            await Common.createDBReference("code", "tokenId" + "-" + 0, undefined, server),
+        ]);
 
-        await blockFactory.loadAllSubjects();
+        let contractSub = new Concept("962283", "", "");
+        let contractSub1 = new Concept("12311", "", "");
+
+        await token.addTriplet(contractSub, contractSub1);
+        await tokenPathFactory.loadAllSubjects();
+        await tokenPathFactory.loadTriplets(contractSub, contractSub1);
+
+        await tokenPathFactory.pushTripletsBatchWithVerb(contractSub, true);
 
         console.log("a");
 
