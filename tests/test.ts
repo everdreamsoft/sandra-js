@@ -8,7 +8,7 @@ import { SandraAdapter } from "../src/adapters/SandraAdapter";
 export class Test {
 
     async run() {
-        this.testDBClass();
+        this.testDB();
     }
 
     async testAbortSignal() {
@@ -40,8 +40,13 @@ export class Test {
     async testDB(server: string = "sandra") {
         //let controller = new AbortController();
         let facotry = new EntityFactory("planet", "planet_file", await SystemConcepts.get("name", server), server)
-        await facotry.loadEntityConcepts();
-        await facotry.loadEntityConceptsRefs();
+        await facotry.loadEntityConcepts(undefined, "10");
+        await facotry.loadTriplets(
+            await SystemConcepts.get("hasMoon", server),
+            await SystemConcepts.get("false", server),
+            true
+        );
+
         console.log("a");
     }
 

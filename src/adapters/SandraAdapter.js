@@ -169,46 +169,54 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         });
     }
     /**
-     * Queries database for triplets with given subjects and verb concepts. Loads verb concept data also if
-     * loadVerbData is set to true.
+     * Loading triplets with given subject, verb and targets
      * @param subjects
      * @param verbs
-     * @param loadVerbData
-     * @returns Returns array of triplets for given subject and verb
+     * @param targets
+     * @param loadConcepts
+     * @param options
+     * @returns
      */
-    async getTriplets(subjects, verbs = undefined, loadVerbData = false, options) {
+    async getTriplets(subjects, verbs = undefined, targets, loadConcepts = false, options) {
         let subConcept = subjects.map(s => s.getId());
         let verbConcept = verbs === null || verbs === void 0 ? void 0 : verbs.map(v => v.getId());
-        let sql = "select c.id as cId, c.shortname as cSN, c.code as cCode , t.id as id, t.idConceptStart as subId, t.idConceptLink as verbId, t.idConceptTarget as targetId #VERB_SELECT# from " +
-            this.tables.get(this.TABLE_TRIPLETS) + " as t join " +
-            this.tables.get(this.TABLE_CONCEPTS) + " as c on c.id = t.idConceptTarget and t.idConceptStart in (?)";
-        if (loadVerbData) {
-            sql = sql.replace("#VERB_SELECT#", " , c1.code as verbCode, c1.shortname as verbSn ");
-        }
-        else
-            sql = sql.replace("#VERB_SELECT#", " , null as verbCode, null as verbSn ");
-        let rows;
-        if (verbConcept && (verbConcept === null || verbConcept === void 0 ? void 0 : verbConcept.length) > 0) {
-            sql = sql + " and t.idConceptLink in (?)";
-            if (loadVerbData) {
-                sql = sql + " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink ";
-            }
-            [rows] = await this.getConnectionPool().query(sql, [subConcept, verbConcept], options);
+        let targetConcept = targets === null || targets === void 0 ? void 0 : targets.map(t => t.getId());
+        let vals = [];
+        let sql = "";
+        // Use joins 
+        sql = "select t1.id as id, t1.idConceptStart as subId ,#SELECT# from  "
+            + this.tables.get(this.TABLE_TRIPLETS) + " as t1  ";
+        if (loadConcepts) {
+            sql = sql + " join  " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on t1.idConceptLink = c1.id ";
+            sql = sql + " join  " + this.tables.get(this.TABLE_CONCEPTS) + " as c2 on t1.idConceptTarget = c2.id ";
+            sql = sql.replace(",#SELECT#", ", c1.id as vId, c1.code as vCode, c1.shortname as vSn ,#SELECT#");
+            sql = sql.replace(",#SELECT#", ", c2.id as tId, c2.code as tCode, c2.shortname as tSn ,#SELECT#");
+            sql = sql + " and t1.idConceptStart in (?) ";
+            vals.push(subConcept);
         }
         else {
-            if (loadVerbData) {
-                sql = sql + " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink ";
-            }
-            [rows] = await this.getConnectionPool().query(sql, [subConcept], options);
+            sql = sql.replace(",#SELECT#", ", null as vId, null as vCode, null as vSn ,#SELECT#");
+            sql = sql.replace(",#SELECT#", ", null as tId, null as tCode, null as tSn ,#SELECT#");
+            sql = sql + " where t1.idConceptStart in (?) ";
+            vals.push(subConcept);
         }
-        ;
+        if (verbs) {
+            sql = sql + " and t1.idConceptLink in (?) ";
+            vals.push(verbConcept);
+        }
+        if (targets) {
+            sql = sql + " and t1.idConceptTarget in (?) ";
+            vals.push(targetConcept);
+        }
+        sql = sql.replace(",#SELECT#", "");
+        let [rows] = await this.getConnectionPool().query(sql, vals, options);
         return new Promise((resolve, reject) => {
             let triplets = [];
             if ((rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
                 rows.forEach((row) => {
                     if (options === null || options === void 0 ? void 0 : options.abort)
                         return reject(new Error("Operation aborted"));
-                    triplets.push(new Triplet_1.Triplet(row.id, new Concept_1.Concept(row.subId, "", undefined), new Concept_1.Concept(row.verbId, row.verbCode, row.verbSn), new Concept_1.Concept(row.cId, row.cCode, row.cSN)));
+                    triplets.push(new Triplet_1.Triplet(row.id, new Concept_1.Concept(row.subId, "", undefined), new Concept_1.Concept(row.vId, row.vCode, row.vSn), new Concept_1.Concept(row.tId, row.tCode, row.tSn)));
                 });
             }
             return resolve(triplets);

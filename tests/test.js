@@ -7,7 +7,7 @@ const EntityFactory_1 = require("../src/wrappers/EntityFactory");
 const DB_1 = require("../src/connections/DB");
 class Test {
     async run() {
-        this.testDBClass();
+        this.testDB();
     }
     async testAbortSignal() {
     }
@@ -23,8 +23,8 @@ class Test {
     async testDB(server = "sandra") {
         //let controller = new AbortController();
         let facotry = new EntityFactory_1.EntityFactory("planet", "planet_file", await SystemConcepts_1.SystemConcepts.get("name", server), server);
-        await facotry.loadEntityConcepts();
-        await facotry.loadEntityConceptsRefs();
+        await facotry.loadEntityConcepts(undefined, "10");
+        await facotry.loadTriplets(await SystemConcepts_1.SystemConcepts.get("hasMoon", server), await SystemConcepts_1.SystemConcepts.get("false", server), true);
         console.log("a");
     }
 }

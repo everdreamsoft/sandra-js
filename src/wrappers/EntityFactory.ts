@@ -642,28 +642,23 @@ export class EntityFactory {
         );
     }
 
-    /***
-     * Loading all the triplets of given factrory entities
-     *  
-    */
-    async loadTriplets(loadVerbData: boolean = false) {
-
-        if (this.entityArray?.length == 0) return;
+    async loadTriplets(verb?: Concept, target?: Concept, loadConcepts?: boolean) {
 
         let s: Concept[] = [];
-
         this.entityArray.forEach(e => {
             let sub = e.getSubject();
             if (sub)
                 s.push(sub)
         })
 
+        let verbArr = (verb ? [verb] : undefined);
+        let targetArr = (target ? [target] : undefined);
+
         let triplets = await (DB.getInstance().server(this.server) as SandraAdapter)?.getTriplets(
-            s, undefined, loadVerbData, this.abortOptions
+            s, verbArr, targetArr, loadConcepts, this.abortOptions
         );
 
         this.entityArray.forEach(e => {
-
 
             let subId = e.getSubject()?.getId();
             let trps = triplets.filter(t => t.getSubject()?.getId() == subId);
@@ -682,43 +677,6 @@ export class EntityFactory {
 
         })
 
-    }
-
-    /**
-     * Loads only the triplets with given verb for each entity of the factory from the database. 
-     * @param verb Verb concept of triplets to load.
-     * @param loadVerbData - It will also loads verb concpet of the given verb. 
-     */
-    async loadTripletsWithVerb(verb: Concept, loadVerbData: boolean = false) {
-
-        let s: Concept[] = [];
-        this.entityArray.forEach(e => {
-            let sub = e.getSubject();
-            if (sub)
-                s.push(sub)
-        })
-
-        let triplets = await (DB.getInstance().server(this.server) as SandraAdapter)?.getTriplets(
-            s, [verb], loadVerbData, this.abortOptions
-        );
-
-        this.entityArray.forEach(e => {
-
-            let subId = e.getSubject()?.getId();
-            let trps = triplets.filter(t => t.getSubject()?.getId() == subId);
-
-            trps.forEach(t => {
-
-                let triplet = e.getTriplets()?.find(tr => tr.getVerb()?.getId() == t.getVerb()?.getId() &&
-                    tr.getTarget()?.getId() == t.getTarget()?.getId());
-                if (triplet)
-                    triplet.setId(t.getId());
-                else {
-                    e.getTriplets().push(t);
-                }
-            });
-
-        })
 
     }
 

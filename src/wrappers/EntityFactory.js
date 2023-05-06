@@ -470,21 +470,17 @@ class EntityFactory {
         let cifSystem = await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server);
         await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsRefs(this.entityArray, cifSystem, this.abortOptions));
     }
-    /***
-     * Loading all the triplets of given factrory entities
-     *
-    */
-    async loadTriplets(loadVerbData = false) {
-        var _a, _b;
-        if (((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length) == 0)
-            return;
+    async loadTriplets(verb, target, loadConcepts) {
+        var _a;
         let s = [];
         this.entityArray.forEach(e => {
             let sub = e.getSubject();
             if (sub)
                 s.push(sub);
         });
-        let triplets = await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.getTriplets(s, undefined, loadVerbData, this.abortOptions));
+        let verbArr = (verb ? [verb] : undefined);
+        let targetArr = (target ? [target] : undefined);
+        let triplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getTriplets(s, verbArr, targetArr, loadConcepts, this.abortOptions));
         this.entityArray.forEach(e => {
             var _a;
             let subId = (_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.getId();
@@ -499,39 +495,6 @@ class EntityFactory {
                 if (triplet) {
                     triplet.setId(t.getId());
                 }
-                else {
-                    e.getTriplets().push(t);
-                }
-            });
-        });
-    }
-    /**
-     * Loads only the triplets with given verb for each entity of the factory from the database.
-     * @param verb Verb concept of triplets to load.
-     * @param loadVerbData - It will also loads verb concpet of the given verb.
-     */
-    async loadTripletsWithVerb(verb, loadVerbData = false) {
-        var _a;
-        let s = [];
-        this.entityArray.forEach(e => {
-            let sub = e.getSubject();
-            if (sub)
-                s.push(sub);
-        });
-        let triplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getTriplets(s, [verb], loadVerbData, this.abortOptions));
-        this.entityArray.forEach(e => {
-            var _a;
-            let subId = (_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.getId();
-            let trps = triplets.filter(t => { var _a; return ((_a = t.getSubject()) === null || _a === void 0 ? void 0 : _a.getId()) == subId; });
-            trps.forEach(t => {
-                var _a;
-                let triplet = (_a = e.getTriplets()) === null || _a === void 0 ? void 0 : _a.find(tr => {
-                    var _a, _b, _c, _d;
-                    return ((_a = tr.getVerb()) === null || _a === void 0 ? void 0 : _a.getId()) == ((_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getId()) &&
-                        ((_c = tr.getTarget()) === null || _c === void 0 ? void 0 : _c.getId()) == ((_d = t.getTarget()) === null || _d === void 0 ? void 0 : _d.getId());
-                });
-                if (triplet)
-                    triplet.setId(t.getId());
                 else {
                     e.getTriplets().push(t);
                 }

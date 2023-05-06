@@ -232,42 +232,55 @@ export class SandraAdapter extends DBBaseAdapter {
     }
 
     /**
-     * Queries database for triplets with given subjects and verb concepts. Loads verb concept data also if
-     * loadVerbData is set to true.
+     * Loading triplets with given subject, verb and targets 
      * @param subjects 
      * @param verbs 
-     * @param loadVerbData 
-     * @returns Returns array of triplets for given subject and verb
+     * @param targets 
+     * @param loadConcepts 
+     * @param options 
+     * @returns 
      */
-    async getTriplets(subjects: Concept[], verbs: Concept[] | undefined = undefined, loadVerbData: boolean = false, options?: IAbortOption): Promise<Triplet[]> {
+    async getTriplets(subjects: Concept[], verbs: Concept[] | undefined = undefined, targets: Concept[] | undefined, loadConcepts: boolean = false, options?: IAbortOption): Promise<Triplet[]> {
 
         let subConcept = subjects.map(s => s.getId());
         let verbConcept = verbs?.map(v => v.getId());
+        let targetConcept = targets?.map(t => t.getId());
+        let vals = [];
 
-        let sql = "select c.id as cId, c.shortname as cSN, c.code as cCode , t.id as id, t.idConceptStart as subId, t.idConceptLink as verbId, t.idConceptTarget as targetId #VERB_SELECT# from " +
-            this.tables.get(this.TABLE_TRIPLETS) + " as t join " +
-            this.tables.get(this.TABLE_CONCEPTS) + " as c on c.id = t.idConceptTarget and t.idConceptStart in (?)";
+        let sql = "";
 
-        if (loadVerbData) {
-            sql = sql.replace("#VERB_SELECT#", " , c1.code as verbCode, c1.shortname as verbSn ")
-        } else
-            sql = sql.replace("#VERB_SELECT#", " , null as verbCode, null as verbSn ")
+        // Use joins 
+        sql = "select t1.id as id, t1.idConceptStart as subId ,#SELECT# from  "
+            + this.tables.get(this.TABLE_TRIPLETS) + " as t1  "
 
-        let rows: any;
-
-        if (verbConcept && verbConcept?.length > 0) {
-            sql = sql + " and t.idConceptLink in (?)";
-            if (loadVerbData) {
-                sql = sql + " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink "
-            }
-            [rows] = await this.getConnectionPool().query(sql, [subConcept, verbConcept], options);
+        if (loadConcepts) {
+            sql = sql + " join  " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on t1.idConceptLink = c1.id ";
+            sql = sql + " join  " + this.tables.get(this.TABLE_CONCEPTS) + " as c2 on t1.idConceptTarget = c2.id ";
+            sql = sql.replace(",#SELECT#", ", c1.id as vId, c1.code as vCode, c1.shortname as vSn ,#SELECT#");
+            sql = sql.replace(",#SELECT#", ", c2.id as tId, c2.code as tCode, c2.shortname as tSn ,#SELECT#");
+            sql = sql + " and t1.idConceptStart in (?) "
+            vals.push(subConcept);
         }
         else {
-            if (loadVerbData) {
-                sql = sql + " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c1 on c1.id = t.idConceptLink "
-            }
-            [rows] = await this.getConnectionPool().query(sql, [subConcept], options)
-        };
+            sql = sql.replace(",#SELECT#", ", null as vId, null as vCode, null as vSn ,#SELECT#");
+            sql = sql.replace(",#SELECT#", ", null as tId, null as tCode, null as tSn ,#SELECT#");
+            sql = sql + " where t1.idConceptStart in (?) "
+            vals.push(subConcept);
+        }
+
+        if (verbs) {
+            sql = sql + " and t1.idConceptLink in (?) "
+            vals.push(verbConcept);
+        }
+
+        if (targets) {
+            sql = sql + " and t1.idConceptTarget in (?) ";
+            vals.push(targetConcept);
+        }
+
+        sql = sql.replace(",#SELECT#", "");
+
+        let [rows]: any = await this.getConnectionPool().query(sql, vals, options);
 
         return new Promise((resolve, reject) => {
             let triplets: Triplet[] = [];
@@ -275,13 +288,12 @@ export class SandraAdapter extends DBBaseAdapter {
                 rows.forEach((row: any) => {
                     if (options?.abort)
                         return reject(new Error("Operation aborted"));
-
                     triplets.push(
                         new Triplet(
                             row.id,
                             new Concept(row.subId, "", undefined),
-                            new Concept(row.verbId, row.verbCode, row.verbSn),
-                            new Concept(row.cId, row.cCode, row.cSN)
+                            new Concept(row.vId, row.vCode, row.vSn),
+                            new Concept(row.tId, row.tCode, row.tSn)
                         )
                     );
                 });

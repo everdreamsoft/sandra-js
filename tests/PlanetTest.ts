@@ -413,7 +413,7 @@ export class PlanetTest {
             console.log("Total - " + planetFactory.getEntities()?.length);
 
             // Loading other data if required 
-            await planetFactory.loadTriplets(true);
+            await planetFactory.loadTriplets(undefined, undefined, true);
             await planetFactory.loadAllTripletRefs();
 
             await this.printFactory(planetFactory);

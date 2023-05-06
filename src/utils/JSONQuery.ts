@@ -272,7 +272,7 @@ export class JSONQuery {
         await factory.filter(tripletsArr, refsArr, limit);
 
         if (json.options?.load_data) {
-            await factory.loadTriplets(true);
+            await factory.loadTriplets(undefined, undefined, true);
             await factory.loadAllTripletRefs();
         }
 

@@ -128,7 +128,7 @@ class JSONQuery {
         }
         await factory.filter(tripletsArr, refsArr, limit);
         if ((_a = json.options) === null || _a === void 0 ? void 0 : _a.load_data) {
-            await factory.loadTriplets(true);
+            await factory.loadTriplets(undefined, undefined, true);
             await factory.loadAllTripletRefs();
         }
         return Promise.resolve(factory.getEntities());

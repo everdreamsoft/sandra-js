@@ -291,7 +291,7 @@ class PlanetTest {
             */
             console.log("Total - " + ((_b = planetFactory.getEntities()) === null || _b === void 0 ? void 0 : _b.length));
             // Loading other data if required 
-            await planetFactory.loadTriplets(true);
+            await planetFactory.loadTriplets(undefined, undefined, true);
             await planetFactory.loadAllTripletRefs();
             await this.printFactory(planetFactory);
         }
