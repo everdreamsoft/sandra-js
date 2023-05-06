@@ -4,6 +4,7 @@ import { IDBConfig } from "../src/interfaces/IDBconfig";
 import { EntityFactory } from "../src/wrappers/EntityFactory";
 import { DB } from "../src/connections/DB";
 import { SandraAdapter } from "../src/adapters/SandraAdapter";
+import { Common } from "../src/utils/Common";
 
 export class Test {
 
@@ -39,15 +40,19 @@ export class Test {
 
     async testDB(server: string = "sandra") {
         //let controller = new AbortController();
-        let facotry = new EntityFactory("planet", "planet_file", await SystemConcepts.get("name", server), server)
-        await facotry.loadEntityConcepts(undefined, "10");
-        await facotry.loadTriplets(
-            await SystemConcepts.get("hasMoon", server),
-            await SystemConcepts.get("false", server),
-            true
-        );
+
+        let blockFactory: EntityFactory | undefined = new EntityFactory("blockchainBloc", "blockchainblocFile", await SystemConcepts.get("blockIndex", server), server);
+
+        for (let i = 0; i < 10; i++) {
+            let b = await blockFactory.create([
+                await Common.createDBReference("blockIndex", String(i), undefined, server),
+            ]);
+        }
+
+        await blockFactory.loadAllSubjects();
 
         console.log("a");
+
     }
 
 }
@@ -67,16 +72,16 @@ const DB_CONFIG: IDBConfig = {
 };
 
 const DB_CONFIG_LOCAL = {
-    name: "sandra_local",
-    database: "ccc8_batch",
-    host: "localhost",
-    env: "fondue",
-    password: "",
-    user: "root",
-    connectionLimit: 10,
-    queueLimit: 0,
-    waitForConnections: true
-
+    "name": "sandra",
+    "user": "root",
+    "database": "jetski",
+    "env": "fondue",
+    "host": "localhost",
+    "password": "",
+    "waitForConnections": true,
+    "connectionLimit": 10,
+    "queueLimit": 0,
+    "enableKeepAlive": true
 };
 
 Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;

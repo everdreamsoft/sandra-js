@@ -699,8 +699,16 @@ export class EntityFactory {
         });
 
         let entityConceptsMap: Map<string, Concept> = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityConceptsByRefs(
-            await SystemConcepts.get("contained_in_file", this.server),
-            await SystemConcepts.get(this.contained_in_file, this.server),
+            new Triplet(
+                "",
+                undefined,
+                await SystemConcepts.get("is_a", this.server),
+                await SystemConcepts.get(this.is_a, this.server)),
+            new Triplet(
+                "",
+                undefined,
+                await SystemConcepts.get("contained_in_file", this.server),
+                await SystemConcepts.get(this.contained_in_file, this.server)),
             refs,
             this.uniqueRefConcept,
             this.abortOptions

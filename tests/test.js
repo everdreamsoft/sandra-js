@@ -5,6 +5,7 @@ const Sandra_1 = require("../src/Sandra");
 const SystemConcepts_1 = require("../src/models/SystemConcepts");
 const EntityFactory_1 = require("../src/wrappers/EntityFactory");
 const DB_1 = require("../src/connections/DB");
+const Common_1 = require("../src/utils/Common");
 class Test {
     async run() {
         this.testDB();
@@ -22,9 +23,13 @@ class Test {
     }
     async testDB(server = "sandra") {
         //let controller = new AbortController();
-        let facotry = new EntityFactory_1.EntityFactory("planet", "planet_file", await SystemConcepts_1.SystemConcepts.get("name", server), server);
-        await facotry.loadEntityConcepts(undefined, "10");
-        await facotry.loadTriplets(await SystemConcepts_1.SystemConcepts.get("hasMoon", server), await SystemConcepts_1.SystemConcepts.get("false", server), true);
+        let blockFactory = new EntityFactory_1.EntityFactory("blockchainBloc", "blockchainblocFile", await SystemConcepts_1.SystemConcepts.get("blockIndex", server), server);
+        for (let i = 0; i < 10; i++) {
+            let b = await blockFactory.create([
+                await Common_1.Common.createDBReference("blockIndex", String(i), undefined, server),
+            ]);
+        }
+        await blockFactory.loadAllSubjects();
         console.log("a");
     }
 }
@@ -42,15 +47,16 @@ const DB_CONFIG = {
     waitForConnections: true
 };
 const DB_CONFIG_LOCAL = {
-    name: "sandra_local",
-    database: "ccc8_batch",
-    host: "localhost",
-    env: "fondue",
-    password: "",
-    user: "root",
-    connectionLimit: 10,
-    queueLimit: 0,
-    waitForConnections: true
+    "name": "sandra",
+    "user": "root",
+    "database": "jetski",
+    "env": "fondue",
+    "host": "localhost",
+    "password": "",
+    "waitForConnections": true,
+    "connectionLimit": 10,
+    "queueLimit": 0,
+    "enableKeepAlive": true
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 Sandra_1.Sandra.LOG_CONFIG = {

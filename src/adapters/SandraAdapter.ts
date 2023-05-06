@@ -303,26 +303,34 @@ export class SandraAdapter extends DBBaseAdapter {
 
     }
 
-    /**
-  * Queries database for give verb, target and refs values.
-  * @param verb 
-  * @param target 
-  * @param refsValuesToSearch 
-  * @param refConcept 
-  * @returns Returns map of reference value and corresponding Concept
-  */
-    async getEntityConceptsByRefs(verb: Concept, target: Concept, refsValuesToSearch: string[], refConcept: Concept, options?: IAbortOption): Promise<Map<string, Concept>> {
+    async getEntityConceptsByRefs(isATriplet: Triplet, cifTriplet: Triplet, refsValuesToSearch: string[], refConcept: Concept, options?: IAbortOption): Promise<Map<string, Concept>> {
 
-        let sql = "select  c.id, c.code, c.shortname, r.value from " +
-            this.tables.get(this.TABLE_REFERENCES) + "  as r " +
-            " join " + this.tables.get(this.TABLE_TRIPLETS) + " as t on t.id = r.linkReferenced" +
-            " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t.idConceptStart = c.id" +
-            " and r.value in ( ? ) " +
-            " and r.idConcept = ? " +
-            " and t.idConceptLink =  ? " +
-            " and t.idConceptTarget = ? ";
+        let sql = "select  c.id, c.code, c.shortname, r.value from " + this.tables.get(this.TABLE_TRIPLETS) + " as t1" +
+            " join " + this.tables.get(this.TABLE_TRIPLETS) + " as t2 on t1.idConceptStart = t2.idConceptStart " +
+            " and t1.idConceptLink = ? and t2.idConceptLink = ? " +
+            " and t1.idConceptTarget = ? and t2.idConceptTarget = ? " +
+            " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t2.idConceptStart = c.id" +
+            " join " + this.tables.get(this.TABLE_REFERENCES) + " as r on t2.id = r.linkReferenced and r.idConcept = ? and r.value in (?) ";
 
-        let [rows]: any = await this.getConnectionPool().query(sql, [refsValuesToSearch, refConcept.getId(), verb.getId(), target.getId()], options);
+        // let sql1 = "select  c.id, c.code, c.shortname, r.value from " +
+        //     this.tables.get(this.TABLE_REFERENCES) + "  as r " +
+        //     " join " + this.tables.get(this.TABLE_TRIPLETS) + " as t on t.id = r.linkReferenced" +
+        //     " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t.idConceptStart = c.id" +
+        //     " and r.value in ( ? ) " +
+        //     " and r.idConcept = ? " +
+        //     " and t.idConceptLink =  ? " +
+        //     " and t.idConceptTarget = ? ";
+
+        let vals = [
+            isATriplet.getVerb()?.getId(),
+            cifTriplet.getVerb()?.getId(),
+            isATriplet.getTarget()?.getId(),
+            cifTriplet.getTarget()?.getId(),
+            refConcept.getId(),
+            refsValuesToSearch
+        ];
+
+        let [rows]: any = await this.getConnectionPool().query(sql, vals, options);
 
         return new Promise((resolve, reject) => {
 
