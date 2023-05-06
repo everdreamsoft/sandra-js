@@ -252,7 +252,7 @@ class EntityFactory {
             }
         }
         if (triplets.length > 0)
-            await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.addTripletsBatch(triplets, false, true, this.abortOptions));
+            await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.addTripletsBatch(triplets, false, !ignoreIfVerbExist, this.abortOptions));
     }
     /**
      * Pushes entity list of the facotry class object in batch.
