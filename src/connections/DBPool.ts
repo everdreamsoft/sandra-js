@@ -28,9 +28,25 @@ export class DBPool {
         });
     }
 
+    private createPool() {
+        this.pool = mysql.createPool({
+            user: this.config.user,
+            password: this.config.password,
+            host: this.config.host,
+            database: this.config.database,
+            waitForConnections: this.config.waitForConnections ? this.config.waitForConnections : true,
+            connectionLimit: this.config.connectionLimit ? this.config.connectionLimit : 10,
+            queueLimit: this.config.queueLimit ? this.config.queueLimit : 0,
+            enableKeepAlive: this.config?.enableKeepAlive ? this.config?.enableKeepAlive : false
+        });
+    }
 
-    private getConnetion(): Promise<PoolConnection> {
-        return this.pool.getConnection();
+    private async getConnetion(): Promise<PoolConnection> {
+        let c = await this.pool.getConnection().catch(e => {
+            this.createPool();
+            return this.pool.getConnection();
+        });
+        return c;
     }
 
     getConfig() {
@@ -58,6 +74,8 @@ export class DBPool {
         let result: any, timeout = abortOption?.timeout ? abortOption?.timeout : 1000000;
 
         let connection = await this.getConnetion();
+
+        this.pool.query
 
         abortOption?.abortSignal?.on("abort", ((reason?: string) => {
             LogManager.getInstance().warn("connection destroy.." + reason || "");

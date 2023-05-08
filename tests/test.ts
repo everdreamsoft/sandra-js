@@ -43,6 +43,8 @@ export class Test {
 
         console.log(Sandra.getDBConfig());
 
+        await Sandra.close(server);
+
         //let controller = new AbortController();
         let tokenPathFactory: EntityFactory | undefined = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code", server), server);
 
