@@ -226,6 +226,9 @@ export class EntityFactory {
                     await (DB.getInstance().server(this.server) as SandraAdapter)?.addTriplet(t, false, this.abortOptions);
                 }
 
+                if (t.getStorage()) {
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.addDataStorage(t);
+                }
             }
 
             // Create refs
@@ -291,6 +294,9 @@ export class EntityFactory {
                     await (DB.getInstance().server(this.server) as SandraAdapter)?.addTriplet(t, false, this.abortOptions);
                 }
 
+                if (t.getStorage()) {
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.addDataStorage(t);
+                }
             }
         }
 
@@ -494,6 +500,11 @@ export class EntityFactory {
 
                     let r = await (DB.getInstance().server(this.server) as SandraAdapter)?.getReferenceByTriplet(
                         triplets[i], undefined, this.abortOptions
+                    );
+
+                    // Load storage data for triplet
+                    await (DB.getInstance().server(this.server) as SandraAdapter)?.getDataStorageByTriplet(
+                        triplets[i]
                     );
 
                     refs.push(...r);

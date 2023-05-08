@@ -907,4 +907,43 @@ export class SandraAdapter extends DBBaseAdapter {
 
     }
 
+
+    async addDataStorage(triplet: Triplet, options?: IAbortOption) {
+
+        let dataStorage = triplet.getStorage();
+
+        if (dataStorage) {
+            let sql = "select linkReferenced from " + this.tables.get("datastorage") + " where linkReferenced = ?";
+            let res = await this.getConnectionPool().query(sql, triplet.getId(), options);
+
+            if (res && res?.length > 0) {
+                // Aleady exist, check if need to be updated 
+                if (dataStorage?.isUpsert()) {
+                    // Update 
+                    sql = "update " + this.tables.get("datastorage") + " set value = ?  where linkReferenced = ?";
+                    await this.getConnectionPool().query(sql, [dataStorage.getValue(), triplet.getId()], options);
+                }
+                return;
+            }
+            sql = "insert into " + this.tables.get("datastorage") + " set linkReferenced = ?, value = ?";
+            await this.getConnectionPool().query(sql, [triplet.getId(), dataStorage.getValue()], options);
+        }
+
+        return;
+
+    }
+
+    async getDataStorageByTriplet(triplet: Triplet, options?: IAbortOption): Promise<void> {
+
+        let sql = "select linkReferenced, value  from " + this.tables.get("datastorage") + " where linkReferenced = ?";
+        let res = await this.getConnectionPool().query(sql, triplet.getId(), options);
+
+        if (res && res?.length > 0) {
+            triplet.setStorage(res[0].value);
+        }
+
+        return Promise.resolve();
+
+    }
+
 }

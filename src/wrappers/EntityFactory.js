@@ -148,7 +148,7 @@ class EntityFactory {
      * Pushing all the entities of factory. Entities are inserted/updated one by one.
      */
     async push() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         LogManager_1.LogManager.getInstance().info("Pushing factory  - " + this.getFullName() + ", length - " + ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length));
         for (let index = 0; index < ((_b = this.entityArray) === null || _b === void 0 ? void 0 : _b.length); index++) {
             let entity = this.entityArray[index];
@@ -176,14 +176,17 @@ class EntityFactory {
                 else {
                     await ((_h = DB_1.DB.getInstance().server(this.server)) === null || _h === void 0 ? void 0 : _h.addTriplet(t, false, this.abortOptions));
                 }
+                if (t.getStorage()) {
+                    await ((_j = DB_1.DB.getInstance().server(this.server)) === null || _j === void 0 ? void 0 : _j.addDataStorage(t));
+                }
             }
             // Create refs
             for (let indexRef = 0; indexRef < entity.getRefs().length; indexRef++) {
                 if (entity.isUpsert()) {
-                    await ((_j = DB_1.DB.getInstance().server(this.server)) === null || _j === void 0 ? void 0 : _j.upsertRefs(entity.getRefs()[indexRef], this.abortOptions));
+                    await ((_k = DB_1.DB.getInstance().server(this.server)) === null || _k === void 0 ? void 0 : _k.upsertRefs(entity.getRefs()[indexRef], this.abortOptions));
                 }
                 else {
-                    await ((_k = DB_1.DB.getInstance().server(this.server)) === null || _k === void 0 ? void 0 : _k.addRefs(entity.getRefs()[indexRef], this.abortOptions));
+                    await ((_l = DB_1.DB.getInstance().server(this.server)) === null || _l === void 0 ? void 0 : _l.addRefs(entity.getRefs()[indexRef], this.abortOptions));
                 }
             }
             entity.setPushedStatus(true);
@@ -213,7 +216,7 @@ class EntityFactory {
      * Puses all triplets of each entity in the factory class.
      */
     async pushTriplets() {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         for (let index = 0; index < ((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length); index++) {
             let entity = this.entityArray[index];
             // Create triplets
@@ -224,6 +227,9 @@ class EntityFactory {
                 }
                 else {
                     await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.addTriplet(t, false, this.abortOptions));
+                }
+                if (t.getStorage()) {
+                    await ((_d = DB_1.DB.getInstance().server(this.server)) === null || _d === void 0 ? void 0 : _d.addDataStorage(t));
                 }
             }
         }
@@ -357,7 +363,7 @@ class EntityFactory {
         
     */
     async load(ref, loadAllEntityData = true, iterateDown = false, limit = 1000) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         let entityTriplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file, this.server), ref, limit, this.abortOptions));
         for (let index = 0; index < (entityTriplets === null || entityTriplets === void 0 ? void 0 : entityTriplets.length); index++) {
             let entityTriplet = entityTriplets[index];
@@ -373,6 +379,8 @@ class EntityFactory {
                         }
                     }
                     let r = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplet(triplets[i], undefined, this.abortOptions));
+                    // Load storage data for triplet
+                    await ((_d = DB_1.DB.getInstance().server(this.server)) === null || _d === void 0 ? void 0 : _d.getDataStorageByTriplet(triplets[i]));
                     refs.push(...r);
                 }
             }
