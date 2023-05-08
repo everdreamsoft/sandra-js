@@ -13,10 +13,12 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         this.TABLE_CONCEPTS = "concepts";
         this.TABLE_REFERENCES = "references";
         this.TABLE_TRIPLETS = "triplets";
+        this.TABLE_STORAGE = "datastorage";
         this.tables = new Map();
         this.tables.set(this.TABLE_CONCEPTS, config.env + "_SandraConcept");
         this.tables.set(this.TABLE_REFERENCES, config.env + "_SandraReferences");
         this.tables.set(this.TABLE_TRIPLETS, config.env + "_SandraTriplets");
+        this.tables.set(this.TABLE_STORAGE, config.env + "_SandraDatastorage");
     }
     /**
      * Begins DB transaction.
@@ -684,24 +686,24 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
     async addDataStorage(triplet, options) {
         let dataStorage = triplet.getStorage();
         if (dataStorage) {
-            let sql = "select linkReferenced from " + this.tables.get("datastorage") + " where linkReferenced = ?";
+            let sql = "select linkReferenced from " + this.tables.get(this.TABLE_STORAGE) + " where linkReferenced = ?";
             let res = await this.getConnectionPool().query(sql, triplet.getId(), options);
             if (res && (res === null || res === void 0 ? void 0 : res.length) > 0) {
                 // Aleady exist, check if need to be updated 
                 if (dataStorage === null || dataStorage === void 0 ? void 0 : dataStorage.isUpsert()) {
                     // Update 
-                    sql = "update " + this.tables.get("datastorage") + " set value = ?  where linkReferenced = ?";
+                    sql = "update " + this.tables.get(this.TABLE_STORAGE) + " set value = ?  where linkReferenced = ?";
                     await this.getConnectionPool().query(sql, [dataStorage.getValue(), triplet.getId()], options);
                 }
                 return;
             }
-            sql = "insert into " + this.tables.get("datastorage") + " set linkReferenced = ?, value = ?";
+            sql = "insert into " + this.tables.get(this.TABLE_STORAGE) + " set linkReferenced = ?, value = ?";
             await this.getConnectionPool().query(sql, [triplet.getId(), dataStorage.getValue()], options);
         }
         return;
     }
     async getDataStorageByTriplet(triplet, options) {
-        let sql = "select linkReferenced, value  from " + this.tables.get("datastorage") + " where linkReferenced = ?";
+        let sql = "select linkReferenced, value  from " + this.tables.get(this.TABLE_STORAGE) + " where linkReferenced = ?";
         let res = await this.getConnectionPool().query(sql, triplet.getId(), options);
         if (res && (res === null || res === void 0 ? void 0 : res.length) > 0) {
             triplet.setStorage(res[0].value);

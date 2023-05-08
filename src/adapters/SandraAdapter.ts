@@ -13,6 +13,7 @@ export class SandraAdapter extends DBBaseAdapter {
     private readonly TABLE_CONCEPTS = "concepts";
     private readonly TABLE_REFERENCES = "references";
     private readonly TABLE_TRIPLETS = "triplets";
+    private readonly TABLE_STORAGE = "datastorage";
 
     private tables: Map<string, string> = new Map<string, string>();
 
@@ -21,6 +22,7 @@ export class SandraAdapter extends DBBaseAdapter {
         this.tables.set(this.TABLE_CONCEPTS, config.env + "_SandraConcept");
         this.tables.set(this.TABLE_REFERENCES, config.env + "_SandraReferences");
         this.tables.set(this.TABLE_TRIPLETS, config.env + "_SandraTriplets");
+        this.tables.set(this.TABLE_STORAGE, config.env + "_SandraDatastorage");
     }
 
     /**
@@ -913,19 +915,19 @@ export class SandraAdapter extends DBBaseAdapter {
         let dataStorage = triplet.getStorage();
 
         if (dataStorage) {
-            let sql = "select linkReferenced from " + this.tables.get("datastorage") + " where linkReferenced = ?";
+            let sql = "select linkReferenced from " + this.tables.get(this.TABLE_STORAGE) + " where linkReferenced = ?";
             let res = await this.getConnectionPool().query(sql, triplet.getId(), options);
 
             if (res && res?.length > 0) {
                 // Aleady exist, check if need to be updated 
                 if (dataStorage?.isUpsert()) {
                     // Update 
-                    sql = "update " + this.tables.get("datastorage") + " set value = ?  where linkReferenced = ?";
+                    sql = "update " + this.tables.get(this.TABLE_STORAGE) + " set value = ?  where linkReferenced = ?";
                     await this.getConnectionPool().query(sql, [dataStorage.getValue(), triplet.getId()], options);
                 }
                 return;
             }
-            sql = "insert into " + this.tables.get("datastorage") + " set linkReferenced = ?, value = ?";
+            sql = "insert into " + this.tables.get(this.TABLE_STORAGE) + " set linkReferenced = ?, value = ?";
             await this.getConnectionPool().query(sql, [triplet.getId(), dataStorage.getValue()], options);
         }
 
@@ -935,7 +937,7 @@ export class SandraAdapter extends DBBaseAdapter {
 
     async getDataStorageByTriplet(triplet: Triplet, options?: IAbortOption): Promise<void> {
 
-        let sql = "select linkReferenced, value  from " + this.tables.get("datastorage") + " where linkReferenced = ?";
+        let sql = "select linkReferenced, value  from " + this.tables.get(this.TABLE_STORAGE) + " where linkReferenced = ?";
         let res = await this.getConnectionPool().query(sql, triplet.getId(), options);
 
         if (res && res?.length > 0) {
