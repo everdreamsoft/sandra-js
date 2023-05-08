@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Triplet = void 0;
+const Datastorage_1 = require("./Datastorage");
 class Triplet {
     constructor(id, subject, verb, target, flag = false, upsert = false) {
         this.id = id;
@@ -37,6 +38,13 @@ class Triplet {
      */
     getTarget() {
         return this.target;
+    }
+    /**
+     *
+     * @returns Returns triplet storage
+     */
+    getStorage() {
+        return this.storage;
     }
     /**
      *
@@ -88,6 +96,15 @@ class Triplet {
      */
     setTarget(target) {
         this.target = target;
+    }
+    setStorage(value, upsert = false) {
+        if (this.storage) {
+            this.storage.setValue(value);
+            this.storage.setUpsert(upsert);
+        }
+        else {
+            this.storage = new Datastorage_1.DataStorage(value, upsert);
+        }
     }
     /**
      * @param t
