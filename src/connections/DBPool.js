@@ -26,9 +26,13 @@ class DBPool {
         return this.pool.getConnection();
     }
     getConfig() {
-        let conf = Object.assign({}, this.pool.pool.config);
-        delete conf.password;
-        delete conf.user;
+        let conf = {
+            user: this.pool.pool.config.user,
+            host: this.pool.pool.config.host,
+            database: this.pool.pool.config.database,
+            enableKeepAlive: this.pool.pool.config.enableKeepAlive,
+            connectionLimit: this.pool.pool.config.connectionLimit
+        };
         return conf;
     }
     async end() {

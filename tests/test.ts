@@ -40,6 +40,9 @@ export class Test {
 
 
     async testDB(server: string = "sandra") {
+
+        console.log(Sandra.getDBConfig());
+
         //let controller = new AbortController();
         let tokenPathFactory: EntityFactory | undefined = new EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts.get("code", server), server);
 

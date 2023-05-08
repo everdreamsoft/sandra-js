@@ -23,6 +23,7 @@ class Test {
         console.log(con);
     }
     async testDB(server = "sandra") {
+        console.log(Sandra_1.Sandra.getDBConfig());
         //let controller = new AbortController();
         let tokenPathFactory = new EntityFactory_1.EntityFactory("tokenPath", "tokenPathFile", await SystemConcepts_1.SystemConcepts.get("code", server), server);
         let token = await tokenPathFactory.create([
