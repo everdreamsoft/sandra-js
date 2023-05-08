@@ -1,4 +1,4 @@
-import mysql, { Pool, PoolOptions, PoolConnection } from "mysql2/promise";
+import mysql, { Pool, PoolOptions, PoolConnection, ConnectionOptions } from "mysql2/promise";
 import { performance } from "perf_hooks";
 import { Sandra } from "../Sandra";
 import { IAbortOption } from "../interfaces/IAbortOption";
@@ -34,12 +34,14 @@ export class DBPool {
     }
 
     getConfig() {
+
+        let c: any = this.pool.pool.config
         let conf: any = {
-            user: this.pool.pool.config.user,
-            host: this.pool.pool.config.host,
-            database: this.pool.pool.config.database,
-            enableKeepAlive: this.pool.pool.config.enableKeepAlive,
-            connectionLimit: this.pool.pool.config.connectionLimit
+            user: c.connectionConfig.user,
+            host: c.connectionConfig.host,
+            database: c.connectionConfig.database,
+            enableKeepAlive: c.connectionConfig.enableKeepAlive,
+            connectionLimit: c.connectionLimit
         };
         return conf;
     }

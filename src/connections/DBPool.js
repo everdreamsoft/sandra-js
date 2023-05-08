@@ -26,12 +26,13 @@ class DBPool {
         return this.pool.getConnection();
     }
     getConfig() {
+        let c = this.pool.pool.config;
         let conf = {
-            user: this.pool.pool.config.user,
-            host: this.pool.pool.config.host,
-            database: this.pool.pool.config.database,
-            enableKeepAlive: this.pool.pool.config.enableKeepAlive,
-            connectionLimit: this.pool.pool.config.connectionLimit
+            user: c.connectionConfig.user,
+            host: c.connectionConfig.host,
+            database: c.connectionConfig.database,
+            enableKeepAlive: c.connectionConfig.enableKeepAlive,
+            connectionLimit: c.connectionLimit
         };
         return conf;
     }
