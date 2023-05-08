@@ -1,16 +1,18 @@
-import mysql from "mysql2/promise";
-import PoolConnection from "mysql2/typings/mysql/lib/PoolConnection";
+import mysql, { Pool, PoolOptions, PoolConnection } from "mysql2/promise";
 import { performance } from "perf_hooks";
 import { Sandra } from "../Sandra";
 import { IAbortOption } from "../interfaces/IAbortOption";
 import { IDBConfig } from "../interfaces/IDBconfig";
 import { LogManager } from "../loggers/LogManager";
+import Connection from "mysql2/typings/mysql/lib/Connection";
+
+
 
 
 export class DBPool {
 
     private config: IDBConfig;
-    private pool: any;
+    private pool: Pool;
 
     constructor(config: IDBConfig) {
         this.config = config;
@@ -32,14 +34,14 @@ export class DBPool {
     }
 
     getConfig() {
-        let conf: any = { ...this.config };
+        let conf: any = { ...this.pool.pool.config };
         delete conf.password;
         delete conf.user;
         return conf;
     }
 
     async end(): Promise<void> {
-        LogManager.getInstance().warn("ending pool" + JSON.stringify(this.pool?.getConfig()));
+        LogManager.getInstance().warn("ending pool" + JSON.stringify(this.getConfig()));
         return this.pool?.end();
     }
 

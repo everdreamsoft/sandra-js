@@ -26,15 +26,15 @@ class DBPool {
         return this.pool.getConnection();
     }
     getConfig() {
-        let conf = Object.assign({}, this.config);
+        let conf = Object.assign({}, this.pool.pool.config);
         delete conf.password;
         delete conf.user;
         return conf;
     }
     async end() {
-        var _a, _b;
-        LogManager_1.LogManager.getInstance().warn("ending pool" + JSON.stringify((_a = this.pool) === null || _a === void 0 ? void 0 : _a.getConfig()));
-        return (_b = this.pool) === null || _b === void 0 ? void 0 : _b.end();
+        var _a;
+        LogManager_1.LogManager.getInstance().warn("ending pool" + JSON.stringify(this.getConfig()));
+        return (_a = this.pool) === null || _a === void 0 ? void 0 : _a.end();
     }
     async query(sql, values, abortOption) {
         var _a, _b;
