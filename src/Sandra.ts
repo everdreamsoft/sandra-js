@@ -10,7 +10,7 @@ export class Sandra {
     public static LOG_CONFIG: ILogConfig;
 
     static async close(server: string = "sandra") {
-        if (DB.getInstance()?.server()) {
+        if (DB.getInstance()?.server(server)) {
             return DB.getInstance()?.server(server)?.end();
         }
         return Promise.resolve(0);
