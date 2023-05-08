@@ -37,11 +37,12 @@ export class DBPool {
 
         let c: any = this.pool.pool.config
         let conf: any = {
-            user: c.connectionConfig.user,
-            host: c.connectionConfig.host,
-            database: c.connectionConfig.database,
-            enableKeepAlive: c.connectionConfig.enableKeepAlive,
-            connectionLimit: c.connectionLimit
+            name: this.config?.name,
+            user: c?.connectionConfig.user,
+            host: c?.connectionConfig.host,
+            database: c?.connectionConfig.database,
+            enableKeepAlive: c?.connectionConfig.enableKeepAlive,
+            connectionLimit: c?.connectionLimit
         };
         return conf;
     }

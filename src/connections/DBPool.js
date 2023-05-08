@@ -26,13 +26,15 @@ class DBPool {
         return this.pool.getConnection();
     }
     getConfig() {
+        var _a;
         let c = this.pool.pool.config;
         let conf = {
-            user: c.connectionConfig.user,
-            host: c.connectionConfig.host,
-            database: c.connectionConfig.database,
-            enableKeepAlive: c.connectionConfig.enableKeepAlive,
-            connectionLimit: c.connectionLimit
+            name: (_a = this.config) === null || _a === void 0 ? void 0 : _a.name,
+            user: c === null || c === void 0 ? void 0 : c.connectionConfig.user,
+            host: c === null || c === void 0 ? void 0 : c.connectionConfig.host,
+            database: c === null || c === void 0 ? void 0 : c.connectionConfig.database,
+            enableKeepAlive: c === null || c === void 0 ? void 0 : c.connectionConfig.enableKeepAlive,
+            connectionLimit: c === null || c === void 0 ? void 0 : c.connectionLimit
         };
         return conf;
     }
