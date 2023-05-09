@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DBPool = void 0;
 const promise_1 = __importDefault(require("mysql2/promise"));
-const perf_hooks_1 = require("perf_hooks");
 const LogManager_1 = require("../loggers/LogManager");
 class DBPool {
     constructor(config) {
@@ -72,9 +71,9 @@ class DBPool {
             connection.destroy();
         }).bind(this));
         try {
-            start = perf_hooks_1.performance.now();
+            start = Date.now();
             result = connection.query({ sql, timeout }, values);
-            LogManager_1.LogManager.getInstance().query(sql, values, (perf_hooks_1.performance.now() - start));
+            LogManager_1.LogManager.getInstance().query(sql, values, (Date.now() - start));
         }
         catch (e) {
             LogManager_1.LogManager.getInstance().error(e);

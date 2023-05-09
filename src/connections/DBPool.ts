@@ -1,12 +1,7 @@
-import mysql, { Pool, PoolOptions, PoolConnection, ConnectionOptions } from "mysql2/promise";
-import { performance } from "perf_hooks";
-import { Sandra } from "../Sandra";
+import mysql, { Pool, PoolConnection } from "mysql2/promise";
 import { IAbortOption } from "../interfaces/IAbortOption";
 import { IDBConfig } from "../interfaces/IDBconfig";
 import { LogManager } from "../loggers/LogManager";
-import Connection from "mysql2/typings/mysql/lib/Connection";
-
-
 
 
 export class DBPool {
@@ -85,11 +80,11 @@ export class DBPool {
 
         try {
 
-            start = performance.now();
+            start = Date.now();
 
             result = connection.query({ sql, timeout }, values);
 
-            LogManager.getInstance().query(sql, values, (performance.now() - start));
+            LogManager.getInstance().query(sql, values, (Date.now() - start));
 
 
         } catch (e: any) {
