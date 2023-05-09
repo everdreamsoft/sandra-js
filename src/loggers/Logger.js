@@ -8,7 +8,7 @@ class Logger {
     }
     query(query, values, exectime) {
         var _a;
-        if ((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.enable) {
+        if (((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.enable) && Sandra_1.Sandra.LOG_CONFIG.query) {
             let lowerCasedQuery = (typeof query == "string") ? query.toLocaleLowerCase() : JSON.stringify(query).toLocaleLowerCase();
             if (this.dataModificationQueries.some(v => lowerCasedQuery.includes(v))) {
                 console.warn(lowerCasedQuery + "; Values: [" + (values === null || values === void 0 ? void 0 : values.toString()) + "]; Time: " + (exectime || ""));

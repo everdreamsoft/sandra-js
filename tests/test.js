@@ -2,11 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Test = void 0;
 const Sandra_1 = require("../src/Sandra");
-const SystemConcepts_1 = require("../src/models/SystemConcepts");
-const EntityFactory_1 = require("../src/wrappers/EntityFactory");
 const DB_1 = require("../src/connections/DB");
-const Common_1 = require("../src/utils/Common");
 const Concept_1 = require("../src/models/Concept");
+const SystemConcepts_1 = require("../src/models/SystemConcepts");
+const Common_1 = require("../src/utils/Common");
+const EntityFactory_1 = require("../src/wrappers/EntityFactory");
 class Test {
     async run() {
         this.testDB();
@@ -67,11 +67,7 @@ const DB_CONFIG_LOCAL = {
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 Sandra_1.Sandra.LOG_CONFIG = {
     enable: true,
-    query: {
-        enable: true,
-        time: true,
-        values: true
-    }
+    query: true
 };
 let test = new Test();
 test.run();

@@ -6,7 +6,7 @@ export class Logger implements ILogger {
     private dataModificationQueries = ["insert", "update", "delete"];
 
     query(query: any, values?: any, exectime?: number): void {
-        if (Sandra.LOG_CONFIG?.enable) {
+        if (Sandra.LOG_CONFIG?.enable && Sandra.LOG_CONFIG.query) {
             let lowerCasedQuery = (typeof query == "string") ? query.toLocaleLowerCase() : JSON.stringify(query).toLocaleLowerCase();
             if (this.dataModificationQueries.some(v => lowerCasedQuery.includes(v))) {
                 console.warn(lowerCasedQuery + "; Values: [" + values?.toString() + "]; Time: " + (exectime || ""));

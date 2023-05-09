@@ -35,11 +35,7 @@ class PlanetTest {
         Sandra_1.Sandra.APP_CONFIG = this.APP_CONFIG_LOCAL;
         Sandra_1.Sandra.LOG_CONFIG = {
             enable: true,
-            query: {
-                enable: true,
-                time: true,
-                values: true
-            }
+            query: true
         };
     }
     async run() {

@@ -1,6 +1,5 @@
 /// This is planet test class, it implements various functions to load and push data
 
-import { resolve } from "path";
 import { Sandra } from "../src/Sandra";
 import { IDBConfig } from "../src/interfaces/IDBconfig";
 import { Concept } from "../src/models/Concept";
@@ -43,11 +42,7 @@ export class PlanetTest {
         Sandra.APP_CONFIG = this.APP_CONFIG_LOCAL;
         Sandra.LOG_CONFIG = {
             enable: true,
-            query: {
-                enable: true,
-                time: true,
-                values: true
-            }
+            query: true
         }
     }
 

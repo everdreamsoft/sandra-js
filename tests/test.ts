@@ -1,11 +1,10 @@
 import { Sandra } from "../src/Sandra";
-import { SystemConcepts } from "../src/models/SystemConcepts";
-import { IDBConfig } from "../src/interfaces/IDBconfig";
-import { EntityFactory } from "../src/wrappers/EntityFactory";
 import { DB } from "../src/connections/DB";
-import { SandraAdapter } from "../src/adapters/SandraAdapter";
-import { Common } from "../src/utils/Common";
+import { IDBConfig } from "../src/interfaces/IDBconfig";
 import { Concept } from "../src/models/Concept";
+import { SystemConcepts } from "../src/models/SystemConcepts";
+import { Common } from "../src/utils/Common";
+import { EntityFactory } from "../src/wrappers/EntityFactory";
 
 export class Test {
 
@@ -98,11 +97,7 @@ const DB_CONFIG_LOCAL = {
 Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 Sandra.LOG_CONFIG = {
     enable: true,
-    query: {
-        enable: true,
-        time: true,
-        values: true
-    }
+    query: true
 }
 
 let test = new Test();
