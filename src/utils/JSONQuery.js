@@ -62,7 +62,7 @@ class JSONQuery {
         let cif = json["contained_in_file"];
         let uniqueRef = json["uniqueRef"];
         let uniqueRefConcept = await SystemConcepts_1.SystemConcepts.get(uniqueRef, server);
-        let factory = new EntityFactory_1.EntityFactory(is_a, cif, uniqueRefConcept);
+        let factory = new EntityFactory_1.EntityFactory(is_a, cif, uniqueRefConcept, server);
         let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + factory.getIsAVerb(), undefined);
         let sysCiFConcept = await SystemConcepts_1.SystemConcepts.get("contained_in_file", server);
         let sysisAConcept = await SystemConcepts_1.SystemConcepts.get("is_a", server);
@@ -139,7 +139,7 @@ class JSONQuery {
         let cif = json["contained_in_file"];
         let uniqueRef = json["uniqueRef"];
         let uniqueRefConcept = await SystemConcepts_1.SystemConcepts.get(uniqueRef, server);
-        let factory = new EntityFactory_1.EntityFactory(is_a, cif, uniqueRefConcept);
+        let factory = new EntityFactory_1.EntityFactory(is_a, cif, uniqueRefConcept, server);
         let refsArr = [];
         if (json.refs) {
             let refKeys = Object.keys(json.refs);

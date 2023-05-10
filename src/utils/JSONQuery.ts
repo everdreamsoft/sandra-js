@@ -189,7 +189,7 @@ export class JSONQuery {
         let uniqueRef = json["uniqueRef"];
 
         let uniqueRefConcept = await SystemConcepts.get(uniqueRef, server);
-        let factory = new EntityFactory(is_a, cif, uniqueRefConcept);
+        let factory = new EntityFactory(is_a, cif, uniqueRefConcept, server);
 
         let subConcept = new Concept(TemporaryId.create(), Concept.ENTITY_CONCEPT_CODE_PREFIX + factory.getIsAVerb(), undefined);
         let sysCiFConcept = await SystemConcepts.get("contained_in_file", server);
@@ -287,7 +287,7 @@ export class JSONQuery {
         let uniqueRef = json["uniqueRef"];
 
         let uniqueRefConcept = await SystemConcepts.get(uniqueRef, server);
-        let factory = new EntityFactory(is_a, cif, uniqueRefConcept);
+        let factory = new EntityFactory(is_a, cif, uniqueRefConcept, server);
 
         let refsArr = [];
         if (json.refs) {
