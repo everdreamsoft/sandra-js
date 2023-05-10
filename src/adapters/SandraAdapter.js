@@ -704,9 +704,9 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
     }
     async getDataStorageByTriplet(triplet, options) {
         let sql = "select linkReferenced, value  from " + this.tables.get(this.TABLE_STORAGE) + " where linkReferenced = ?";
-        let res = await this.getConnectionPool().query(sql, triplet.getId(), options);
-        if (res && (res === null || res === void 0 ? void 0 : res.length) > 0) {
-            triplet.setStorage(res[0].value);
+        let [rows] = await this.getConnectionPool().query(sql, triplet.getId(), options);
+        if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
+            triplet.setStorage(rows[0].value);
         }
         return Promise.resolve();
     }

@@ -938,10 +938,10 @@ export class SandraAdapter extends DBBaseAdapter {
     async getDataStorageByTriplet(triplet: Triplet, options?: IAbortOption): Promise<void> {
 
         let sql = "select linkReferenced, value  from " + this.tables.get(this.TABLE_STORAGE) + " where linkReferenced = ?";
-        let res = await this.getConnectionPool().query(sql, triplet.getId(), options);
+        let [rows]: any = await this.getConnectionPool().query(sql, triplet.getId(), options);
 
-        if (res && res?.length > 0) {
-            triplet.setStorage(res[0].value);
+        if (rows && rows?.length > 0) {
+            triplet.setStorage(rows[0].value);
         }
 
         return Promise.resolve();
