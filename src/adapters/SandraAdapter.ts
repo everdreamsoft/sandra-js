@@ -916,9 +916,9 @@ export class SandraAdapter extends DBBaseAdapter {
 
         if (dataStorage) {
             let sql = "select linkReferenced from " + this.tables.get(this.TABLE_STORAGE) + " where linkReferenced = ?";
-            let res = await this.getConnectionPool().query(sql, triplet.getId(), options);
+            let [rows]: any = await this.getConnectionPool().query(sql, triplet.getId(), options);
 
-            if (res && res?.length > 0) {
+            if (rows && rows?.length > 0) {
                 // Aleady exist, check if need to be updated 
                 if (dataStorage?.isUpsert()) {
                     // Update 

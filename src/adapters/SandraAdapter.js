@@ -687,8 +687,8 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         let dataStorage = triplet.getStorage();
         if (dataStorage) {
             let sql = "select linkReferenced from " + this.tables.get(this.TABLE_STORAGE) + " where linkReferenced = ?";
-            let res = await this.getConnectionPool().query(sql, triplet.getId(), options);
-            if (res && (res === null || res === void 0 ? void 0 : res.length) > 0) {
+            let [rows] = await this.getConnectionPool().query(sql, triplet.getId(), options);
+            if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
                 // Aleady exist, check if need to be updated 
                 if (dataStorage === null || dataStorage === void 0 ? void 0 : dataStorage.isUpsert()) {
                     // Update 
