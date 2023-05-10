@@ -52,6 +52,7 @@ export class DBPool {
             user: c?.connectionConfig.user,
             host: c?.connectionConfig.host,
             database: c?.connectionConfig.database,
+            env:this.config?.env,
             enableKeepAlive: c?.connectionConfig.enableKeepAlive,
             connectionLimit: c?.connectionLimit
         };
