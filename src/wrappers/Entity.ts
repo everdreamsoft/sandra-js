@@ -169,7 +169,8 @@ export class Entity {
             let sn = t.getTarget()?.getShortname();
 
             if (sn && sn.length > 0) {
-                json["brothers"][sn] = t.getTarget()?.getShortname();
+                if (verb)
+                    json["brothers"][verb] = sn;
             }
             else {
                 if (verb)
