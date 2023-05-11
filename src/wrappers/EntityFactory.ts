@@ -655,6 +655,9 @@ export class EntityFactory {
 
     async loadTriplets(verb?: Concept, target?: Concept, loadConcepts?: boolean) {
 
+        if (this.entityArray?.length == 0)
+            return;
+
         let s: Concept[] = [];
         this.entityArray.forEach(e => {
             let sub = e.getSubject();
@@ -687,7 +690,6 @@ export class EntityFactory {
             });
 
         })
-
 
     }
 

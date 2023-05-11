@@ -480,7 +480,9 @@ class EntityFactory {
         await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsRefs(this.entityArray, cifSystem, this.abortOptions));
     }
     async loadTriplets(verb, target, loadConcepts) {
-        var _a;
+        var _a, _b;
+        if (((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length) == 0)
+            return;
         let s = [];
         this.entityArray.forEach(e => {
             let sub = e.getSubject();
@@ -489,7 +491,7 @@ class EntityFactory {
         });
         let verbArr = (verb ? [verb] : undefined);
         let targetArr = (target ? [target] : undefined);
-        let triplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getTriplets(s, verbArr, targetArr, loadConcepts, this.abortOptions));
+        let triplets = await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.getTriplets(s, verbArr, targetArr, loadConcepts, this.abortOptions));
         this.entityArray.forEach(e => {
             var _a;
             let subId = (_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.getId();

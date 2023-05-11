@@ -25,11 +25,13 @@ class Test {
     }
     async testFilter() {
         let jsonQuery = {
-            "is_a": "ethContract",
             "contained_in_file": "blockchainContractFile",
             "uniqueRef": "id",
+            "refs": {
+                "id": "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13"
+            },
             "options": {
-                "limit": 1000,
+                "limit": 1,
                 "load_data": true
             }
         };
@@ -59,7 +61,7 @@ const DB_CONFIG = {
     name: "sandra_linode_ranjit",
     database: "jetski",
     host: "139.162.176.241",
-    env: "balor",
+    env: "fondue",
     password: "4TyijLEBEZHJ1hsabPto",
     user: "remote1",
     connectionLimit: 10,
