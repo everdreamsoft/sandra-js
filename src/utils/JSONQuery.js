@@ -78,6 +78,13 @@ class JSONQuery {
             isAConcept = await SystemConcepts_1.SystemConcepts.get(is_a, server);
             isATriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysisAConcept, isAConcept);
         }
+        if (json.subjectIds) {
+            for (let i = 0; i < json.subjectIds.length; i++) {
+                await factory.addSubjectAsEntity(new Concept_1.Concept(String(json.subjectIds[i]), "A " + factory.getIsAVerb(), undefined));
+            }
+            await factory.loadEntityConceptsRefs();
+            return Promise.resolve(factory.getEntities());
+        }
         let refsArr = [];
         if (json.refs && cifTriplet) {
             let refKeys = Object.keys(json.refs);

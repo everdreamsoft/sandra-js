@@ -10,7 +10,7 @@ import { EntityFactory } from "../src/wrappers/EntityFactory";
 export class Test {
 
     async run() {
-        this.testFilter();
+        this.testPull();
     }
 
     async testAbortSignal() {
@@ -39,24 +39,101 @@ export class Test {
     }
 
     async testFilter() {
-        
+
+
         let jsonQuery = {
+            "is_a": "ethContract",
             "contained_in_file": "blockchainContractFile",
             "uniqueRef": "id",
             "refs": {
-                "id": "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13"
+                "id": "test",
+                "explicitListing": "1",
+                "metadataType": "hte"
             },
-            "options": {
-                "limit": 1,
-                "load_data": true
+            "brothers": {
+                "onBlockchain": {
+                    "target": "ethereum"
+                }
+            },
+            "joined": {
+                "inCollection": {
+                    "target": {
+                        "is_a": "assetCollection",
+                        "contained_in_file": "assetCollectionFile",
+                        "uniqueRef": "collectionId",
+                        "refs": {
+                            "collectionId": "test"
+                        }
+                    },
+                    "refs": {
+                        "assetKeyId": "test"
+                    }
+                },
+                "contractStandard": {
+                    "target": {
+                        "is_a": "blockchainStandard",
+                        "contained_in_file": "blockchainStandardFile",
+                        "uniqueRef": "class_name",
+                        "refs": {
+                            "class_name": "erc721111",
+                            "creationTimestamp": Math.floor(Date.now() / 1000)
+                        },
+                        "push": true
+                    }
+                }
             }
         }
 
-        let c = await JSONQuery.selectAsJson(jsonQuery, "sandra_linode_ranjit");
+
+        let c = await JSONQuery.push(jsonQuery, "sandra_linode_ranjit");
 
         console.log(c);
 
     }
+
+    async testPull() {
+
+        // let query = {
+        //     "contained_in_file": "blockchainContractFile",
+        //     "uniqueRef": "id",
+        //     "joined": {
+        //         "inCollection": {
+        //             "target": {
+        //                 "is_a": "assetCollection",
+        //                 "contained_in_file": "assetCollectionFile",
+        //                 "uniqueRef": "collectionId",
+        //                 "refs": {
+        //                     "collectionId": "test"
+        //                 }
+        //             }
+        //         },
+        //         "contractStandard": {
+        //             "load_data": true
+        //         }
+        //     },
+        //     "options": {
+        //         "limit": 9999,
+        //         "load_data": true
+        //     }
+        // }
+
+        let query = {
+            "contained_in_file": "blockchainStandardFile",
+            "uniqueRef": "class_name",
+            "subjectIds": ["329816"],
+            "options": {
+                "limit": 100,
+                "load_data": true
+            }
+        }
+
+        console.log("");
+
+        let c = await JSONQuery.selectAsJson(query, "sandra_linode_ranjit");
+
+        console.log(c);
+    }
+
 
     async testDB(server: string = "sandra") {
 
