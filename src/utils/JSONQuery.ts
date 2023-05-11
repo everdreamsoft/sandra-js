@@ -195,14 +195,23 @@ export class JSONQuery {
         let sysCiFConcept = await SystemConcepts.get("contained_in_file", server);
         let sysisAConcept = await SystemConcepts.get("is_a", server);
 
-        let cifConcept = await SystemConcepts.get(cif, server);
-        let isAConcept = await SystemConcepts.get(is_a, server);
+        let cifConcept = undefined;
+        let isAConcept = undefined;
+        let cifTriplet = undefined;
+        let isATriplet = undefined;
 
-        let cifTriplet = new Triplet(TemporaryId.create(), subConcept, sysCiFConcept, cifConcept);
-        let isATriplet = new Triplet(TemporaryId.create(), subConcept, sysisAConcept, isAConcept);
+        if (cif) {
+            cifConcept = await SystemConcepts.get(cif, server);
+            cifTriplet = new Triplet(TemporaryId.create(), subConcept, sysCiFConcept, cifConcept);
+        }
+
+        if (is_a) {
+            isAConcept = await SystemConcepts.get(is_a, server);
+            isATriplet = new Triplet(TemporaryId.create(), subConcept, sysisAConcept, isAConcept);
+        }
 
         let refsArr = [];
-        if (json.refs) {
+        if (json.refs && cifTriplet) {
             let refKeys = Object.keys(json.refs);
             for (let i = 0; i < refKeys.length; i++) {
                 let ref = await Common.createDBReference(refKeys[i], json.refs[refKeys[i]], cifTriplet, server);
@@ -210,7 +219,14 @@ export class JSONQuery {
             }
         }
 
-        let tripletsArr = [cifTriplet, isATriplet];
+        let tripletsArr = [];
+
+        if (isATriplet)
+            tripletsArr.push(isATriplet)
+
+        if (cifTriplet)
+            tripletsArr.push(cifTriplet)
+
         if (json.brothers) {
             let tripletsKeys = Object.keys(json.brothers);
             for (let i = 0; i < tripletsKeys.length; i++) {

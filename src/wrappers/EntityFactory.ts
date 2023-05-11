@@ -22,8 +22,8 @@ export class EntityFactory {
     private abortOptions?: IAbortOption;
 
     constructor(is_a: string, contained_in_file: string, uniqueRefConcept: Concept, server: string = "sandra") {
-        this.is_a = is_a;
-        this.contained_in_file = contained_in_file;
+        this.is_a = is_a || "generalIsA";
+        this.contained_in_file = contained_in_file || "generalContainedInFile";
         this.uniqueRefConcept = uniqueRefConcept;
         this.server = server;
     }

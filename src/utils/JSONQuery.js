@@ -66,19 +66,31 @@ class JSONQuery {
         let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + factory.getIsAVerb(), undefined);
         let sysCiFConcept = await SystemConcepts_1.SystemConcepts.get("contained_in_file", server);
         let sysisAConcept = await SystemConcepts_1.SystemConcepts.get("is_a", server);
-        let cifConcept = await SystemConcepts_1.SystemConcepts.get(cif, server);
-        let isAConcept = await SystemConcepts_1.SystemConcepts.get(is_a, server);
-        let cifTriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysCiFConcept, cifConcept);
-        let isATriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysisAConcept, isAConcept);
+        let cifConcept = undefined;
+        let isAConcept = undefined;
+        let cifTriplet = undefined;
+        let isATriplet = undefined;
+        if (cif) {
+            cifConcept = await SystemConcepts_1.SystemConcepts.get(cif, server);
+            cifTriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysCiFConcept, cifConcept);
+        }
+        if (is_a) {
+            isAConcept = await SystemConcepts_1.SystemConcepts.get(is_a, server);
+            isATriplet = new Triplet_1.Triplet(TemporaryId_1.TemporaryId.create(), subConcept, sysisAConcept, isAConcept);
+        }
         let refsArr = [];
-        if (json.refs) {
+        if (json.refs && cifTriplet) {
             let refKeys = Object.keys(json.refs);
             for (let i = 0; i < refKeys.length; i++) {
                 let ref = await Common_1.Common.createDBReference(refKeys[i], json.refs[refKeys[i]], cifTriplet, server);
                 refsArr.push(ref);
             }
         }
-        let tripletsArr = [cifTriplet, isATriplet];
+        let tripletsArr = [];
+        if (isATriplet)
+            tripletsArr.push(isATriplet);
+        if (cifTriplet)
+            tripletsArr.push(cifTriplet);
         if (json.brothers) {
             let tripletsKeys = Object.keys(json.brothers);
             for (let i = 0; i < tripletsKeys.length; i++) {

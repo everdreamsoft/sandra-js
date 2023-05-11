@@ -4,12 +4,13 @@ import { IDBConfig } from "../src/interfaces/IDBconfig";
 import { Concept } from "../src/models/Concept";
 import { SystemConcepts } from "../src/models/SystemConcepts";
 import { Common } from "../src/utils/Common";
+import { JSONQuery } from "../src/utils/JSONQuery";
 import { EntityFactory } from "../src/wrappers/EntityFactory";
 
 export class Test {
 
     async run() {
-        this.testDB();
+        this.testFilter();
     }
 
     async testAbortSignal() {
@@ -37,6 +38,23 @@ export class Test {
 
     }
 
+    async testFilter() {
+        
+        let jsonQuery = {
+            "is_a":"ethContract",
+            "contained_in_file": "blockchainContractFile",
+            "uniqueRef": "id",
+            "options": {
+                "limit": 1000,
+                "load_data": true
+            }
+        };
+
+        let c = await JSONQuery.selectAsJson(jsonQuery, "sandra_linode_ranjit");
+
+        console.log(c);
+
+    }
 
     async testDB(server: string = "sandra") {
 
@@ -67,13 +85,13 @@ export class Test {
 
 }
 
-const LOCAL = true;
+const LOCAL = false;
 
 const DB_CONFIG: IDBConfig = {
     name: "sandra_linode_ranjit",
     database: "jetski",
     host: "139.162.176.241",
-    env: "fondue",
+    env: "balor",
     password: "4TyijLEBEZHJ1hsabPto",
     user: "remote1",
     connectionLimit: 10,

@@ -12,8 +12,8 @@ class EntityFactory {
     constructor(is_a, contained_in_file, uniqueRefConcept, server = "sandra") {
         this.entityArray = [];
         this.pushedStatus = false;
-        this.is_a = is_a;
-        this.contained_in_file = contained_in_file;
+        this.is_a = is_a || "generalIsA";
+        this.contained_in_file = contained_in_file || "generalContainedInFile";
         this.uniqueRefConcept = uniqueRefConcept;
         this.server = server;
     }

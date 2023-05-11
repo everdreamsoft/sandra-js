@@ -6,10 +6,11 @@ const DB_1 = require("../src/connections/DB");
 const Concept_1 = require("../src/models/Concept");
 const SystemConcepts_1 = require("../src/models/SystemConcepts");
 const Common_1 = require("../src/utils/Common");
+const JSONQuery_1 = require("../src/utils/JSONQuery");
 const EntityFactory_1 = require("../src/wrappers/EntityFactory");
 class Test {
     async run() {
-        this.testDB();
+        this.testFilter();
     }
     async testAbortSignal() {
     }
@@ -21,6 +22,19 @@ class Test {
         res = await (con === null || con === void 0 ? void 0 : con.query("select * from fondue_SandraConcept limit 100;"));
         res = await (con === null || con === void 0 ? void 0 : con.query("select * from fondue_SandraConcept limit 1000;"));
         console.log(con);
+    }
+    async testFilter() {
+        let jsonQuery = {
+            "is_a": "ethContract",
+            "contained_in_file": "blockchainContractFile",
+            "uniqueRef": "id",
+            "options": {
+                "limit": 1000,
+                "load_data": true
+            }
+        };
+        let c = await JSONQuery_1.JSONQuery.selectAsJson(jsonQuery, "sandra_linode_ranjit");
+        console.log(c);
     }
     async testDB(server = "sandra") {
         console.log(Sandra_1.Sandra.getDBConfig());
@@ -40,12 +54,12 @@ class Test {
     }
 }
 exports.Test = Test;
-const LOCAL = true;
+const LOCAL = false;
 const DB_CONFIG = {
     name: "sandra_linode_ranjit",
     database: "jetski",
     host: "139.162.176.241",
-    env: "fondue",
+    env: "balor",
     password: "4TyijLEBEZHJ1hsabPto",
     user: "remote1",
     connectionLimit: 10,
