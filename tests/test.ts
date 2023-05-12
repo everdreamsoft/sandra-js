@@ -151,9 +151,23 @@ export class Test {
         //     }
         // }
 
+        let jsonQuery = {
+            "contained_in_file": "blockchainContractFile",
+            "uniqueRef": "id",
+            "refs": {
+                "id": "0x9227a3d959654c8004fa77dffc380ec40880fff6"
+            },
+            "options": {
+                "limit": 1,
+                "load_data": true,
+                "load_triplets": {
+                    "verbs": ["onBlockchain"]
+                }
+            }
+        };
         console.log("");
 
-        let c = await JSONQuery.selectAsJson(query, "sandra_linode_ranjit");
+        let c = await JSONQuery.selectAsJson(jsonQuery, "sandra_linode_ranjit");
 
         console.log(c);
     }

@@ -149,17 +149,15 @@ class JSONQuery {
         }
         await factory.filter(tripletsArr, refsArr, limit);
         if ((_a = json.options) === null || _a === void 0 ? void 0 : _a.load_data) {
-            if ((_b = json.options.load_refs) === null || _b === void 0 ? void 0 : _b.verbs) {
-                for (let i = 0; i < json.options.load_refs.verbs.length; i++) {
-                    let v = json.options.load_refs.verbs[i];
+            if ((_b = json.options.load_triplets) === null || _b === void 0 ? void 0 : _b.verbs) {
+                for (let i = 0; i < json.options.load_triplets.verbs.length; i++) {
+                    let v = json.options.load_triplets.verbs[i];
                     if (v.length > 0) {
-                        let index = verbConcepts.findIndex(vb => { return (vb.getShortname() || "") == v; });
-                        if (index < 0)
-                            verbConcepts.push(await SystemConcepts_1.SystemConcepts.get(v, server));
+                        verbConcepts.push(await SystemConcepts_1.SystemConcepts.get(v, server));
                     }
                 }
             }
-            await factory.loadTriplets([...verbConcepts], undefined, true);
+            await factory.loadTriplets(verbConcepts, undefined, true);
             await factory.loadAllTripletRefs();
         }
         return Promise.resolve(factory.getEntities());
