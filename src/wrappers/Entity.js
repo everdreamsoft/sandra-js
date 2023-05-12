@@ -144,15 +144,16 @@ class Entity {
                     json["brothers"][verb] = { "value": sn };
                     if (verb != "contained_in_file") {
                         let rfs = (_d = this.references) === null || _d === void 0 ? void 0 : _d.filter(r => { var _a; return ((_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getId()) == t.getId(); });
-                        if ((rfs === null || rfs === void 0 ? void 0 : rfs.length) > 0)
-                            json["brothers"][verb]["refs"] = rfs === null || rfs === void 0 ? void 0 : rfs.map(r => {
+                        if ((rfs === null || rfs === void 0 ? void 0 : rfs.length) > 0) {
+                            let a = json["brothers"][verb];
+                            a["refs"] = {};
+                            rfs.forEach(r => {
                                 var _a;
-                                let j = {};
                                 let key = (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname();
                                 if (key)
-                                    j[key] = r.getValue();
-                                return j;
+                                    a["refs"][key] = r.getValue();
                             });
+                        }
                     }
                 }
             }
@@ -162,28 +163,30 @@ class Entity {
                     if (t.getJoinedEntity()) {
                         j[verb] = (_e = t.getJoinedEntity()) === null || _e === void 0 ? void 0 : _e.asJSON();
                         let rfs = (_f = this.references) === null || _f === void 0 ? void 0 : _f.filter(r => { var _a; return ((_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getId()) == t.getId(); });
-                        if ((rfs === null || rfs === void 0 ? void 0 : rfs.length) > 0)
-                            j[verb]["refs"] = rfs === null || rfs === void 0 ? void 0 : rfs.map(r => {
+                        if ((rfs === null || rfs === void 0 ? void 0 : rfs.length) > 0) {
+                            let a = j[verb];
+                            a["refs"] = {};
+                            rfs.forEach(r => {
                                 var _a;
-                                let j = {};
                                 let key = (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname();
                                 if (key)
-                                    j[key] = r.getValue();
-                                return j;
+                                    a["refs"][key] = r.getValue();
                             });
+                        }
                     }
                     else {
                         j[verb] = { "subjectId": (_g = t.getTarget()) === null || _g === void 0 ? void 0 : _g.getId() };
                         let rfs = (_h = this.references) === null || _h === void 0 ? void 0 : _h.filter(r => { var _a; return ((_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getId()) == t.getId(); });
-                        if ((rfs === null || rfs === void 0 ? void 0 : rfs.length) > 0)
-                            j[verb]["refs"] = rfs === null || rfs === void 0 ? void 0 : rfs.map(r => {
+                        if ((rfs === null || rfs === void 0 ? void 0 : rfs.length) > 0) {
+                            let a = j[verb];
+                            a["refs"] = {};
+                            rfs.forEach(r => {
                                 var _a;
-                                let j = {};
                                 let key = (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname();
                                 if (key)
-                                    j[key] = r.getValue();
-                                return j;
+                                    a["refs"][key] = r.getValue();
                             });
+                        }
                     }
                     json["joined"].push(j);
                 }
