@@ -171,16 +171,19 @@ export class Entity {
 
             if (sn && sn.length > 0) {
                 if (verb) {
-                    json["brothers"][verb] = { "value": sn };
+                    json["brothers"][verb] = sn;
+
                     if (verb != "contained_in_file") {
                         let rfs = this.references?.filter(r => { return r.getTripletLink()?.getId() == t.getId() });
                         if (rfs?.length > 0) {
-                            let a = json["brothers"][verb];
-                            a["refs"] = {};
+                            let a = json["brothers"];
+                            a["refs"] = {
+                            };
+                            a["refs"][verb] = {};
                             rfs.forEach(r => {
                                 let key = r.getIdConcept()?.getShortname();
-                                if (key)
-                                    a["refs"][key] = r.getValue();
+                                if (key && verb)
+                                    a["refs"][verb][key] = r.getValue();
                             });
 
                         }

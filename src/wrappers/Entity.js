@@ -141,17 +141,18 @@ class Entity {
             let sn = (_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getShortname();
             if (sn && sn.length > 0) {
                 if (verb) {
-                    json["brothers"][verb] = { "value": sn };
+                    json["brothers"][verb] = sn;
                     if (verb != "contained_in_file") {
                         let rfs = (_d = this.references) === null || _d === void 0 ? void 0 : _d.filter(r => { var _a; return ((_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getId()) == t.getId(); });
                         if ((rfs === null || rfs === void 0 ? void 0 : rfs.length) > 0) {
-                            let a = json["brothers"][verb];
+                            let a = json["brothers"];
                             a["refs"] = {};
+                            a["refs"][verb] = {};
                             rfs.forEach(r => {
                                 var _a;
                                 let key = (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname();
-                                if (key)
-                                    a["refs"][key] = r.getValue();
+                                if (key && verb)
+                                    a["refs"][verb][key] = r.getValue();
                             });
                         }
                     }
