@@ -70,38 +70,38 @@ class Test {
         console.log(c);
     }
     async testPull() {
-        // let query = {
-        //     "contained_in_file": "blockchainContractFile",
-        //     "uniqueRef": "id",
-        //     "joined": {
-        //         "inCollection": {
-        //             "target": {
-        //                 "is_a": "assetCollection",
-        //                 "contained_in_file": "assetCollectionFile",
-        //                 "uniqueRef": "collectionId",
-        //                 "refs": {
-        //                     "collectionId": "test"
-        //                 }
-        //             }
-        //         },
-        //         "contractStandard": {
-        //             "load_data": true
-        //         }
-        //     },
-        //     "options": {
-        //         "limit": 9999,
-        //         "load_data": true
-        //     }
-        // }
         let query = {
-            "contained_in_file": "blockchainStandardFile",
-            "uniqueRef": "class_name",
-            "subjectIds": ["329816"],
+            "contained_in_file": "blockchainContractFile",
+            "uniqueRef": "id",
+            "joined": {
+                "inCollection": {
+                    "target": {
+                        "is_a": "assetCollection",
+                        "contained_in_file": "assetCollectionFile",
+                        "uniqueRef": "collectionId",
+                        "refs": {
+                            "collectionId": "test"
+                        }
+                    }
+                },
+                "contractStandard": {
+                    "load_data": true
+                }
+            },
             "options": {
-                "limit": 100,
+                "limit": 9999,
                 "load_data": true
             }
         };
+        // let query = {
+        //     "contained_in_file": "blockchainStandardFile",
+        //     "uniqueRef": "class_name",
+        //     "subjectIds": ["329816"],
+        //     "options": {
+        //         "limit": 100,
+        //         "load_data": true
+        //     }
+        // }
         console.log("");
         let c = await JSONQuery_1.JSONQuery.selectAsJson(query, "sandra_linode_ranjit");
         console.log(c);

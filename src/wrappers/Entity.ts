@@ -160,7 +160,7 @@ export class Entity {
         });
 
         json["brothers"] = {};
-        json["joined"] = {};
+        json["joined"] = [];
 
         this.triplets.forEach((t, i) => {
 
@@ -173,16 +173,16 @@ export class Entity {
                     json["brothers"][verb] = sn;
             }
             else {
-                if (verb)
+                if (verb) {
+                    let j: any = {};
                     if (t.getJoinedEntity()) {
-                        json["joined"][verb] = t.getJoinedEntity()?.asJSON();
+                        j[verb] = t.getJoinedEntity()?.asJSON();
                     }
                     else {
-                        json["joined"][verb] = {
-                            "subjectId": t.getTarget()?.getId()
-                        }
+                        j[verb] = { "subjectId": t.getTarget()?.getId() };
                     }
-
+                    json["joined"].push(j);
+                }
             }
 
         });

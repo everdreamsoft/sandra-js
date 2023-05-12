@@ -132,7 +132,7 @@ class Entity {
                 json[key] = r.getValue();
         });
         json["brothers"] = {};
-        json["joined"] = {};
+        json["joined"] = [];
         this.triplets.forEach((t, i) => {
             var _a, _b, _c, _d, _e;
             let verb = ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) ? (_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getShortname() : "tripletVerb" + i;
@@ -142,15 +142,16 @@ class Entity {
                     json["brothers"][verb] = sn;
             }
             else {
-                if (verb)
+                if (verb) {
+                    let j = {};
                     if (t.getJoinedEntity()) {
-                        json["joined"][verb] = (_d = t.getJoinedEntity()) === null || _d === void 0 ? void 0 : _d.asJSON();
+                        j[verb] = (_d = t.getJoinedEntity()) === null || _d === void 0 ? void 0 : _d.asJSON();
                     }
                     else {
-                        json["joined"][verb] = {
-                            "subjectId": (_e = t.getTarget()) === null || _e === void 0 ? void 0 : _e.getId()
-                        };
+                        j[verb] = { "subjectId": (_e = t.getTarget()) === null || _e === void 0 ? void 0 : _e.getId() };
                     }
+                    json["joined"].push(j);
+                }
             }
         });
         return json;
