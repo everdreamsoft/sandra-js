@@ -489,8 +489,20 @@ class EntityFactory {
             if (sub)
                 s.push(sub);
         });
-        let verbArr = (verb ? [verb] : undefined);
-        let targetArr = (target ? [target] : undefined);
+        let verbArr = [];
+        let targetArr = undefined;
+        if (Array.isArray(verb)) {
+            verbArr = [...verb];
+        }
+        else {
+            verbArr = (verb ? [verb] : undefined);
+        }
+        if (Array.isArray(target)) {
+            targetArr = [...target];
+        }
+        else {
+            targetArr = (target ? [target] : undefined);
+        }
         let triplets = await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.getTriplets(s, verbArr, targetArr, loadConcepts, this.abortOptions));
         this.entityArray.forEach(e => {
             var _a;

@@ -54,7 +54,7 @@ class JSONQuery {
         await JSONQuery.pushJson(data, 0, server);
     }
     static async filter(json, level = 0, server) {
-        var _a;
+        var _a, _b;
         let limit = 1;
         if (level == 0)
             limit = json.options.limit;
@@ -118,11 +118,13 @@ class JSONQuery {
                 }
             }
         }
+        let verbConcepts = [sysCiFConcept];
         if (json.joined) {
             let joinedKeys = Object.keys(json.joined);
             for (let i = 0; i < (joinedKeys === null || joinedKeys === void 0 ? void 0 : joinedKeys.length); i++) {
                 let verbConcept = await SystemConcepts_1.SystemConcepts.get(joinedKeys[i], server);
                 let joinedTargetValues = json.joined[joinedKeys[i]];
+                verbConcepts.push(verbConcept);
                 if (joinedTargetValues.target) {
                     let joinedTarget = joinedTargetValues.target;
                     let targets = await this.filter(joinedTarget, level + 1, server);
@@ -147,7 +149,17 @@ class JSONQuery {
         }
         await factory.filter(tripletsArr, refsArr, limit);
         if ((_a = json.options) === null || _a === void 0 ? void 0 : _a.load_data) {
-            await factory.loadTriplets(undefined, undefined, true);
+            if ((_b = json.options.load_refs) === null || _b === void 0 ? void 0 : _b.verbs) {
+                for (let i = 0; i < json.options.load_refs.verbs.length; i++) {
+                    let v = json.options.load_refs.verbs[i];
+                    if (v.length > 0) {
+                        let index = verbConcepts.findIndex(vb => { return (vb.getShortname() || "") == v; });
+                        if (index < 0)
+                            verbConcepts.push(await SystemConcepts_1.SystemConcepts.get(v, server));
+                    }
+                }
+            }
+            await factory.loadTriplets([...verbConcepts], undefined, true);
             await factory.loadAllTripletRefs();
         }
         return Promise.resolve(factory.getEntities());

@@ -653,7 +653,7 @@ export class EntityFactory {
         );
     }
 
-    async loadTriplets(verb?: Concept, target?: Concept, loadConcepts?: boolean) {
+    async loadTriplets(verb?: Concept | Concept[], target?: Concept | Concept[], loadConcepts?: boolean) {
 
         if (this.entityArray?.length == 0)
             return;
@@ -665,8 +665,22 @@ export class EntityFactory {
                 s.push(sub)
         })
 
-        let verbArr = (verb ? [verb] : undefined);
-        let targetArr = (target ? [target] : undefined);
+        let verbArr: Concept[] | undefined = [];
+        let targetArr: Concept[] | undefined = undefined;
+
+        if (Array.isArray(verb)) {
+            verbArr = [...verb]
+        }
+        else {
+            verbArr = (verb ? [verb] : undefined);
+        }
+
+        if (Array.isArray(target)) {
+            targetArr = [...target]
+        }
+        else {
+            targetArr = (target ? [target] : undefined);
+        }
 
         let triplets = await (DB.getInstance().server(this.server) as SandraAdapter)?.getTriplets(
             s, verbArr, targetArr, loadConcepts, this.abortOptions

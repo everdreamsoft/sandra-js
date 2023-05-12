@@ -260,12 +260,15 @@ export class JSONQuery {
             }
         }
 
+        let verbConcepts = [sysCiFConcept];
+
         if (json.joined) {
             let joinedKeys = Object.keys(json.joined);
             for (let i = 0; i < joinedKeys?.length; i++) {
 
                 let verbConcept = await SystemConcepts.get(joinedKeys[i], server);
                 let joinedTargetValues = json.joined[joinedKeys[i]];
+                verbConcepts.push(verbConcept);
 
                 if (joinedTargetValues.target) {
 
@@ -296,7 +299,19 @@ export class JSONQuery {
         await factory.filter(tripletsArr, refsArr, limit);
 
         if (json.options?.load_data) {
-            await factory.loadTriplets(undefined, undefined, true);
+
+            if (json.options.load_refs?.verbs) {
+                for (let i = 0; i < json.options.load_refs.verbs.length; i++) {
+                    let v: string = json.options.load_refs.verbs[i];
+                    if (v.length > 0) {
+                        let index = verbConcepts.findIndex(vb => { return (vb.getShortname() || "") == v });
+                        if (index < 0)
+                            verbConcepts.push(await SystemConcepts.get(v, server))
+                    }
+                }
+            }
+
+            await factory.loadTriplets([...verbConcepts], undefined, true);
             await factory.loadAllTripletRefs();
         }
 

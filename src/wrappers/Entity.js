@@ -126,29 +126,64 @@ class Entity {
         let json = {};
         json["subjectId"] = (_a = this.getSubject()) === null || _a === void 0 ? void 0 : _a.getId();
         this.references.forEach(r => {
-            var _a;
-            let key = (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname();
-            if (key)
-                json[key] = r.getValue();
+            var _a, _b, _c;
+            if (((_b = (_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getVerb()) === null || _b === void 0 ? void 0 : _b.getShortname()) == "contained_in_file") {
+                let key = (_c = r.getIdConcept()) === null || _c === void 0 ? void 0 : _c.getShortname();
+                if (key)
+                    json[key] = r.getValue();
+            }
         });
         json["brothers"] = {};
         json["joined"] = [];
         this.triplets.forEach((t, i) => {
-            var _a, _b, _c, _d, _e;
+            var _a, _b, _c, _d, _e, _f, _g, _h;
             let verb = ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) ? (_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getShortname() : "tripletVerb" + i;
             let sn = (_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getShortname();
             if (sn && sn.length > 0) {
-                if (verb)
-                    json["brothers"][verb] = sn;
+                if (verb) {
+                    json["brothers"][verb] = { "value": sn };
+                    if (verb != "contained_in_file") {
+                        let rfs = (_d = this.references) === null || _d === void 0 ? void 0 : _d.filter(r => { var _a; return ((_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getId()) == t.getId(); });
+                        if ((rfs === null || rfs === void 0 ? void 0 : rfs.length) > 0)
+                            json["brothers"][verb]["refs"] = rfs === null || rfs === void 0 ? void 0 : rfs.map(r => {
+                                var _a;
+                                let j = {};
+                                let key = (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname();
+                                if (key)
+                                    j[key] = r.getValue();
+                                return j;
+                            });
+                    }
+                }
             }
             else {
                 if (verb) {
                     let j = {};
                     if (t.getJoinedEntity()) {
-                        j[verb] = (_d = t.getJoinedEntity()) === null || _d === void 0 ? void 0 : _d.asJSON();
+                        j[verb] = (_e = t.getJoinedEntity()) === null || _e === void 0 ? void 0 : _e.asJSON();
+                        let rfs = (_f = this.references) === null || _f === void 0 ? void 0 : _f.filter(r => { var _a; return ((_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getId()) == t.getId(); });
+                        if ((rfs === null || rfs === void 0 ? void 0 : rfs.length) > 0)
+                            j[verb]["refs"] = rfs === null || rfs === void 0 ? void 0 : rfs.map(r => {
+                                var _a;
+                                let j = {};
+                                let key = (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname();
+                                if (key)
+                                    j[key] = r.getValue();
+                                return j;
+                            });
                     }
                     else {
-                        j[verb] = { "subjectId": (_e = t.getTarget()) === null || _e === void 0 ? void 0 : _e.getId() };
+                        j[verb] = { "subjectId": (_g = t.getTarget()) === null || _g === void 0 ? void 0 : _g.getId() };
+                        let rfs = (_h = this.references) === null || _h === void 0 ? void 0 : _h.filter(r => { var _a; return ((_a = r.getTripletLink()) === null || _a === void 0 ? void 0 : _a.getId()) == t.getId(); });
+                        if ((rfs === null || rfs === void 0 ? void 0 : rfs.length) > 0)
+                            j[verb]["refs"] = rfs === null || rfs === void 0 ? void 0 : rfs.map(r => {
+                                var _a;
+                                let j = {};
+                                let key = (_a = r.getIdConcept()) === null || _a === void 0 ? void 0 : _a.getShortname();
+                                if (key)
+                                    j[key] = r.getValue();
+                                return j;
+                            });
                     }
                     json["joined"].push(j);
                 }

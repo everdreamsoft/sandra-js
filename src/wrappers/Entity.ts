@@ -154,9 +154,11 @@ export class Entity {
         json["subjectId"] = this.getSubject()?.getId();
 
         this.references.forEach(r => {
-            let key = r.getIdConcept()?.getShortname();
-            if (key)
-                json[key] = r.getValue();
+            if (r.getTripletLink()?.getVerb()?.getShortname() == "contained_in_file") {
+                let key = r.getIdConcept()?.getShortname();
+                if (key)
+                    json[key] = r.getValue();
+            }
         });
 
         json["brothers"] = {};
@@ -165,21 +167,50 @@ export class Entity {
         this.triplets.forEach((t, i) => {
 
             let verb = t.getVerb()?.getShortname() ? t.getVerb()?.getShortname() : "tripletVerb" + i;
-
             let sn = t.getTarget()?.getShortname();
 
             if (sn && sn.length > 0) {
-                if (verb)
-                    json["brothers"][verb] = sn;
+                if (verb) {
+                    json["brothers"][verb] = { "value": sn };
+                    if (verb != "contained_in_file") {
+                        let rfs = this.references?.filter(r => { return r.getTripletLink()?.getId() == t.getId() });
+                        if (rfs?.length > 0)
+                            json["brothers"][verb]["refs"] = rfs?.map(r => {
+                                let j: any = {};
+                                let key = r.getIdConcept()?.getShortname();
+                                if (key)
+                                    j[key] = r.getValue();
+                                return j;
+                            });
+                    }
+                }
             }
             else {
                 if (verb) {
                     let j: any = {};
                     if (t.getJoinedEntity()) {
                         j[verb] = t.getJoinedEntity()?.asJSON();
+                        let rfs = this.references?.filter(r => { return r.getTripletLink()?.getId() == t.getId() });
+                        if (rfs?.length > 0)
+                            j[verb]["refs"] = rfs?.map(r => {
+                                let j: any = {};
+                                let key = r.getIdConcept()?.getShortname();
+                                if (key)
+                                    j[key] = r.getValue();
+                                return j;
+                            });
                     }
                     else {
                         j[verb] = { "subjectId": t.getTarget()?.getId() };
+                        let rfs = this.references?.filter(r => { return r.getTripletLink()?.getId() == t.getId() });
+                        if (rfs?.length > 0)
+                            j[verb]["refs"] = rfs?.map(r => {
+                                let j: any = {};
+                                let key = r.getIdConcept()?.getShortname();
+                                if (key)
+                                    j[key] = r.getValue();
+                                return j;
+                            });
                     }
                     json["joined"].push(j);
                 }

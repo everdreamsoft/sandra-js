@@ -70,27 +70,51 @@ class Test {
         console.log(c);
     }
     async testPull() {
+        // let query = {
+        //     "contained_in_file": "blockchainContractFile",
+        //     "uniqueRef": "id",
+        //     "joined": {
+        //         "inCollection": {
+        //             "target": {
+        //                 "is_a": "assetCollection",
+        //                 "contained_in_file": "assetCollectionFile",
+        //                 "uniqueRef": "collectionId",
+        //                 "refs": {
+        //                     "collectionId": "test"
+        //                 }
+        //             }
+        //         },
+        //         "contractStandard": {
+        //             "load_data": true
+        //         }
+        //     },
+        //     "options": {
+        //         "limit": 9999,
+        //         "load_data": true
+        //     }
+        // }
         let query = {
-            "contained_in_file": "blockchainContractFile",
+            "is_a": "jwiProcess",
+            "contained_in_file": "jwiProcessFile",
             "uniqueRef": "id",
             "joined": {
-                "inCollection": {
+                "has": {
                     "target": {
-                        "is_a": "assetCollection",
-                        "contained_in_file": "assetCollectionFile",
-                        "uniqueRef": "collectionId",
+                        "is_a": "ethContract",
+                        "contained_in_file": "blockchainContractFile",
+                        "uniqueRef": "id",
                         "refs": {
-                            "collectionId": "test"
+                            "id": "0x9227a3d959654c8004fa77dffc380ec40880fff6"
                         }
                     }
-                },
-                "contractStandard": {
-                    "load_data": true
                 }
             },
             "options": {
-                "limit": 9999,
-                "load_data": true
+                "limit": 1,
+                "load_data": true,
+                "load_refs": {
+                    "verbs": ["contained_in_file", "has"]
+                }
             }
         };
         // let query = {
