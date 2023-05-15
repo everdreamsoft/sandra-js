@@ -397,7 +397,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             ((triplets === null || triplets === void 0 ? void 0 : triplets.length) == 1 && (refs === null || refs === void 0 ? void 0 : refs.length) == 0 ? " where " : " and ") +
             " t0.idConceptTarget = " + ((_c = triplets[0].getTarget()) === null || _c === void 0 ? void 0 : _c.getId()) + " and " +
             " t0.idConceptLink = " + ((_d = triplets[0].getVerb()) === null || _d === void 0 ? void 0 : _d.getId());
-        sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
+        sql = sql.replace(",#SELECT#", " ") + " order by t0.id desc limit " + limit;
         let [rows] = await this.getConnectionPool().query(sql, undefined, options);
         return new Promise((resolve, reject) => {
             if (options === null || options === void 0 ? void 0 : options.abortSignal) {

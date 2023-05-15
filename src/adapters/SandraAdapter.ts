@@ -536,7 +536,7 @@ export class SandraAdapter extends DBBaseAdapter {
             " t0.idConceptTarget = " + triplets[0].getTarget()?.getId() + " and " +
             " t0.idConceptLink = " + triplets[0].getVerb()?.getId();
 
-        sql = sql.replace(",#SELECT#", " ") + " limit " + limit;
+        sql = sql.replace(",#SELECT#", " ") + " order by t0.id desc limit " + limit;
 
         let [rows]: any = await this.getConnectionPool().query(sql, undefined, options);
 
