@@ -725,17 +725,22 @@ export class EntityFactory {
             if (r) refs.push(r.getValue());
         });
 
-        let entityConceptsMap: Map<string, Concept> = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityConceptsByRefs(
-            new Triplet(
+        let tisA = undefined;
+
+        if (this.is_a != "generalIsA")
+            tisA = new Triplet(
                 "",
                 undefined,
                 await SystemConcepts.get("is_a", this.server),
-                await SystemConcepts.get(this.is_a, this.server)),
+                await SystemConcepts.get(this.is_a, this.server));
+
+        let entityConceptsMap: Map<string, Concept> = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityConceptsByRefs(
             new Triplet(
                 "",
                 undefined,
                 await SystemConcepts.get("contained_in_file", this.server),
                 await SystemConcepts.get(this.contained_in_file, this.server)),
+            tisA,
             refs,
             this.uniqueRefConcept,
             this.abortOptions

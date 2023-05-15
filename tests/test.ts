@@ -10,7 +10,7 @@ import { EntityFactory } from "../src/wrappers/EntityFactory";
 export class Test {
 
     async run() {
-        this.testPull();
+        this.testFilter();
     }
 
     async testAbortSignal() {
@@ -42,47 +42,70 @@ export class Test {
 
 
         let jsonQuery = {
-            "is_a": "ethContract",
-            "contained_in_file": "blockchainContractFile",
+            "is_a": "jwiProcess",
+            "contained_in_file": "jwiProcessFile",
             "uniqueRef": "id",
             "refs": {
-                "id": "test",
-                "explicitListing": "1",
-                "metadataType": "hte"
-            },
-            "brothers": {
-                "onBlockchain": {
-                    "target": "ethereum"
-                }
+                "id": "binance_asset_daemon",
             },
             "joined": {
-                "inCollection": {
+                "has": {
                     "target": {
-                        "is_a": "assetCollection",
-                        "contained_in_file": "assetCollectionFile",
-                        "uniqueRef": "collectionId",
+                        "contained_in_file": "blockchainContractFile",
+                        "uniqueRef": "id",
                         "refs": {
-                            "collectionId": "test"
-                        }
-                    },
-                    "refs": {
-                        "assetKeyId": "test"
-                    }
-                },
-                "contractStandard": {
-                    "target": {
-                        "is_a": "blockchainStandard",
-                        "contained_in_file": "blockchainStandardFile",
-                        "uniqueRef": "class_name",
-                        "refs": {
-                            "class_name": "erc721111",
-                            "creationTimestamp": Math.floor(Date.now() / 1000)
+                            "id": "0x9227a3d959654c8004fa77dffc380ec40880fff6",
                         },
-                        "push": true
-                    }
+                        "push": false
+                    },
+                    "refs": { status: 'active', startBlock: '123', endBlock: '4343232', range: '1000' }
+
                 }
             }
-        }
+        };
+
+        // let jsonQuery = {
+        //     "is_a": "ethContract",
+        //     "contained_in_file": "blockchainContractFile",
+        //     "uniqueRef": "id",
+        //     "refs": {
+        //         "id": "test",
+        //         "explicitListing": "1",
+        //         "metadataType": "hte"
+        //     },
+        //     "brothers": {
+        //         "onBlockchain": {
+        //             "target": "ethereum"
+        //         }
+        //     },
+        //     "joined": {
+        //         "inCollection": {
+        //             "target": {
+        //                 "is_a": "assetCollection",
+        //                 "contained_in_file": "assetCollectionFile",
+        //                 "uniqueRef": "collectionId",
+        //                 "refs": {
+        //                     "collectionId": "test"
+        //                 }
+        //             },
+        //             "refs": {
+        //                 "assetKeyId": "test"
+        //             }
+        //         },
+        //         "contractStandard": {
+        //             "target": {
+        //                 "is_a": "blockchainStandard",
+        //                 "contained_in_file": "blockchainStandardFile",
+        //                 "uniqueRef": "class_name",
+        //                 "refs": {
+        //                     "class_name": "erc721111",
+        //                     "creationTimestamp": Math.floor(Date.now() / 1000)
+        //                 },
+        //                 "push": true
+        //             }
+        //         }
+        //     }
+        // }
 
 
         let c = await JSONQuery.push(jsonQuery, "sandra_linode_ranjit");

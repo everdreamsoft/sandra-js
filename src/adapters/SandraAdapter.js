@@ -224,30 +224,39 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             return resolve(triplets);
         });
     }
-    async getEntityConceptsByRefs(isATriplet, cifTriplet, refsValuesToSearch, refConcept, options) {
-        var _a, _b, _c, _d;
-        let sql = "select  c.id, c.code, c.shortname, r.value from " + this.tables.get(this.TABLE_TRIPLETS) + " as t1" +
-            " join " + this.tables.get(this.TABLE_TRIPLETS) + " as t2 on t1.idConceptStart = t2.idConceptStart " +
-            " and t1.idConceptLink = ? and t2.idConceptLink = ? " +
-            " and t1.idConceptTarget = ? and t2.idConceptTarget = ? " +
-            " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t2.idConceptStart = c.id" +
-            " join " + this.tables.get(this.TABLE_REFERENCES) + " as r on t2.id = r.linkReferenced and r.idConcept = ? and r.value in (?) ";
-        // let sql1 = "select  c.id, c.code, c.shortname, r.value from " +
-        //     this.tables.get(this.TABLE_REFERENCES) + "  as r " +
-        //     " join " + this.tables.get(this.TABLE_TRIPLETS) + " as t on t.id = r.linkReferenced" +
-        //     " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t.idConceptStart = c.id" +
-        //     " and r.value in ( ? ) " +
-        //     " and r.idConcept = ? " +
-        //     " and t.idConceptLink =  ? " +
-        //     " and t.idConceptTarget = ? ";
-        let vals = [
-            (_a = isATriplet.getVerb()) === null || _a === void 0 ? void 0 : _a.getId(),
-            (_b = cifTriplet.getVerb()) === null || _b === void 0 ? void 0 : _b.getId(),
-            (_c = isATriplet.getTarget()) === null || _c === void 0 ? void 0 : _c.getId(),
-            (_d = cifTriplet.getTarget()) === null || _d === void 0 ? void 0 : _d.getId(),
-            refConcept.getId(),
-            refsValuesToSearch
-        ];
+    async getEntityConceptsByRefs(cifTriplet, isATriplet, refsValuesToSearch, refConcept, options) {
+        var _a, _b, _c, _d, _e, _f;
+        let sql = "";
+        let vals = [];
+        if (isATriplet) {
+            sql = "select  c.id, c.code, c.shortname, r.value from " + this.tables.get(this.TABLE_TRIPLETS) + " as t1" +
+                " join " + this.tables.get(this.TABLE_TRIPLETS) + " as t2 on t1.idConceptStart = t2.idConceptStart " +
+                " and t1.idConceptLink = ? and t2.idConceptLink = ? " +
+                " and t1.idConceptTarget = ? and t2.idConceptTarget = ? " +
+                " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t2.idConceptStart = c.id" +
+                " join " + this.tables.get(this.TABLE_REFERENCES) + " as r on t2.id = r.linkReferenced and r.idConcept = ? and r.value in (?) ";
+            vals = [
+                (_a = isATriplet.getVerb()) === null || _a === void 0 ? void 0 : _a.getId(),
+                (_b = cifTriplet.getVerb()) === null || _b === void 0 ? void 0 : _b.getId(),
+                (_c = isATriplet.getTarget()) === null || _c === void 0 ? void 0 : _c.getId(),
+                (_d = cifTriplet.getTarget()) === null || _d === void 0 ? void 0 : _d.getId(),
+                refConcept.getId(),
+                refsValuesToSearch
+            ];
+        }
+        else {
+            sql = "select  c.id, c.code, c.shortname, r.value from " + this.tables.get(this.TABLE_TRIPLETS) + " as t1" +
+                " join " + this.tables.get(this.TABLE_CONCEPTS) + " as c on t1.idConceptStart = c.id" +
+                " and t1.idConceptLink = ? " +
+                " and t1.idConceptTarget = ? " +
+                " join " + this.tables.get(this.TABLE_REFERENCES) + " as r on t1.id = r.linkReferenced and r.idConcept = ? and r.value in (?) ";
+            vals = [
+                (_e = cifTriplet.getVerb()) === null || _e === void 0 ? void 0 : _e.getId(),
+                (_f = cifTriplet.getTarget()) === null || _f === void 0 ? void 0 : _f.getId(),
+                refConcept.getId(),
+                refsValuesToSearch
+            ];
+        }
         let [rows] = await this.getConnectionPool().query(sql, vals, options);
         return new Promise((resolve, reject) => {
             if (options === null || options === void 0 ? void 0 : options.abort)

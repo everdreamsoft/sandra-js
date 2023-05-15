@@ -540,7 +540,10 @@ class EntityFactory {
             if (r)
                 refs.push(r.getValue());
         });
-        let entityConceptsMap = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsByRefs(new Triplet_1.Triplet("", undefined, await SystemConcepts_1.SystemConcepts.get("is_a", this.server), await SystemConcepts_1.SystemConcepts.get(this.is_a, this.server)), new Triplet_1.Triplet("", undefined, await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file, this.server)), refs, this.uniqueRefConcept, this.abortOptions));
+        let tisA = undefined;
+        if (this.is_a != "generalIsA")
+            tisA = new Triplet_1.Triplet("", undefined, await SystemConcepts_1.SystemConcepts.get("is_a", this.server), await SystemConcepts_1.SystemConcepts.get(this.is_a, this.server));
+        let entityConceptsMap = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsByRefs(new Triplet_1.Triplet("", undefined, await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file, this.server)), tisA, refs, this.uniqueRefConcept, this.abortOptions));
         this.entityArray.forEach(entity => {
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
