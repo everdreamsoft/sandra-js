@@ -10,7 +10,7 @@ const JSONQuery_1 = require("../src/utils/JSONQuery");
 const EntityFactory_1 = require("../src/wrappers/EntityFactory");
 class Test {
     async run() {
-        this.testFilter();
+        this.testPull();
     }
     async testAbortSignal() {
     }
@@ -150,14 +150,12 @@ class Test {
         let jsonQuery = {
             "contained_in_file": "blockchainContractFile",
             "uniqueRef": "id",
-            "refs": {
-                "id": "0x9227a3d959654c8004fa77dffc380ec40880fff6"
-            },
+            "subjectIds": [60, 72],
             "options": {
                 "limit": 1,
                 "load_data": true,
                 "load_triplets": {
-                    "verbs": ["onBlockchain"]
+                    "verbs": ["contractStandard"]
                 }
             }
         };

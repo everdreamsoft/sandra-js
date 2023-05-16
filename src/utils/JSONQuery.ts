@@ -211,10 +211,20 @@ export class JSONQuery {
         }
 
         if (json.subjectIds) {
+            let verbConcepts = [];
             for (let i = 0; i < json.subjectIds.length; i++) {
                 await factory.addSubjectAsEntity(new Concept(String(json.subjectIds[i]), "A " + factory.getIsAVerb(), undefined))
             }
             await factory.loadEntityConceptsRefs();
+            if (json.options.load_triplets?.verbs) {
+                for (let i = 0; i < json.options.load_triplets.verbs.length; i++) {
+                    let v: string = json.options.load_triplets.verbs[i];
+                    if (v.length > 0) {
+                        verbConcepts.push(await SystemConcepts.get(v, server))
+                    }
+                }
+            }
+            await factory.loadTriplets(verbConcepts);
             return Promise.resolve(factory.getEntities());
         }
 

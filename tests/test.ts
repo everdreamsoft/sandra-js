@@ -10,7 +10,7 @@ import { EntityFactory } from "../src/wrappers/EntityFactory";
 export class Test {
 
     async run() {
-        this.testFilter();
+        this.testPull();
     }
 
     async testAbortSignal() {
@@ -176,14 +176,12 @@ export class Test {
         let jsonQuery = {
             "contained_in_file": "blockchainContractFile",
             "uniqueRef": "id",
-            "refs": {
-                "id": "0x9227a3d959654c8004fa77dffc380ec40880fff6"
-            },
+            "subjectIds": [60, 72],
             "options": {
                 "limit": 1,
                 "load_data": true,
                 "load_triplets": {
-                    "verbs": ["onBlockchain"]
+                    "verbs": ["contractStandard"]
                 }
             }
         };
