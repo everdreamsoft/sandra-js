@@ -692,8 +692,8 @@ export class SandraAdapter extends DBBaseAdapter {
    */
     async upsertTriplet(t: Triplet, options?: IAbortOption): Promise<void> {
 
-        let sql = "select id from " + this.tables.get(this.TABLE_TRIPLETS) + " where idConceptStart = ? and idConceptLink = ?";
-        const [rows]: any = await this.getConnectionPool().query(sql, [t.getSubject()?.getId(), t.getVerb()?.getId()], options);
+        let sql = "select id from " + this.tables.get(this.TABLE_TRIPLETS) + " where idConceptStart = ? and idConceptLink = ? and idConceptTarget = ? ";
+        const [rows]: any = await this.getConnectionPool().query(sql, [t.getSubject()?.getId(), t.getVerb()?.getId(), t.getTarget()?.getId()], options);
 
         if (rows && rows?.length > 0) {
             // Update

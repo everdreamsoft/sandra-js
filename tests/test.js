@@ -41,8 +41,7 @@ class Test {
                         },
                         "push": false
                     },
-                    "refs": { status: 'active', startBlock: '123', endBlock: '4343232', range: '1000' },
-                    "upsert": false
+                    "refs": { status: 'active', startBlock: '123', endBlock: '4343232', range: '1000' }
                 }
             }
         };

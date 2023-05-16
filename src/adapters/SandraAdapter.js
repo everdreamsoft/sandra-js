@@ -511,13 +511,13 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
    * @returns Returns upserted or selected triplet
    */
     async upsertTriplet(t, options) {
-        var _a, _b, _c;
-        let sql = "select id from " + this.tables.get(this.TABLE_TRIPLETS) + " where idConceptStart = ? and idConceptLink = ?";
-        const [rows] = await this.getConnectionPool().query(sql, [(_a = t.getSubject()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getId()], options);
+        var _a, _b, _c, _d;
+        let sql = "select id from " + this.tables.get(this.TABLE_TRIPLETS) + " where idConceptStart = ? and idConceptLink = ? and idConceptTarget = ? ";
+        const [rows] = await this.getConnectionPool().query(sql, [(_a = t.getSubject()) === null || _a === void 0 ? void 0 : _a.getId(), (_b = t.getVerb()) === null || _b === void 0 ? void 0 : _b.getId(), (_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getId()], options);
         if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
             // Update
             sql = "update " + this.tables.get(this.TABLE_TRIPLETS) + " set idConceptTarget = ? where id = ?";
-            await this.getConnectionPool().query(sql, [(_c = t.getTarget()) === null || _c === void 0 ? void 0 : _c.getId(), rows[0].id], options);
+            await this.getConnectionPool().query(sql, [(_d = t.getTarget()) === null || _d === void 0 ? void 0 : _d.getId(), rows[0].id], options);
             t.setId(rows[0].id);
             return Promise.resolve();
         }
