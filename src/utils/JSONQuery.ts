@@ -299,7 +299,7 @@ export class JSONQuery {
         await factory.filter(tripletsArr, refsArr, limit);
 
         if (json.options?.load_data) {
-            
+
             if (json.options.load_triplets?.verbs) {
                 for (let i = 0; i < json.options.load_triplets.verbs.length; i++) {
                     let v: string = json.options.load_triplets.verbs[i];
@@ -368,7 +368,9 @@ export class JSONQuery {
 
                 if (joinedTargetValues.target) {
                     let joinedTarget = joinedTargetValues.target;
+                    let upsert = ("upsert" in joinedTargetValues) ? joinedTargetValues.upsert : true;
                     let joinedRefs = [];
+
                     let targets = (await this.pushJson(joinedTarget, level + 1, server))?.getEntities();
 
                     if (targets && targets?.length > 0) {
@@ -380,7 +382,8 @@ export class JSONQuery {
                                 joinedRefs.push(ref);
                             }
                         }
-                        await entity.addTriplet(verbConcept, targets[0].getSubject(), joinedRefs, true, true);
+
+                        await entity.addTriplet(verbConcept, targets[0].getSubject(), joinedRefs, true, upsert);
                     }
                     else {
                         return undefined;
@@ -392,7 +395,7 @@ export class JSONQuery {
 
         await factory.loadAllSubjects();
 
-        if (!("push" in json) || json.push) {
+        if (level == 0 || (level > 0 && json.push)) {
             entity.setPushedStatus(false);
             await factory.push();
         }

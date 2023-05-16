@@ -37,11 +37,12 @@ class Test {
                         "contained_in_file": "blockchainContractFile",
                         "uniqueRef": "id",
                         "refs": {
-                            "id": "0x9227a3d959654c8004fa77dffc380ec40880fff6",
+                            "id": "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d",
                         },
                         "push": false
                     },
-                    "refs": { status: 'active', startBlock: '123', endBlock: '4343232', range: '1000' }
+                    "refs": { status: 'active', startBlock: '123', endBlock: '4343232', range: '1000' },
+                    "upsert": false
                 }
             }
         };

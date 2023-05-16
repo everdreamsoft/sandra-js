@@ -206,6 +206,7 @@ class JSONQuery {
                 let joinedTargetValues = json.joined[joinedKeys[i]];
                 if (joinedTargetValues.target) {
                     let joinedTarget = joinedTargetValues.target;
+                    let upsert = ("upsert" in joinedTargetValues) ? joinedTargetValues.upsert : true;
                     let joinedRefs = [];
                     let targets = (_a = (await this.pushJson(joinedTarget, level + 1, server))) === null || _a === void 0 ? void 0 : _a.getEntities();
                     if (targets && (targets === null || targets === void 0 ? void 0 : targets.length) > 0) {
@@ -217,7 +218,7 @@ class JSONQuery {
                                 joinedRefs.push(ref);
                             }
                         }
-                        await entity.addTriplet(verbConcept, targets[0].getSubject(), joinedRefs, true, true);
+                        await entity.addTriplet(verbConcept, targets[0].getSubject(), joinedRefs, true, upsert);
                     }
                     else {
                         return undefined;
@@ -226,7 +227,7 @@ class JSONQuery {
             }
         }
         await factory.loadAllSubjects();
-        if (!("push" in json) || json.push) {
+        if (level == 0 || (level > 0 && json.push)) {
             entity.setPushedStatus(false);
             await factory.push();
         }
