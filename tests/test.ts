@@ -115,81 +115,108 @@ export class Test {
 
     async testPull() {
 
-        // let query = {
-        //     "contained_in_file": "blockchainContractFile",
-        //     "uniqueRef": "id",
-        //     "joined": {
-        //         "inCollection": {
-        //             "target": {
-        //                 "is_a": "assetCollection",
-        //                 "contained_in_file": "assetCollectionFile",
-        //                 "uniqueRef": "collectionId",
-        //                 "refs": {
-        //                     "collectionId": "test"
-        //                 }
-        //             }
-        //         },
-        //         "contractStandard": {
-        //             "load_data": true
-        //         }
-        //     },
-        //     "options": {
-        //         "limit": 9999,
-        //         "load_data": true
-        //     }
-        // }
 
-        let query = {
+        let subIds: string[] = [];
+        let stdSubjIds: any = [];
+
+        let jsonQuery = {
             "is_a": "jwiProcess",
             "contained_in_file": "jwiProcessFile",
             "uniqueRef": "id",
-            "joined": {
-                "has": {
-                    "target": {
-                        "is_a": "ethContract",
-                        "contained_in_file": "blockchainContractFile",
-                        "uniqueRef": "id",
-                        "refs": {
-                            "id": "0x9227a3d959654c8004fa77dffc380ec40880fff6"
-                        }
-                    }
-                }
+            "refs": {
+                id: "ethereum" + "_" + "canonize"
             },
             "options": {
                 "limit": 1,
                 "load_data": true,
-                "load_refs": {
-                    "verbs": ["contained_in_file", "has"]
+                "load_triplets": {
+                    "verbs": ["has"]
                 }
             }
-        }
-        // let query = {
-        //     "contained_in_file": "blockchainStandardFile",
-        //     "uniqueRef": "class_name",
-        //     "subjectIds": ["329816"],
-        //     "options": {
-        //         "limit": 100,
-        //         "load_data": true
-        //     }
-        // }
+        };
 
-        let jsonQuery = {
+        let contractsQuery = {
             "contained_in_file": "blockchainContractFile",
             "uniqueRef": "id",
-            "subjectIds": [60, 72],
+            "subjectIds": subIds,
             "options": {
-                "limit": 1,
+                "limit": 99999,
                 "load_data": true,
                 "load_triplets": {
                     "verbs": ["contractStandard"]
                 }
             }
         };
-        console.log("");
 
-        let c = await JSONQuery.selectAsJson(jsonQuery, "sandra_linode_ranjit");
+        let standardQeuery = {
+            "contained_in_file": "blockchainStandardFile",
+            "uniqueRef": "class_name",
+            "subjectIds": stdSubjIds,
+            "options": {
+                "limit": 99999,
+                "load_data": true,
+            }
+        };
 
-        console.log(c);
+        let process = await JSONQuery.selectAsJson(jsonQuery, "sandra_linode_ranjit");
+        let contractJson: any[] = [];
+
+        if (process?.length > 0) {
+
+            process[0].joined?.forEach((e: any) => {
+                if ("has" in e) {
+                    subIds.push(e.has.subjectId);
+                }
+            });
+
+            let contracts = await JSONQuery.selectAsJson(contractsQuery, "sandra_linode_ranjit");
+
+            contracts?.forEach((c: any) => {
+                c.joined?.find((s: any) => {
+                    if (("contractStandard" in s)) {
+                        stdSubjIds.push(s.contractStandard.subjectId)
+                    }
+                })
+            })
+
+            let stds = await JSONQuery.selectAsJson(standardQeuery, "sandra_linode_ranjit");
+
+
+            contracts?.forEach((c: any) => {
+
+                let scanDetails = process[0].joined?.find((p: any) => {
+                    if (("has" in p) && p.has?.subjectId == c.subjectId)
+                        return true;
+                });
+
+                let std = stds?.find((s: any) => {
+
+                    let cs = c.joined?.find((s: any) => {
+                        if (("contractStandard" in s)) {
+                            return true;
+                        }
+                    });
+
+                    if (cs) {
+                        if (cs.subjectId = s.subjectId) return true;
+                    }
+
+                    return false;
+                });
+
+                let a = {
+                    ...scanDetails?.has?.refs,
+                    address: c.id,
+                    standard: std?.class_name?.replace("CsCannon\\Blockchains\\Contracts\\", "")
+                };
+
+                contractJson.push(a);
+
+            })
+
+        }
+
+        return Promise.resolve(contractJson);
     }
 
 
@@ -228,7 +255,7 @@ const DB_CONFIG: IDBConfig = {
     name: "sandra_linode_ranjit",
     database: "jetski",
     host: "139.162.176.241",
-    env: "fondue",
+    env: "raclette",
     password: "4TyijLEBEZHJ1hsabPto",
     user: "remote1",
     connectionLimit: 10,

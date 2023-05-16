@@ -91,8 +91,11 @@ class JSONQuery {
                         verbConcepts.push(await SystemConcepts_1.SystemConcepts.get(v, server));
                     }
                 }
+                if ((verbConcepts === null || verbConcepts === void 0 ? void 0 : verbConcepts.length) > 0) {
+                    await factory.loadTriplets(verbConcepts, undefined, true);
+                    await factory.loadAllTripletRefs();
+                }
             }
-            await factory.loadTriplets(verbConcepts);
             return Promise.resolve(factory.getEntities());
         }
         let refsArr = [];
@@ -167,8 +170,10 @@ class JSONQuery {
                     }
                 }
             }
-            await factory.loadTriplets(verbConcepts, undefined, true);
-            await factory.loadAllTripletRefs();
+            if ((verbConcepts === null || verbConcepts === void 0 ? void 0 : verbConcepts.length) > 0) {
+                await factory.loadTriplets(verbConcepts, undefined, true);
+                await factory.loadAllTripletRefs();
+            }
         }
         return Promise.resolve(factory.getEntities());
     }

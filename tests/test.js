@@ -91,77 +91,88 @@ class Test {
         console.log(c);
     }
     async testPull() {
-        // let query = {
-        //     "contained_in_file": "blockchainContractFile",
-        //     "uniqueRef": "id",
-        //     "joined": {
-        //         "inCollection": {
-        //             "target": {
-        //                 "is_a": "assetCollection",
-        //                 "contained_in_file": "assetCollectionFile",
-        //                 "uniqueRef": "collectionId",
-        //                 "refs": {
-        //                     "collectionId": "test"
-        //                 }
-        //             }
-        //         },
-        //         "contractStandard": {
-        //             "load_data": true
-        //         }
-        //     },
-        //     "options": {
-        //         "limit": 9999,
-        //         "load_data": true
-        //     }
-        // }
-        let query = {
+        var _a;
+        let subIds = [];
+        let stdSubjIds = [];
+        let jsonQuery = {
             "is_a": "jwiProcess",
             "contained_in_file": "jwiProcessFile",
             "uniqueRef": "id",
-            "joined": {
-                "has": {
-                    "target": {
-                        "is_a": "ethContract",
-                        "contained_in_file": "blockchainContractFile",
-                        "uniqueRef": "id",
-                        "refs": {
-                            "id": "0x9227a3d959654c8004fa77dffc380ec40880fff6"
-                        }
-                    }
-                }
+            "refs": {
+                id: "ethereum" + "_" + "canonize"
             },
             "options": {
                 "limit": 1,
                 "load_data": true,
-                "load_refs": {
-                    "verbs": ["contained_in_file", "has"]
+                "load_triplets": {
+                    "verbs": ["has"]
                 }
             }
         };
-        // let query = {
-        //     "contained_in_file": "blockchainStandardFile",
-        //     "uniqueRef": "class_name",
-        //     "subjectIds": ["329816"],
-        //     "options": {
-        //         "limit": 100,
-        //         "load_data": true
-        //     }
-        // }
-        let jsonQuery = {
+        let contractsQuery = {
             "contained_in_file": "blockchainContractFile",
             "uniqueRef": "id",
-            "subjectIds": [60, 72],
+            "subjectIds": subIds,
             "options": {
-                "limit": 1,
+                "limit": 99999,
                 "load_data": true,
                 "load_triplets": {
                     "verbs": ["contractStandard"]
                 }
             }
         };
-        console.log("");
-        let c = await JSONQuery_1.JSONQuery.selectAsJson(jsonQuery, "sandra_linode_ranjit");
-        console.log(c);
+        let standardQeuery = {
+            "contained_in_file": "blockchainStandardFile",
+            "uniqueRef": "class_name",
+            "subjectIds": stdSubjIds,
+            "options": {
+                "limit": 99999,
+                "load_data": true,
+            }
+        };
+        let process = await JSONQuery_1.JSONQuery.selectAsJson(jsonQuery, "sandra_linode_ranjit");
+        let contractJson = [];
+        if ((process === null || process === void 0 ? void 0 : process.length) > 0) {
+            (_a = process[0].joined) === null || _a === void 0 ? void 0 : _a.forEach((e) => {
+                if ("has" in e) {
+                    subIds.push(e.has.subjectId);
+                }
+            });
+            let contracts = await JSONQuery_1.JSONQuery.selectAsJson(contractsQuery, "sandra_linode_ranjit");
+            contracts === null || contracts === void 0 ? void 0 : contracts.forEach((c) => {
+                var _a;
+                (_a = c.joined) === null || _a === void 0 ? void 0 : _a.find((s) => {
+                    if (("contractStandard" in s)) {
+                        stdSubjIds.push(s.contractStandard.subjectId);
+                    }
+                });
+            });
+            let stds = await JSONQuery_1.JSONQuery.selectAsJson(standardQeuery, "sandra_linode_ranjit");
+            contracts === null || contracts === void 0 ? void 0 : contracts.forEach((c) => {
+                var _a, _b, _c;
+                let scanDetails = (_a = process[0].joined) === null || _a === void 0 ? void 0 : _a.find((p) => {
+                    var _a;
+                    if (("has" in p) && ((_a = p.has) === null || _a === void 0 ? void 0 : _a.subjectId) == c.subjectId)
+                        return true;
+                });
+                let std = stds === null || stds === void 0 ? void 0 : stds.find((s) => {
+                    var _a;
+                    let cs = (_a = c.joined) === null || _a === void 0 ? void 0 : _a.find((s) => {
+                        if (("contractStandard" in s)) {
+                            return true;
+                        }
+                    });
+                    if (cs) {
+                        if (cs.subjectId = s.subjectId)
+                            return true;
+                    }
+                    return false;
+                });
+                let a = Object.assign(Object.assign({}, (_b = scanDetails === null || scanDetails === void 0 ? void 0 : scanDetails.has) === null || _b === void 0 ? void 0 : _b.refs), { address: c.id, standard: (_c = std === null || std === void 0 ? void 0 : std.class_name) === null || _c === void 0 ? void 0 : _c.replace("CsCannon\\Blockchains\\Contracts\\", "") });
+                contractJson.push(a);
+            });
+        }
+        return Promise.resolve(contractJson);
     }
     async testDB(server = "sandra") {
         console.log(Sandra_1.Sandra.getDBConfig());
@@ -186,7 +197,7 @@ const DB_CONFIG = {
     name: "sandra_linode_ranjit",
     database: "jetski",
     host: "139.162.176.241",
-    env: "fondue",
+    env: "raclette",
     password: "4TyijLEBEZHJ1hsabPto",
     user: "remote1",
     connectionLimit: 10,
