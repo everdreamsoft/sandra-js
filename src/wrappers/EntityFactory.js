@@ -54,20 +54,23 @@ class EntityFactory {
             });
         }
         else {
-            e = new Entity_1.Entity(this);
+            e = this.createEntity();
             e.setUpsert(upsert);
             let subConcept = new Concept_1.Concept(TemporaryId_1.TemporaryId.create(), Concept_1.Concept.ENTITY_CONCEPT_CODE_PREFIX + this.getIsAVerb(), undefined);
             e.setSubject(subConcept);
             // Set unique ref concept
             e.setUniqueRefConcept(this.uniqueRefConcept);
             // Adding is_a verb triplet
-            await e.brother("is_a", this.is_a);
+            e.setIsATriplet(await e.brother("is_a", this.is_a));
             // Adding contained_in_file triplet
-            await e.brother("contained_in_file", this.contained_in_file, refs);
+            e.setCIFTriplet(await e.brother("contained_in_file", this.contained_in_file, refs));
             // Adding it to the factory list
             this.entityArray.push(e);
         }
         return e;
+    }
+    createEntity() {
+        return new Entity_1.Entity(this);
     }
     setPushedStatus(status) { this.pushedStatus = status; }
     setAbortOptions(options) { this.abortOptions = options; }
@@ -384,7 +387,7 @@ class EntityFactory {
                     refs.push(...r);
                 }
             }
-            let e = new Entity_1.Entity(this);
+            let e = this.createEntity();
             let subject = entityTriplet.getSubject();
             if (subject)
                 e.setSubject(subject);
@@ -422,7 +425,7 @@ class EntityFactory {
                 let r = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplet(triplets[i], undefined, this.abortOptions));
                 refs.push(...r);
             }
-            let e = new Entity_1.Entity(this);
+            let e = this.createEntity();
             if (subject)
                 e.setSubject(subject);
             e.getTriplets().push(...triplets);
@@ -444,7 +447,7 @@ class EntityFactory {
             var _a;
             if ((_a = this.abortOptions) === null || _a === void 0 ? void 0 : _a.abort)
                 throw Error("Abort signal recieved");
-            let e = new Entity_1.Entity(this);
+            let e = this.createEntity();
             e.setSubject(key);
             e.getTriplets().push(...val);
             e.setPushedStatus(true);
@@ -465,7 +468,7 @@ class EntityFactory {
         let entityConcepts = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConcepts(cifFileVerbSub, cifFileTargetSub, lastId, limit, this.abortOptions));
         for (let index = 0; index < (entityConcepts === null || entityConcepts === void 0 ? void 0 : entityConcepts.length); index++) {
             let entityConcept = entityConcepts[index];
-            let e = new Entity_1.Entity(this);
+            let e = this.createEntity();
             e.setSubject(entityConcept);
             e.setUniqueRefConcept(this.uniqueRefConcept);
             this.entityArray.push(e);
@@ -606,7 +609,7 @@ class EntityFactory {
         let i = this.entityArray.findIndex(e => { var _a; return (_a = e.getSubject()) === null || _a === void 0 ? void 0 : _a.isEqual(subject); });
         if (i >= 0)
             return;
-        let e = new Entity_1.Entity(this);
+        let e = this.createEntity();
         e.setSubject(subject);
         this.entityArray.push(e);
     }

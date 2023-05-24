@@ -13,6 +13,12 @@ class Entity {
         this.pushedStatus = false;
         this.factory = factory;
     }
+    setIsATriplet(triplet) {
+        this.isATriplet = triplet;
+    }
+    setCIFTriplet(triplet) {
+        this.cifTriplet = triplet;
+    }
     /**
      * Sets subject concept for current entity.
      * @param subject Subject concept object.
@@ -257,6 +263,30 @@ class Entity {
                 return this.references[i];
         }
         return undefined;
+    }
+    getIsATriplet() {
+        if (this.isATriplet)
+            return this.isATriplet;
+        else {
+            let ts = this.getTriplets();
+            let tIndex = ts.findIndex(t => { var _a; return ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) == "is_a"; });
+            if (tIndex >= 0) {
+                this.setIsATriplet(ts[tIndex]);
+                return ts[tIndex];
+            }
+        }
+    }
+    getCIFTriplet() {
+        if (this.cifTriplet)
+            return this.cifTriplet;
+        else {
+            let ts = this.getTriplets();
+            let tIndex = ts.findIndex(t => { var _a; return ((_a = t.getVerb()) === null || _a === void 0 ? void 0 : _a.getShortname()) == "contained_in_file"; });
+            if (tIndex >= 0) {
+                this.setCIFTriplet(ts[tIndex]);
+                return ts[tIndex];
+            }
+        }
     }
     /**
      *

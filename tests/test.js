@@ -7,10 +7,12 @@ const Concept_1 = require("../src/models/Concept");
 const SystemConcepts_1 = require("../src/models/SystemConcepts");
 const Common_1 = require("../src/utils/Common");
 const JSONQuery_1 = require("../src/utils/JSONQuery");
+const TemporaryId_1 = require("../src/utils/TemporaryId");
 const EntityFactory_1 = require("../src/wrappers/EntityFactory");
+const BlockchainAddressFactory_1 = require("../src/wrappers/models/BlockchainAddressFactory");
 class Test {
     async run() {
-        this.testPull();
+        this.getbalance("0x15ba85c861463873fe78a6ac56cc0da8e94223a0", "sandra_linode_ranjit");
     }
     async testAbortSignal() {
     }
@@ -190,6 +192,32 @@ class Test {
         await tokenPathFactory.pushTripletsBatchWithVerb(contractSub, true);
         console.log("a");
     }
+    async getbalance(address, server) {
+        TemporaryId_1.TemporaryId.reset();
+        // Keeping chain as empty to get general address 
+        let factory = new BlockchainAddressFactory_1.BlockchainAddressFactory("", await SystemConcepts_1.SystemConcepts.get("address", server), server);
+        let query = {
+            "contained_in_file": "blockchainAddressFile",
+            "uniqueRef": "address",
+            "refs": {
+                "address": address
+            },
+            "options": {
+                "limit": 1,
+                "load_data": false
+            }
+        };
+        let addresses = await JSONQuery_1.JSONQuery.select(query, server);
+        if ((addresses === null || addresses === void 0 ? void 0 : addresses.length) > 0) {
+            let sub = addresses[0].getSubject();
+            if (sub)
+                factory.addSubjectAsEntity(sub);
+            let extendedObj = factory.getEntities()[0];
+            extendedObj.getRefs().push(await Common_1.Common.createDBReference("address", address, undefined, server));
+            let balances = await extendedObj.getBalances();
+            console.log(balances);
+        }
+    }
 }
 exports.Test = Test;
 const LOCAL = false;
@@ -197,7 +225,7 @@ const DB_CONFIG = {
     name: "sandra_linode_ranjit",
     database: "jetski",
     host: "139.162.176.241",
-    env: "raclette",
+    env: "fondue",
     password: "4TyijLEBEZHJ1hsabPto",
     user: "remote1",
     connectionLimit: 10,

@@ -21,6 +21,7 @@ export class EntityFactory {
     private server: string;
     private abortOptions?: IAbortOption;
 
+
     constructor(is_a: string, contained_in_file: string, uniqueRefConcept: Concept, server: string = "sandra") {
         this.is_a = is_a || "generalIsA";
         this.contained_in_file = contained_in_file || "generalContainedInFile";
@@ -78,7 +79,7 @@ export class EntityFactory {
         }
         else {
 
-            e = new Entity(this);
+            e = this.createEntity();
 
             e.setUpsert(upsert);
 
@@ -90,10 +91,10 @@ export class EntityFactory {
             e.setUniqueRefConcept(this.uniqueRefConcept);
 
             // Adding is_a verb triplet
-            await e.brother("is_a", this.is_a);
+            e.setIsATriplet(await e.brother("is_a", this.is_a));
 
             // Adding contained_in_file triplet
-            await e.brother("contained_in_file", this.contained_in_file, refs);
+            e.setCIFTriplet(await e.brother("contained_in_file", this.contained_in_file, refs));
 
             // Adding it to the factory list
             this.entityArray.push(e);
@@ -102,6 +103,10 @@ export class EntityFactory {
 
         return e;
 
+    }
+
+    createEntity() {
+        return new Entity(this);
     }
 
     setPushedStatus(status: boolean) { this.pushedStatus = status; }
@@ -513,7 +518,7 @@ export class EntityFactory {
 
             }
 
-            let e = new Entity(this);
+            let e = this.createEntity();
             let subject = entityTriplet.getSubject();
 
             if (subject)
@@ -579,7 +584,7 @@ export class EntityFactory {
 
             }
 
-            let e = new Entity(this);
+            let e = this.createEntity();
 
             if (subject)
                 e.setSubject(subject);
@@ -608,7 +613,7 @@ export class EntityFactory {
 
         concepts.forEach((val: Triplet[], key: Concept) => {
             if (this.abortOptions?.abort) throw Error("Abort signal recieved");
-            let e = new Entity(this);
+            let e = this.createEntity();
             e.setSubject(key);
             e.getTriplets().push(...val)
             e.setPushedStatus(true);
@@ -635,7 +640,7 @@ export class EntityFactory {
 
         for (let index = 0; index < entityConcepts?.length; index++) {
             let entityConcept = entityConcepts[index];
-            let e = new Entity(this);
+            let e = this.createEntity();
             e.setSubject(entityConcept);
             e.setUniqueRefConcept(this.uniqueRefConcept);
             this.entityArray.push(e);
@@ -822,7 +827,7 @@ export class EntityFactory {
         if (i >= 0)
             return;
 
-        let e = new Entity(this);
+        let e = this.createEntity();
         e.setSubject(subject);
         this.entityArray.push(e);
 

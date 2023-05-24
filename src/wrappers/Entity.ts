@@ -18,8 +18,21 @@ export class Entity {
     private factory: EntityFactory;
     private pushedStatus: boolean = false;
 
+    // Reference for entity triplet to make searching these triplets easier
+    private isATriplet: Triplet | undefined;
+    private cifTriplet: Triplet | undefined;
+
     constructor(factory: EntityFactory) {
         this.factory = factory;
+    }
+
+
+    setIsATriplet(triplet: Triplet) {
+        this.isATriplet = triplet;
+    }
+
+    setCIFTriplet(triplet: Triplet) {
+        this.cifTriplet = triplet;
     }
 
     /**
@@ -292,6 +305,34 @@ export class Entity {
         }
         return undefined;
     }
+
+    getIsATriplet() {
+        if (this.isATriplet)
+            return this.isATriplet;
+        else {
+            let ts = this.getTriplets();
+            let tIndex = ts.findIndex(t => { return t.getVerb()?.getShortname() == "is_a" });
+            if (tIndex >= 0) {
+                this.setIsATriplet(ts[tIndex]);
+                return ts[tIndex];
+            }
+        }
+    }
+
+    getCIFTriplet() {
+        if (this.cifTriplet)
+            return this.cifTriplet;
+        else {
+            let ts = this.getTriplets();
+            let tIndex = ts.findIndex(t => { return t.getVerb()?.getShortname() == "contained_in_file" });
+            if (tIndex >= 0) {
+                this.setCIFTriplet(ts[tIndex]);
+                return ts[tIndex];
+            }
+        }
+    }
+
+
 
     /**
      * 

@@ -5,12 +5,16 @@ import { Concept } from "../src/models/Concept";
 import { SystemConcepts } from "../src/models/SystemConcepts";
 import { Common } from "../src/utils/Common";
 import { JSONQuery } from "../src/utils/JSONQuery";
+import { TemporaryId } from "../src/utils/TemporaryId";
+import { Entity } from "../src/wrappers/Entity";
 import { EntityFactory } from "../src/wrappers/EntityFactory";
+import { BlockchainAddress } from "../src/wrappers/models/BlockchainAddress";
+import { BlockchainAddressFactory } from "../src/wrappers/models/BlockchainAddressFactory";
 
 export class Test {
 
     async run() {
-        this.testPull();
+        this.getbalance("0x15ba85c861463873fe78a6ac56cc0da8e94223a0", "sandra_linode_ranjit");
     }
 
     async testAbortSignal() {
@@ -219,7 +223,6 @@ export class Test {
         return Promise.resolve(contractJson);
     }
 
-
     async testDB(server: string = "sandra") {
 
         console.log(Sandra.getDBConfig());
@@ -247,6 +250,44 @@ export class Test {
 
     }
 
+
+    async getbalance(address: string, server: string) {
+
+        TemporaryId.reset();
+
+        // Keeping chain as empty to get general address 
+        let factory = new BlockchainAddressFactory("", await SystemConcepts.get("address", server), server)
+        let query = {
+            "contained_in_file": "blockchainAddressFile",
+            "uniqueRef": "address",
+            "refs": {
+                "address": address
+            },
+            "options": {
+                "limit": 1,
+                "load_data": false
+            }
+        }
+
+        let addresses = await JSONQuery.select(query, server);
+
+        if (addresses?.length > 0) {
+
+            let sub = addresses[0].getSubject();
+
+            if (sub)
+                factory.addSubjectAsEntity(sub)
+
+            let extendedObj: BlockchainAddress = factory.getEntities()[0] as BlockchainAddress;
+            extendedObj.getRefs().push(await Common.createDBReference("address", address, undefined, server));
+
+            let balances = await extendedObj.getBalances();
+
+            console.log(balances);
+
+        }
+
+    }
 }
 
 const LOCAL = false;
@@ -255,7 +296,7 @@ const DB_CONFIG: IDBConfig = {
     name: "sandra_linode_ranjit",
     database: "jetski",
     host: "139.162.176.241",
-    env: "raclette",
+    env: "fondue",
     password: "4TyijLEBEZHJ1hsabPto",
     user: "remote1",
     connectionLimit: 10,
