@@ -722,7 +722,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
     async getBalanceForAddress(address, conceptsIds, options) {
         let sql = "SELECT" +
             " c1.shortname as blockchain, " +
-            " r3.value as contract," +
+            " t4.idConceptTarget as contractId," +
             " r2.value as tokenId," +
             " SUM(CASE WHEN t5.idConceptLink = 76 THEN r1.value ELSE - r1.value END) as quantity" +
             " FROM jetski.fondue_SandraTriplets as t1 " +
@@ -733,8 +733,6 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             " join jetski.fondue_SandraReferences as r1 on t1.id = r1.linkReferenced " +
             " join jetski.fondue_SandraReferences as r2 on t4.id = r2.linkReferenced " +
             " join jetski.fondue_SandraConcept as c1 on t3.idConceptTarget = c1.id " +
-            " join jetski.fondue_SandraTriplets as t6 on t4.idConceptTarget = t6.idConceptStart " +
-            " join jetski.fondue_SandraReferences as r3 on t6.id = r3.linkReferenced " +
             " and t1.idConceptLink = ? and t1.idConceptTarget = ? /* contained_in_file => blockchainEventFile */" +
             " and t2.idConceptLink = ? and t2.idConceptTarget = ? /* is_a  => blockchainEvent */" +
             " and t3.idConceptLink = ? /* onBlockchain verb */" +
@@ -747,9 +745,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             "     or" +
             "    (t5.idConceptLink = ? and t5.idConceptTarget = ?) " +
             " )" +
-            " and r3.idConcept = ? " +
-            " and t6.idConceptLink = ? " +
-            " group by blockchain, contract, tokenId " +
+            " group by blockchain, contractId, tokenId " +
             " having(quantity != 0) ";
         let [rows] = await this.getConnectionPool().query(sql, conceptsIds, options);
         if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {
