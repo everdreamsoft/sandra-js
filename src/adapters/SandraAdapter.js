@@ -119,13 +119,22 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
      * @param triplets
      * @returns Returns a promis of References array for given triplets
      */
-    async getReferenceByTriplets(triplets, options) {
+    async getReferenceByTriplets(triplets, refsConcepts, options) {
+        let refsConceptIds = [];
+        if (refsConcepts) {
+            refsConceptIds = refsConcepts.map(r => r.getId());
+        }
         let sql = "select r.id,  r.linkReferenced as tripletId, c.id as cId, c.code, c.shortname, r.value from " +
             this.tables.get(this.TABLE_REFERENCES) + " as r join " +
             this.tables.get(this.TABLE_CONCEPTS) + " as c " +
             " on r.idConcept = c.id and r.linkReferenced in (?)";
-        let v = triplets.map(t => t.getId());
-        let [rows] = await this.getConnectionPool().query(sql, [v], options);
+        let values = [];
+        values.push(triplets.map(t => t.getId()));
+        if (refsConceptIds.length > 0) {
+            sql = sql + " and r.idConcept in (?) ";
+            values.push(refsConceptIds.toString());
+        }
+        let [rows] = await this.getConnectionPool().query(sql, values, options);
         return new Promise((resolve, reject) => {
             let refs = [];
             if ((rows === null || rows === void 0 ? void 0 : rows.length) > 0) {

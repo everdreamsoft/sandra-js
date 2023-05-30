@@ -776,9 +776,10 @@ export class EntityFactory {
     }
 
     /**
+     * Load refs of triplets with given ref concepts 
      * Loads all the references of each triplets of all the entities of current factory class object.
      */
-    async loadAllTripletRefs() {
+    async loadAllTripletRefs(refConcepts?: Concept[]) {
 
         let ts: Triplet[] = [];
 
@@ -788,7 +789,7 @@ export class EntityFactory {
         this.entityArray?.map(e => { ts = [...ts, ...e.getTriplets()] });
 
         let refs = await (DB.getInstance().server(this.server) as SandraAdapter)?.getReferenceByTriplets(
-            ts, this.abortOptions
+            ts, refConcepts, this.abortOptions
         );
 
         for (let i = 0; i < this.entityArray?.length; i++) {

@@ -570,15 +570,16 @@ class EntityFactory {
         });
     }
     /**
+     * Load refs of triplets with given ref concepts
      * Loads all the references of each triplets of all the entities of current factory class object.
      */
-    async loadAllTripletRefs() {
+    async loadAllTripletRefs(refConcepts) {
         var _a, _b, _c, _d;
         let ts = [];
         if (((_a = this.entityArray) === null || _a === void 0 ? void 0 : _a.length) == 0)
             return;
         (_b = this.entityArray) === null || _b === void 0 ? void 0 : _b.map(e => { ts = [...ts, ...e.getTriplets()]; });
-        let refs = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplets(ts, this.abortOptions));
+        let refs = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplets(ts, refConcepts, this.abortOptions));
         for (let i = 0; i < ((_d = this.entityArray) === null || _d === void 0 ? void 0 : _d.length); i++) {
             let e = this.entityArray[i];
             let triplets = e.getTriplets();

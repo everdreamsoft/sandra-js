@@ -154,15 +154,29 @@ export class SandraAdapter extends DBBaseAdapter {
      * @param triplets 
      * @returns Returns a promis of References array for given triplets
      */
-    async getReferenceByTriplets(triplets: Triplet[], options?: IAbortOption): Promise<Reference[]> {
+    async getReferenceByTriplets(triplets: Triplet[], refsConcepts?: Concept[], options?: IAbortOption): Promise<Reference[]> {
+
+        let refsConceptIds: string[] = [];
+
+        if (refsConcepts) {
+            refsConceptIds = refsConcepts.map(r => r.getId())
+        }
 
         let sql = "select r.id,  r.linkReferenced as tripletId, c.id as cId, c.code, c.shortname, r.value from " +
             this.tables.get(this.TABLE_REFERENCES) + " as r join " +
             this.tables.get(this.TABLE_CONCEPTS) + " as c " +
             " on r.idConcept = c.id and r.linkReferenced in (?)";
 
-        let v: string[] = triplets.map(t => t.getId());
-        let [rows]: any = await this.getConnectionPool().query(sql, [v], options);
+        let values: any = [];
+
+        values.push(triplets.map(t => t.getId()));
+
+        if (refsConceptIds.length > 0) {
+            sql = sql + " and r.idConcept in (?) ";
+            values.push(refsConceptIds.toString());
+        }
+
+        let [rows]: any = await this.getConnectionPool().query(sql, values, options);
 
         return new Promise((resolve, reject) => {
             let refs: Reference[] = [];

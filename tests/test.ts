@@ -14,7 +14,10 @@ import { BlockchainAddressFactory } from "../src/wrappers/models/BlockchainAddre
 export class Test {
 
     async run() {
-        this.getbalance("0x15ba85c861463873fe78a6ac56cc0da8e94223a0", "sandra_linode_ranjit");
+
+        this.loadTripletRefs("sandra_linode_ranjit");
+
+        //this.getbalance("0x15ba85c861463873fe78a6ac56cc0da8e94223a0", "sandra_linode_ranjit");
     }
 
     async testAbortSignal() {
@@ -286,6 +289,33 @@ export class Test {
             console.log(balances);
 
         }
+
+    }
+
+    async loadTripletRefs(server: string) {
+
+        let blockFactory: EntityFactory | undefined = new EntityFactory("blockchainBloc", "blockchainblocFile", await SystemConcepts.get("blockIndex", server), server);
+        let klaytn_timestampConcept = await SystemConcepts.get("klaytn-timestamp", server);
+        let eth_timestampConcept = await SystemConcepts.get("ethereum-timestamp", server);
+
+        // Creating block entity
+        let b = await blockFactory.create([
+            await Common.createDBReference("blockIndex", "33637001", undefined, server),
+            await Common.createDBReference("klaytn-timestamp", "1", undefined, server),
+            await Common.createDBReference("ethereum-timestamp", "2", undefined, server),
+
+        ]);
+
+        let cifConcept = await SystemConcepts.get("contained_in_file", server);
+
+
+        await blockFactory.loadAllSubjects();
+        await blockFactory.loadTriplets(cifConcept, undefined, true);
+        await blockFactory.loadAllTripletRefs([eth_timestampConcept, klaytn_timestampConcept]);
+        await blockFactory.pushRefsBatch();
+
+        console.log("");
+
 
     }
 }
