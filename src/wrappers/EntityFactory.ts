@@ -588,6 +588,11 @@ export class EntityFactory {
                     this.abortOptions
                 );
 
+                // Load storage data for triplet
+                await (DB.getInstance().server(this.server) as SandraAdapter)?.getDataStorageByTriplet(
+                    triplets[i]
+                );
+
                 refs.push(...r);
 
             }

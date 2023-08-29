@@ -415,7 +415,7 @@ class EntityFactory {
      * It does not add loaded entity to current factory entity list.
      */
     async loadBySubject(subject, iterateDown = false) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         let entityConcept = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getConceptById(Number(subject === null || subject === void 0 ? void 0 : subject.getId()), this.abortOptions));
         if (entityConcept) {
             // Get all the triplets for this entity 
@@ -429,6 +429,8 @@ class EntityFactory {
                     }
                 }
                 let r = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplet(triplets[i], undefined, this.abortOptions));
+                // Load storage data for triplet
+                await ((_d = DB_1.DB.getInstance().server(this.server)) === null || _d === void 0 ? void 0 : _d.getDataStorageByTriplet(triplets[i]));
                 refs.push(...r);
             }
             let e = this.createEntity();
