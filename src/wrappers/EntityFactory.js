@@ -63,7 +63,10 @@ class EntityFactory {
             // Adding is_a verb triplet
             e.setIsATriplet(await e.brother("is_a", this.is_a));
             // Adding contained_in_file triplet
-            e.setCIFTriplet(await e.brother("contained_in_file", this.contained_in_file, refs));
+            if (typeof this.contained_in_file == "string")
+                e.setCIFTriplet(await e.brother("contained_in_file", this.contained_in_file, refs));
+            else if (this.contained_in_file instanceof Entity_1.Entity)
+                e.setCIFTriplet(await e.join("contained_in_file", this.contained_in_file, refs));
             // Adding it to the factory list
             this.entityArray.push(e);
         }
@@ -367,7 +370,10 @@ class EntityFactory {
     */
     async load(ref, loadAllEntityData = true, iterateDown = false, limit = 1000) {
         var _a, _b, _c, _d;
-        let entityTriplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file, this.server), ref, limit, this.abortOptions));
+        let cifConcept = await this.getContainedInFileConcept();
+        let entityTriplets = [];
+        if (cifConcept)
+            entityTriplets = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityTriplet(await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server), cifConcept, ref, limit, this.abortOptions));
         for (let index = 0; index < (entityTriplets === null || entityTriplets === void 0 ? void 0 : entityTriplets.length); index++) {
             let entityTriplet = entityTriplets[index];
             let refs = [];
@@ -463,15 +469,17 @@ class EntityFactory {
      */
     async loadEntityConcepts(lastId, limit) {
         var _a;
-        let cifFileTargetSub = await SystemConcepts_1.SystemConcepts.get(this.getContainedInFileVerb(), this.server);
+        let cifFileTargetSub = await this.getContainedInFileConcept();
         let cifFileVerbSub = await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server);
-        let entityConcepts = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConcepts(cifFileVerbSub, cifFileTargetSub, lastId, limit, this.abortOptions));
-        for (let index = 0; index < (entityConcepts === null || entityConcepts === void 0 ? void 0 : entityConcepts.length); index++) {
-            let entityConcept = entityConcepts[index];
-            let e = this.createEntity();
-            e.setSubject(entityConcept);
-            e.setUniqueRefConcept(this.uniqueRefConcept);
-            this.entityArray.push(e);
+        if (cifFileTargetSub) {
+            let entityConcepts = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConcepts(cifFileVerbSub, cifFileTargetSub, lastId, limit, this.abortOptions));
+            for (let index = 0; index < (entityConcepts === null || entityConcepts === void 0 ? void 0 : entityConcepts.length); index++) {
+                let entityConcept = entityConcepts[index];
+                let e = this.createEntity();
+                e.setSubject(entityConcept);
+                e.setUniqueRefConcept(this.uniqueRefConcept);
+                this.entityArray.push(e);
+            }
         }
     }
     /**
@@ -546,7 +554,7 @@ class EntityFactory {
         let tisA = undefined;
         if (this.is_a != "generalIsA")
             tisA = new Triplet_1.Triplet("", undefined, await SystemConcepts_1.SystemConcepts.get("is_a", this.server), await SystemConcepts_1.SystemConcepts.get(this.is_a, this.server));
-        let entityConceptsMap = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsByRefs(new Triplet_1.Triplet("", undefined, await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server), await SystemConcepts_1.SystemConcepts.get(this.contained_in_file, this.server)), tisA, refs, this.uniqueRefConcept, this.abortOptions));
+        let entityConceptsMap = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getEntityConceptsByRefs(new Triplet_1.Triplet("", undefined, await SystemConcepts_1.SystemConcepts.get("contained_in_file", this.server), await this.getContainedInFileConcept()), tisA, refs, this.uniqueRefConcept, this.abortOptions));
         this.entityArray.forEach(entity => {
             let r = entity.getRef(this.uniqueRefConcept);
             if (r) {
@@ -613,6 +621,16 @@ class EntityFactory {
         let e = this.createEntity();
         e.setSubject(subject);
         this.entityArray.push(e);
+    }
+    async getContainedInFileConcept() {
+        if (typeof this.contained_in_file == "string")
+            return SystemConcepts_1.SystemConcepts.get(this.contained_in_file, this.server);
+        else if (this.contained_in_file instanceof Entity_1.Entity) {
+            let sub = this.contained_in_file.getSubject();
+            if (sub)
+                return sub;
+        }
+        throw new Error("Invalid contained in file concept");
     }
 }
 exports.EntityFactory = EntityFactory;

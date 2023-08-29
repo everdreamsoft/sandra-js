@@ -13,7 +13,7 @@ import { Entity } from "./Entity";
 export class EntityFactory {
 
     private is_a: string
-    private contained_in_file: string
+    private contained_in_file: string | Entity
     private uniqueRefConcept: Concept;
 
     private entityArray: Entity[] = [];
@@ -22,7 +22,7 @@ export class EntityFactory {
     private abortOptions?: IAbortOption;
 
 
-    constructor(is_a: string, contained_in_file: string, uniqueRefConcept: Concept, server: string = "sandra") {
+    constructor(is_a: string, contained_in_file: string | Entity, uniqueRefConcept: Concept, server: string = "sandra") {
         this.is_a = is_a || "generalIsA";
         this.contained_in_file = contained_in_file || "generalContainedInFile";
         this.uniqueRefConcept = uniqueRefConcept;
@@ -94,7 +94,10 @@ export class EntityFactory {
             e.setIsATriplet(await e.brother("is_a", this.is_a));
 
             // Adding contained_in_file triplet
-            e.setCIFTriplet(await e.brother("contained_in_file", this.contained_in_file, refs));
+            if (typeof this.contained_in_file == "string")
+                e.setCIFTriplet(await e.brother("contained_in_file", this.contained_in_file, refs));
+            else if (this.contained_in_file instanceof Entity)
+                e.setCIFTriplet(await e.join("contained_in_file", this.contained_in_file, refs));
 
             // Adding it to the factory list
             this.entityArray.push(e);
@@ -474,11 +477,16 @@ export class EntityFactory {
     */
     async load(ref: Reference, loadAllEntityData: boolean = true, iterateDown: boolean = false, limit: number = 1000) {
 
-        let entityTriplets: Triplet[] = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityTriplet(
-            await SystemConcepts.get("contained_in_file", this.server),
-            await SystemConcepts.get(this.contained_in_file, this.server),
-            ref, limit, this.abortOptions
-        );
+        let cifConcept = await this.getContainedInFileConcept();
+        let entityTriplets: Triplet[] = [];
+
+        if (cifConcept)
+            entityTriplets = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityTriplet(
+                await SystemConcepts.get("contained_in_file", this.server),
+                cifConcept,
+                ref, limit, this.abortOptions
+            );
+
 
         for (let index = 0; index < entityTriplets?.length; index++) {
 
@@ -631,19 +639,21 @@ export class EntityFactory {
      */
     async loadEntityConcepts(lastId?: string, limit?: string) {
 
-        let cifFileTargetSub = await SystemConcepts.get(this.getContainedInFileVerb(), this.server);
+        let cifFileTargetSub = await this.getContainedInFileConcept();
         let cifFileVerbSub = await SystemConcepts.get("contained_in_file", this.server);
 
-        let entityConcepts: Concept[] = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityConcepts(
-            cifFileVerbSub, cifFileTargetSub, lastId, limit, this.abortOptions
-        );
+        if (cifFileTargetSub) {
+            let entityConcepts: Concept[] = await (DB.getInstance().server(this.server) as SandraAdapter)?.getEntityConcepts(
+                cifFileVerbSub, cifFileTargetSub, lastId, limit, this.abortOptions
+            );
 
-        for (let index = 0; index < entityConcepts?.length; index++) {
-            let entityConcept = entityConcepts[index];
-            let e = this.createEntity();
-            e.setSubject(entityConcept);
-            e.setUniqueRefConcept(this.uniqueRefConcept);
-            this.entityArray.push(e);
+            for (let index = 0; index < entityConcepts?.length; index++) {
+                let entityConcept = entityConcepts[index];
+                let e = this.createEntity();
+                e.setSubject(entityConcept);
+                e.setUniqueRefConcept(this.uniqueRefConcept);
+                this.entityArray.push(e);
+            }
         }
 
     }
@@ -744,7 +754,7 @@ export class EntityFactory {
                 "",
                 undefined,
                 await SystemConcepts.get("contained_in_file", this.server),
-                await SystemConcepts.get(this.contained_in_file, this.server)),
+                await this.getContainedInFileConcept()),
             tisA,
             refs,
             this.uniqueRefConcept,
@@ -834,5 +844,17 @@ export class EntityFactory {
 
     }
 
+    private async getContainedInFileConcept(): Promise<Concept> {
+
+        if (typeof this.contained_in_file == "string")
+            return SystemConcepts.get(this.contained_in_file, this.server);
+        else if (this.contained_in_file instanceof Entity) {
+            let sub = this.contained_in_file.getSubject();
+            if (sub)
+                return sub;
+        }
+
+        throw new Error("Invalid contained in file concept");
+    }
 }
 
