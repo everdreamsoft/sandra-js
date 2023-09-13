@@ -16,21 +16,25 @@ class Logger {
             else
                 console.info(lowerCasedQuery + "; Values: [" + (values === null || values === void 0 ? void 0 : values.toString()) + "]; Time: " + (exectime || ""));
         }
+        return Promise.resolve();
     }
     info(message) {
         var _a;
         if ((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.enable)
             console.info(message);
+        return Promise.resolve();
     }
     warn(message) {
         var _a;
         if ((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.enable)
             console.warn(message);
+        return Promise.resolve();
     }
     error(message) {
         var _a;
         if ((_a = Sandra_1.Sandra.LOG_CONFIG) === null || _a === void 0 ? void 0 : _a.enable)
             console.error(message);
+        return Promise.resolve();
     }
 }
 exports.Logger = Logger;

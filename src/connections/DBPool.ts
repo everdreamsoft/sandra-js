@@ -52,7 +52,7 @@ export class DBPool {
             user: c?.connectionConfig.user,
             host: c?.connectionConfig.host,
             database: c?.connectionConfig.database,
-            env:this.config?.env,
+            env: this.config?.env,
             enableKeepAlive: c?.connectionConfig.enableKeepAlive,
             connectionLimit: c?.connectionLimit
         };
@@ -85,7 +85,7 @@ export class DBPool {
 
             result = connection.query({ sql, timeout }, values);
 
-            LogManager.getInstance().query(sql, values, (Date.now() - start));
+            await LogManager.getInstance().query(sql, values, (Date.now() - start));
 
 
         } catch (e: any) {

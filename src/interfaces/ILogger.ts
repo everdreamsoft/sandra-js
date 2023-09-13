@@ -1,6 +1,6 @@
 export interface ILogger {
-    info(message: string): void;
-    warn(message: string): void;
-    error(message: string): void;
-    query(query: any, values?: any, exectime?: number): void
+    info(message: any): Promise<void>;
+    warn(message: any): Promise<void>;
+    error(message: any): Promise<void>;
+    query(query: any, values?: any, exectime?: number): Promise<void>
 }

@@ -74,7 +74,7 @@ class DBPool {
         try {
             start = Date.now();
             result = connection.query({ sql, timeout }, values);
-            LogManager_1.LogManager.getInstance().query(sql, values, (Date.now() - start));
+            await LogManager_1.LogManager.getInstance().query(sql, values, (Date.now() - start));
         }
         catch (e) {
             LogManager_1.LogManager.getInstance().error(e);
