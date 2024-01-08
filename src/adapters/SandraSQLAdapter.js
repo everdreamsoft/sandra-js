@@ -89,7 +89,7 @@ class SandraSQLAdapter extends DBBaseAdapter_1.DBBaseAdapter {
                     #CANNON# /* cannon_assetId */
                     ORDER BY t1.id  DESC limit ?`;
         if (filter === null || filter === void 0 ? void 0 : filter.assetId) {
-            if (filter === null || filter === void 0 ? void 0 : filter.checkSubstring) {
+            if ((filter === null || filter === void 0 ? void 0 : filter.checkSubstring) || (filter === null || filter === void 0 ? void 0 : filter.checkSubstring) === undefined) {
                 filter.assetId = "%" + filter.assetId + "%";
                 sql = sql.replace("#ASSETID#", `and r1.value like ?`);
             }
@@ -127,7 +127,6 @@ class SandraSQLAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             sql = sql.replace("#CANNON#", "");
         }
         values.push(limit);
-        console.log(sql);
         let [rows, fields] = await this.getConnectionPool().query(sql, values);
         return rows;
     }

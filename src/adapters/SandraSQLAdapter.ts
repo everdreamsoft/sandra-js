@@ -102,7 +102,7 @@ export class SandraSQLAdapter extends DBBaseAdapter {
 
 
         if (filter?.assetId) {
-            if (filter?.checkSubstring) {
+            if (filter?.checkSubstring || filter?.checkSubstring === undefined) {
                 filter.assetId = "%" + filter.assetId + "%";
                 sql = sql.replace("#ASSETID#", `and r1.value like ?`);
             }
@@ -145,8 +145,6 @@ export class SandraSQLAdapter extends DBBaseAdapter {
 
 
         values.push(limit);
-
-        console.log(sql);
 
         let [rows, fields] = await this.getConnectionPool().query(sql, values);
 
