@@ -19,10 +19,24 @@ export class SandraAdapter extends DBBaseAdapter {
 
     constructor(config: IDBConfig) {
         super(config);
-        this.tables.set(this.TABLE_CONCEPTS, config.env + "_SandraConcept");
-        this.tables.set(this.TABLE_REFERENCES, config.env + "_SandraReferences");
-        this.tables.set(this.TABLE_TRIPLETS, config.env + "_SandraTriplets");
-        this.tables.set(this.TABLE_STORAGE, config.env + "_SandraDatastorage");
+
+        if (config.tables) {
+
+            if (!config.tables.concepts || !config.tables.references || !config.tables.triplets || !config.tables.datastorage) {
+                throw new Error("Invalid table names, please check config for sandra db tables");
+            }
+
+            this.tables.set(this.TABLE_CONCEPTS, config.tables.concepts);
+            this.tables.set(this.TABLE_REFERENCES, config.tables.references);
+            this.tables.set(this.TABLE_TRIPLETS, config.tables.triplets);
+            this.tables.set(this.TABLE_STORAGE, config.tables.datastorage);
+        }
+        else {
+            this.tables.set(this.TABLE_CONCEPTS, config.env + "_SandraConcept");
+            this.tables.set(this.TABLE_REFERENCES, config.env + "_SandraReferences");
+            this.tables.set(this.TABLE_TRIPLETS, config.env + "_SandraTriplets");
+            this.tables.set(this.TABLE_STORAGE, config.env + "_SandraDatastorage");
+        }
     }
 
     /**
@@ -563,6 +577,8 @@ export class SandraAdapter extends DBBaseAdapter {
 
         sql = sql.replace(",#SELECT#", " ") + " order by t0.id desc limit " + limit;
 
+        console.log(sql);
+        
         let [rows]: any = await this.getConnectionPool().query(sql, undefined, options);
 
         return new Promise((resolve, reject) => {

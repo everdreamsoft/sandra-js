@@ -296,7 +296,10 @@ JSONQuery.SELECT_TEMPLATE = {
     // joined entites subject ids
     "options": {
         "limit": 10,
-        "load_data": true
+        "load_data": true,
+        "load_triplets": {
+            "verbs": ["has"]
+        }
     }
 };
 JSONQuery.PUSH_TEMPLATE = {

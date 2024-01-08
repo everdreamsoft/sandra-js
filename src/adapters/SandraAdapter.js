@@ -15,10 +15,21 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         this.TABLE_TRIPLETS = "triplets";
         this.TABLE_STORAGE = "datastorage";
         this.tables = new Map();
-        this.tables.set(this.TABLE_CONCEPTS, config.env + "_SandraConcept");
-        this.tables.set(this.TABLE_REFERENCES, config.env + "_SandraReferences");
-        this.tables.set(this.TABLE_TRIPLETS, config.env + "_SandraTriplets");
-        this.tables.set(this.TABLE_STORAGE, config.env + "_SandraDatastorage");
+        if (config.tables) {
+            if (!config.tables.concepts || !config.tables.references || !config.tables.triplets || !config.tables.datastorage) {
+                throw new Error("Invalid table names, please check config for sandra db tables");
+            }
+            this.tables.set(this.TABLE_CONCEPTS, config.tables.concepts);
+            this.tables.set(this.TABLE_REFERENCES, config.tables.references);
+            this.tables.set(this.TABLE_TRIPLETS, config.tables.triplets);
+            this.tables.set(this.TABLE_STORAGE, config.tables.datastorage);
+        }
+        else {
+            this.tables.set(this.TABLE_CONCEPTS, config.env + "_SandraConcept");
+            this.tables.set(this.TABLE_REFERENCES, config.env + "_SandraReferences");
+            this.tables.set(this.TABLE_TRIPLETS, config.env + "_SandraTriplets");
+            this.tables.set(this.TABLE_STORAGE, config.env + "_SandraDatastorage");
+        }
     }
     /**
      * Begins DB transaction.
@@ -416,6 +427,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
             " t0.idConceptTarget = " + ((_c = triplets[0].getTarget()) === null || _c === void 0 ? void 0 : _c.getId()) + " and " +
             " t0.idConceptLink = " + ((_d = triplets[0].getVerb()) === null || _d === void 0 ? void 0 : _d.getId());
         sql = sql.replace(",#SELECT#", " ") + " order by t0.id desc limit " + limit;
+        console.log(sql);
         let [rows] = await this.getConnectionPool().query(sql, undefined, options);
         return new Promise((resolve, reject) => {
             if (options === null || options === void 0 ? void 0 : options.abortSignal) {

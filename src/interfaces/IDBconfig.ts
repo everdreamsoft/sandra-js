@@ -1,3 +1,5 @@
+import { IGraphTables } from "./IGraphTables";
+
 export interface IDBConfig {
     name: string,
     host: string,
@@ -8,5 +10,6 @@ export interface IDBConfig {
     waitForConnections?: boolean,
     connectionLimit?: number,
     queueLimit?: number,
-    enableKeepAlive?: boolean
+    enableKeepAlive?: boolean,
+    tables?: IGraphTables // Will ignore env if tables is set
 }

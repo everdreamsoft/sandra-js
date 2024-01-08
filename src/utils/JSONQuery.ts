@@ -56,7 +56,10 @@ export class JSONQuery {
         // joined entites subject ids
         "options": {
             "limit": 10,
-            "load_data": true
+            "load_data": true,
+            "load_triplets": {
+                "verbs": ["has"]
+            }
         }
     }
 
