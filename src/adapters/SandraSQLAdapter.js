@@ -52,7 +52,7 @@ class SandraSQLAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         LogManager_1.LogManager.getInstance().info("Sleep for " + durationInSec + "s");
         await this.getConnectionPool().query("select sleep(" + durationInSec + ")");
     }
-    async getAssets(filter, lastId = undefined, limit) {
+    async getAssets(filter, lastId = undefined, limit = 100) {
         let values = [];
         let sql = `select t1.id tripletId, t1.idConceptStart as "id", 
                     r1.value as "assetId", r2.value as "moongaCardId", r3.value as "cannon_assetId",

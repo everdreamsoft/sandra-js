@@ -61,7 +61,7 @@ export class SandraSQLAdapter extends DBBaseAdapter {
         await this.getConnectionPool().query("select sleep(" + durationInSec + ")");
     }
 
-    async getAssets(filter: any, lastId: number | undefined = undefined, limit: number): Promise<any[]> {
+    async getAssets(filter: any, lastId: number | undefined = undefined, limit: number = 100): Promise<any[]> {
 
         let values = [];
 
