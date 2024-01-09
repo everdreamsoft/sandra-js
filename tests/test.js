@@ -316,7 +316,7 @@ const DB_CONFIG_LINDT = {
     "database": "lindt_helvetia",
     "env": "balor",
     "host": "mysql-lindt.alwaysdata.net",
-    "password": "!!Wak4bewq",
+    "password": "",
     "waitForConnections": true,
     "connectionLimit": 1,
     "queueLimit": 0,
