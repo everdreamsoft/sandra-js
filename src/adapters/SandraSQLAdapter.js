@@ -55,7 +55,7 @@ class SandraSQLAdapter extends DBBaseAdapter_1.DBBaseAdapter {
     async getAssets(filter, lastId = undefined, limit = 100) {
         let values = [];
         let sql = `select t1.id tripletId, t1.idConceptStart as "id", 
-                    r1.value as "assetId", r2.value as "moongaCardId", r3.value as "cannon_assetId",
+                    r1.value as "assetId", r2.value as "moongaCardId", r3.value as "cannonAssetId",
                     r4.value as "imgURL",r5.value as "onChainMetaDataURL", r6.value as "assetName",  r7.value as "Name", r8.value as "bindToAbo", 
                     r9.value as "mintDate", 
                     FROM_UNIXTIME(CAST(r.value AS UNSIGNED)) AS creationTimestamp
@@ -116,12 +116,12 @@ class SandraSQLAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         else {
             sql = sql.replace("#MOONGA#", "");
         }
-        if ((filter === null || filter === void 0 ? void 0 : filter.cannon_assetId) === null) {
+        if ((filter === null || filter === void 0 ? void 0 : filter.cannonAssetId) === null) {
             sql = sql.replace("#CANNON#", `and r3.value is null`);
         }
-        else if (filter === null || filter === void 0 ? void 0 : filter.cannon_assetId) {
+        else if (filter === null || filter === void 0 ? void 0 : filter.cannonAssetId) {
             sql = sql.replace("#CANNON#", `and r3.value = ?`);
-            values.push(filter.cannon_assetId);
+            values.push(filter.cannonAssetId);
         }
         else {
             sql = sql.replace("#CANNON#", "");
