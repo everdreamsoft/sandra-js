@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Test = void 0;
 const Sandra_1 = require("../src/Sandra");
+const SandraSQLAdapter_1 = require("../src/adapters/SandraSQLAdapter");
 const DB_1 = require("../src/connections/DB");
 const Concept_1 = require("../src/models/Concept");
 const SystemConcepts_1 = require("../src/models/SystemConcepts");
@@ -12,8 +13,48 @@ const EntityFactory_1 = require("../src/wrappers/EntityFactory");
 const BlockchainAddressFactory_1 = require("../src/wrappers/models/BlockchainAddressFactory");
 class Test {
     async run() {
-        this.loadTripletRefs("sandra_linode_ranjit");
+        await this.testSandraSQL();
         //this.getbalance("0x15ba85c861463873fe78a6ac56cc0da8e94223a0", "sandra_linode_ranjit");
+    }
+    async testSandraSQL() {
+        let a = new SandraSQLAdapter_1.SandraSQLAdapter(DB_CONFIG_LINDT);
+        let b = await a.getAssets({ assetId: "eSog-", moongaCardId: null, cannonAssetId: null, checkSubstring: true }, undefined, 100);
+        console.log(b);
+    }
+    async testLoadCards(server = "sandra") {
+        let query = {
+            "is_a": "sogCard",
+            "contained_in_file": "sogCardProdFile",
+            "uniqueRef": "moongaCardId",
+            "joined": {
+                "bindToContract": {
+                    "target": {
+                        "is_a": "xcpContract",
+                        "contained_in_file": "blockchainContractFile",
+                        "uniqueRef": "id",
+                        "refs": {
+                            "id": "BTCMEETUPCD"
+                        },
+                        "options": {
+                            "limit": 100000,
+                            "load_data": true,
+                            "load_triplets": {
+                                "verbs": ["onBlockchain"]
+                            }
+                        }
+                    }
+                }
+            },
+            "options": {
+                "limit": 100000,
+                "load_data": true,
+                "load_triplets": {
+                    "verbs": ["bindToContract"]
+                }
+            }
+        };
+        let json = await JSONQuery_1.JSONQuery.select(query, server);
+        console.log(json);
     }
     async testAbortSignal() {
     }
@@ -240,27 +281,46 @@ class Test {
 exports.Test = Test;
 const LOCAL = false;
 const DB_CONFIG = {
-    name: "sandra_linode_ranjit",
-    database: "jetski",
-    host: "139.162.176.241",
-    env: "fondue",
-    password: "4TyijLEBEZHJ1hsabPto",
-    user: "remote1",
-    connectionLimit: 10,
-    queueLimit: 0,
-    waitForConnections: true
+    "name": "sandra",
+    "user": "eds_skale",
+    "database": "eds_sandra",
+    "env": "",
+    "host": "mysql-eds.alwaysdata.net",
+    "password": "",
+    "waitForConnections": true,
+    "connectionLimit": 1,
+    "queueLimit": 0,
+    "enableKeepAlive": true,
+    "tables": {
+        "concepts": "Concept",
+        "references": "`References`",
+        "triplets": "Link",
+        "datastorage": "storage"
+    }
 };
 const DB_CONFIG_LOCAL = {
     "name": "sandra",
     "user": "root",
-    "database": "jetski",
-    "env": "fondue",
+    "database": "sandra",
+    "env": "",
     "host": "localhost",
     "password": "",
     "waitForConnections": true,
     "connectionLimit": 10,
     "queueLimit": 0,
-    "enableKeepAlive": true
+    "enableKeepAlive": true,
+};
+const DB_CONFIG_LINDT = {
+    "name": "sandra",
+    "user": "lindt_ranjit",
+    "database": "lindt_helvetia",
+    "env": "balor",
+    "host": "mysql-lindt.alwaysdata.net",
+    "password": "",
+    "waitForConnections": true,
+    "connectionLimit": 1,
+    "queueLimit": 0,
+    "enableKeepAlive": true,
 };
 Sandra_1.Sandra.DB_CONFIG = LOCAL ? DB_CONFIG_LOCAL : DB_CONFIG;
 Sandra_1.Sandra.LOG_CONFIG = {
