@@ -19,7 +19,7 @@ export class DBPool {
             waitForConnections: this.config.waitForConnections ? this.config.waitForConnections : true,
             connectionLimit: this.config.connectionLimit ? this.config.connectionLimit : 10,
             queueLimit: this.config.queueLimit ? this.config.queueLimit : 0,
-            enableKeepAlive: this.config?.enableKeepAlive ? this.config?.enableKeepAlive : false
+            enableKeepAlive: this.config?.enableKeepAlive ? this.config?.enableKeepAlive : false,
         });
     }
 
@@ -69,9 +69,8 @@ export class DBPool {
         let start: any | undefined;
         let result: any, timeout = abortOption?.timeout ? abortOption?.timeout : 1000000;
 
-        let connection = await this.getConnetion();
 
-        this.pool.query
+        let connection = await this.getConnetion();
 
         abortOption?.abortSignal?.on("abort", ((reason?: string) => {
             LogManager.getInstance().warn("connection destroy.." + reason || "");
@@ -91,8 +90,12 @@ export class DBPool {
         } catch (e: any) {
             LogManager.getInstance().error(e);
         } finally {
+
             // Release the connection back to the pool
-            connection.release();
+            if (connection) {
+                connection.release();
+            }
+
         }
 
         // Removing listeners
