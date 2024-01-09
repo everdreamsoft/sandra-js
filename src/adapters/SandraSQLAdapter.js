@@ -116,12 +116,12 @@ class SandraSQLAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         else {
             sql = sql.replace("#MOONGA#", "");
         }
-        if ((filter === null || filter === void 0 ? void 0 : filter.cannonAssetId) === null) {
+        if ((filter === null || filter === void 0 ? void 0 : filter.cannon_assetId) === null) {
             sql = sql.replace("#CANNON#", `and r3.value is null`);
         }
-        else if (filter === null || filter === void 0 ? void 0 : filter.cannonAssetId) {
+        else if (filter === null || filter === void 0 ? void 0 : filter.cannon_assetId) {
             sql = sql.replace("#CANNON#", `and r3.value = ?`);
-            values.push(filter.cannonAssetId);
+            values.push(filter.cannon_assetId);
         }
         else {
             sql = sql.replace("#CANNON#", "");
