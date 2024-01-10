@@ -130,6 +130,30 @@ class SandraSQLAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         let [rows, fields] = await this.getConnectionPool().query(sql, values);
         return rows;
     }
+    async getAssetBindings(assetId) {
+        let sql = `select c2.shortname as contractType, t1.idConceptStart as assetId , t3.idConceptTarget as contractId ,  ifnull(c1.shortname, "blockchain") as blockchain, r1.value as address, r2.value as tokenId
+                    from  ${this.tables.get(this.TABLE_TRIPLETS)} as t1 
+                    join  ${this.tables.get(this.TABLE_TRIPLETS)} as t2 on t1.idConceptStart = t2.idConceptStart 
+                    join   ${this.tables.get(this.TABLE_TRIPLETS)} as t3 on t1.idConceptStart = t3.idConceptStart 
+                    and t1.idConceptLink = ( select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "contained_in_file" ) and t1.idConceptTarget = ( select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "blockchainizableAssets" )  /* contained_in_file -> blockchainizableAssets */
+                    and t2.idConceptLink = ( select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "is_a" ) and t2.idConceptTarget = ( select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "blockchainizableAsset" )  /* is_a -> blockchainizableAsset */
+                    and t3.idConceptLink = ( select id from   ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "bindToContract" )
+                    left join   ${this.tables.get(this.TABLE_TRIPLETS)} as t4 on t3.idConceptTarget = t4.idConceptStart  
+                    and t4.idConceptLink = ( select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "contained_in_file" ) and t4.idConceptTarget = ( select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "blockchainContractFile" )  /* contained_in_file -> blockchainContractFile */
+                    left join   ${this.tables.get(this.TABLE_TRIPLETS)} as t5 on t4.idConceptStart = t5.idConceptStart and t5.idConceptLink = (  select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "onBlockchain" )  
+                    left join  ${this.tables.get(this.TABLE_CONCEPTS)} as c1 on t5.idConceptTarget = c1.id 
+                    left join   ${this.tables.get(this.TABLE_REFERENCES)} as r1 on t4.id = r1.linkReferenced and r1.idConcept = (select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "id")
+                    left join  ${this.tables.get(this.TABLE_TRIPLETS)} as t6 on t6.idConceptLink =  t3.idConceptTarget and t6.idConceptTarget = t1.idConceptStart 
+                    left join  ${this.tables.get(this.TABLE_TRIPLETS)} as t7 on t6.idConceptStart =  t7.idConceptStart 
+                    and t7.idConceptLink = ( select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "contained_in_file" ) and t7.idConceptTarget = ( select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "tokenPathFile" )  /* contained_in_file -> blockchainContractFile */
+                    left join   ${this.tables.get(this.TABLE_REFERENCES)} as r2 on t7.id = r2.linkReferenced and r2.idConcept = (select id from  ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "code")
+                    left join  ${this.tables.get(this.TABLE_TRIPLETS)} as t8 on t3.idConceptTarget = t8.idConceptStart
+                    and t8.idConceptLink = ( select id from   ${this.tables.get(this.TABLE_CONCEPTS)} where shortname = "is_a" ) 
+                    left join   ${this.tables.get(this.TABLE_CONCEPTS)} as c2 on t8.idConceptTarget = c2.id 
+                    where t1.idConceptStart = ?;`;
+        let [rows, fields] = await this.getConnectionPool().query(sql, [assetId]);
+        return rows;
+    }
 }
 exports.SandraSQLAdapter = SandraSQLAdapter;
 //# sourceMappingURL=SandraSQLAdapter.js.map
