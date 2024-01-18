@@ -16,7 +16,7 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         this.TABLE_STORAGE = "datastorage";
         this.tables = new Map();
         if (config.tables) {
-            if (!config.tables.concepts || !config.tables.references || !config.tables.triplets || !config.tables.datastorage) {
+            if (!config.tables.concepts || !config.tables.references || !config.tables.triplets) {
                 throw new Error("Invalid table names, please check config for sandra db tables");
             }
             this.tables.set(this.TABLE_CONCEPTS, config.tables.concepts);
@@ -733,6 +733,10 @@ class SandraAdapter extends DBBaseAdapter_1.DBBaseAdapter {
         return;
     }
     async getDataStorageByTriplet(triplet, options) {
+        var _a;
+        if (!this.tables.has(this.TABLE_STORAGE) || ((_a = this.tables.get(this.TABLE_STORAGE)) === null || _a === void 0 ? void 0 : _a.length) == 0) {
+            return Promise.resolve();
+        }
         let sql = "select linkReferenced, value  from " + this.tables.get(this.TABLE_STORAGE) + " where linkReferenced = ?";
         let [rows] = await this.getConnectionPool().query(sql, triplet.getId(), options);
         if (rows && (rows === null || rows === void 0 ? void 0 : rows.length) > 0) {

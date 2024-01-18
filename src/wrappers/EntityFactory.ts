@@ -475,7 +475,7 @@ export class EntityFactory {
         * @param limit limits the number of result.
         
     */
-    async load(ref: Reference, loadAllEntityData: boolean = true, iterateDown: boolean = false, limit: number = 1000) {
+    async load(ref: Reference, loadAllEntityData: boolean = true, iterateDown: boolean = false, limit: number = 1000, maxLevel: number = 0) {
 
         let cifConcept = await this.getContainedInFileConcept();
         let entityTriplets: Triplet[] = [];
@@ -504,12 +504,18 @@ export class EntityFactory {
 
                     if (iterateDown) {
 
-                        let e = await this.loadBySubject(triplets[i].getTarget(), true);
+                        let e = await this.loadBySubject(triplets[i].getTarget(), true, 0, maxLevel);
 
                         if (e) {
                             triplets[i].setJoinedEntity(e);
                         }
                     }
+
+                    if (triplets[i].getVerb()?.getShortname() == null) {
+                        let verbEntity = await this.loadBySubject(triplets[i].getVerb(), true);
+                        triplets[i].setVerbEntity(verbEntity || undefined);
+                    }
+
 
                     let r = await (DB.getInstance().server(this.server) as SandraAdapter)?.getReferenceByTriplet(
                         triplets[i], undefined, this.abortOptions
@@ -554,7 +560,13 @@ export class EntityFactory {
      * @returns Return entity object from the DB with given subject concept. Checks the subject id to load data.
      * It does not add loaded entity to current factory entity list.
      */
-    async loadBySubject(subject: Concept | undefined, iterateDown: boolean = false) {
+    async loadBySubject(subject: Concept | undefined, iterateDown: boolean = false, level: number = 0, maxLevel: number = 1) {
+
+        if (level > maxLevel) {
+            return null;
+        }
+
+        level = level + 1;
 
         let entityConcept: Concept | undefined = await ((DB.getInstance().server(this.server) as SandraAdapter) as SandraAdapter)?.getConceptById(
             Number(subject?.getId()),
@@ -575,7 +587,7 @@ export class EntityFactory {
 
                 if (iterateDown) {
 
-                    let e = await this.loadBySubject(triplets[i].getTarget(), true);
+                    let e = await this.loadBySubject(triplets[i].getTarget(), true, level, maxLevel);
 
                     if (e) {
                         triplets[i].setJoinedEntity(e);

@@ -16,6 +16,7 @@ export class Triplet {
     private upsert: boolean;
 
     private joinedEntity?: Entity;
+    private verbEntity?: Entity;
 
     constructor(id: string, subject?: Concept, verb?: Concept, target?: Concept, flag: boolean = false, upsert: boolean = false) {
         this.id = id;
@@ -74,6 +75,10 @@ export class Triplet {
         return this.joinedEntity;
     }
 
+    getVerbEntity() {
+        return this.verbEntity;
+    }
+
     /**
      * 
      * @returns Returns true if this triplet object is marked as updatable for push queries
@@ -117,6 +122,14 @@ export class Triplet {
      */
     setJoinedEntity(entity: Entity | undefined) {
         this.joinedEntity = entity;
+    }
+
+    /**
+    * Sets given entity as the verb entity of this triplet 
+    * @param entity 
+    */
+    setVerbEntity(entity: Entity | undefined) {
+        this.verbEntity = entity;
     }
 
     /**

@@ -53,6 +53,9 @@ class Triplet {
     getJoinedEntity() {
         return this.joinedEntity;
     }
+    getVerbEntity() {
+        return this.verbEntity;
+    }
     /**
      *
      * @returns Returns true if this triplet object is marked as updatable for push queries
@@ -89,6 +92,13 @@ class Triplet {
      */
     setJoinedEntity(entity) {
         this.joinedEntity = entity;
+    }
+    /**
+    * Sets given entity as the verb entity of this triplet
+    * @param entity
+    */
+    setVerbEntity(entity) {
+        this.verbEntity = entity;
     }
     /**
      * Sets the target concept of this triplet with given target concept

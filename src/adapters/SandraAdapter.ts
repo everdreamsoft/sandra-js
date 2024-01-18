@@ -22,7 +22,7 @@ export class SandraAdapter extends DBBaseAdapter {
 
         if (config.tables) {
 
-            if (!config.tables.concepts || !config.tables.references || !config.tables.triplets || !config.tables.datastorage) {
+            if (!config.tables.concepts || !config.tables.references || !config.tables.triplets) {
                 throw new Error("Invalid table names, please check config for sandra db tables");
             }
 
@@ -578,7 +578,7 @@ export class SandraAdapter extends DBBaseAdapter {
         sql = sql.replace(",#SELECT#", " ") + " order by t0.id desc limit " + limit;
 
         console.log(sql);
-        
+
         let [rows]: any = await this.getConnectionPool().query(sql, undefined, options);
 
         return new Promise((resolve, reject) => {
@@ -977,6 +977,10 @@ export class SandraAdapter extends DBBaseAdapter {
     }
 
     async getDataStorageByTriplet(triplet: Triplet, options?: IAbortOption): Promise<void> {
+
+        if (!this.tables.has(this.TABLE_STORAGE) || this.tables.get(this.TABLE_STORAGE)?.length == 0) {
+            return Promise.resolve();
+        }
 
         let sql = "select linkReferenced, value  from " + this.tables.get(this.TABLE_STORAGE) + " where linkReferenced = ?";
         let [rows]: any = await this.getConnectionPool().query(sql, triplet.getId(), options);

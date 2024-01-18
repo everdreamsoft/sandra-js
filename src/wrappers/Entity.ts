@@ -179,7 +179,7 @@ export class Entity {
 
         this.triplets.forEach((t, i) => {
 
-            let verb = t.getVerb()?.getShortname() ? t.getVerb()?.getShortname() : "tripletVerb" + i;
+            let verb = t.getVerb()?.getShortname() ? t.getVerb()?.getShortname() : t.getVerb()?.getId();
             let sn = t.getTarget()?.getShortname();
 
             if (sn && sn.length > 0) {
@@ -208,35 +208,31 @@ export class Entity {
                     let j: any = {};
                     if (t.getJoinedEntity()) {
                         j[verb] = t.getJoinedEntity()?.asJSON();
-                        if (verb != "contained_in_file") {
-                            let rfs = this.references?.filter(r => { return r.getTripletLink()?.getId() == t.getId() });
-                            if (rfs?.length > 0) {
-                                let a = j[verb];
-                                a["refs"] = {};
-                                rfs.forEach(r => {
-                                    let key = r.getIdConcept()?.getShortname();
-                                    if (key)
-                                        a["refs"][key] = r.getValue();
-                                });
-                            }
-                        }
                     }
                     else {
                         j[verb] = { "subjectId": t.getTarget()?.getId() };
-                        if (verb != "contained_in_file") {
-                            let rfs = this.references?.filter(r => { return r.getTripletLink()?.getId() == t.getId() });
-                            if (rfs?.length > 0) {
-                                let a = j[verb];
-                                a["refs"] = {};
-                                rfs.forEach(r => {
-                                    let key = r.getIdConcept()?.getShortname();
-                                    if (key)
-                                        a["refs"][key] = r.getValue();
-                                });
-                            }
+                    }
+
+                    if (verb != "contained_in_file") {
+                        let rfs = this.references?.filter(r => { return r.getTripletLink()?.getId() == t.getId() });
+                        if (rfs?.length > 0) {
+                            let a = j[verb];
+                            a["refs"] = {};
+                            rfs.forEach(r => {
+                                let key = r.getIdConcept()?.getShortname();
+                                if (key)
+                                    a["refs"][key] = r.getValue();
+                            });
                         }
                     }
+
                     json["joined"].push(j);
+
+                    if(t.getVerbEntity())
+                    {
+                        j[verb]["verb_entity"] = t.getVerbEntity()?.asJSON();
+                    }
+                    
                 }
             }
 

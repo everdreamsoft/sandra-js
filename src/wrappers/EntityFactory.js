@@ -368,8 +368,8 @@ class EntityFactory {
         * @param limit limits the number of result.
         
     */
-    async load(ref, loadAllEntityData = true, iterateDown = false, limit = 1000) {
-        var _a, _b, _c, _d;
+    async load(ref, loadAllEntityData = true, iterateDown = false, limit = 1000, maxLevel = 0) {
+        var _a, _b, _c, _d, _e;
         let cifConcept = await this.getContainedInFileConcept();
         let entityTriplets = [];
         if (cifConcept)
@@ -382,14 +382,18 @@ class EntityFactory {
                 triplets = await ((_b = DB_1.DB.getInstance().server(this.server)) === null || _b === void 0 ? void 0 : _b.getTripletsBySubject(entityTriplet.getSubject(), this.abortOptions));
                 for (let i = 0; i < triplets.length; i++) {
                     if (iterateDown) {
-                        let e = await this.loadBySubject(triplets[i].getTarget(), true);
+                        let e = await this.loadBySubject(triplets[i].getTarget(), true, 0, maxLevel);
                         if (e) {
                             triplets[i].setJoinedEntity(e);
                         }
                     }
-                    let r = await ((_c = DB_1.DB.getInstance().server(this.server)) === null || _c === void 0 ? void 0 : _c.getReferenceByTriplet(triplets[i], undefined, this.abortOptions));
+                    if (((_c = triplets[i].getVerb()) === null || _c === void 0 ? void 0 : _c.getShortname()) == null) {
+                        let verbEntity = await this.loadBySubject(triplets[i].getVerb(), true);
+                        triplets[i].setVerbEntity(verbEntity || undefined);
+                    }
+                    let r = await ((_d = DB_1.DB.getInstance().server(this.server)) === null || _d === void 0 ? void 0 : _d.getReferenceByTriplet(triplets[i], undefined, this.abortOptions));
                     // Load storage data for triplet
-                    await ((_d = DB_1.DB.getInstance().server(this.server)) === null || _d === void 0 ? void 0 : _d.getDataStorageByTriplet(triplets[i]));
+                    await ((_e = DB_1.DB.getInstance().server(this.server)) === null || _e === void 0 ? void 0 : _e.getDataStorageByTriplet(triplets[i]));
                     refs.push(...r);
                 }
             }
@@ -414,8 +418,12 @@ class EntityFactory {
      * @returns Return entity object from the DB with given subject concept. Checks the subject id to load data.
      * It does not add loaded entity to current factory entity list.
      */
-    async loadBySubject(subject, iterateDown = false) {
+    async loadBySubject(subject, iterateDown = false, level = 0, maxLevel = 1) {
         var _a, _b, _c, _d;
+        if (level > maxLevel) {
+            return null;
+        }
+        level = level + 1;
         let entityConcept = await ((_a = DB_1.DB.getInstance().server(this.server)) === null || _a === void 0 ? void 0 : _a.getConceptById(Number(subject === null || subject === void 0 ? void 0 : subject.getId()), this.abortOptions));
         if (entityConcept) {
             // Get all the triplets for this entity 
@@ -423,7 +431,7 @@ class EntityFactory {
             let refs = [];
             for (let i = 0; i < triplets.length; i++) {
                 if (iterateDown) {
-                    let e = await this.loadBySubject(triplets[i].getTarget(), true);
+                    let e = await this.loadBySubject(triplets[i].getTarget(), true, level, maxLevel);
                     if (e) {
                         triplets[i].setJoinedEntity(e);
                     }
